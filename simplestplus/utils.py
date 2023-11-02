@@ -25,7 +25,7 @@ class StateMachine:
         self.initial = initial
         self.final = final
 
-    def run(self, inp, translator = DefTranslator()):
+    def tokenize(self, inp, translator = DefTranslator()):
         machine = self
         state = machine.initial
         tmp_inp = inp + '\n'
@@ -78,7 +78,7 @@ class Lexer:
         self.state_machines = state_machines
         self.translator = translator
 
-    def analyze(self, inp):
+    def tokenize(self, inp):
         tokens = []
         row = col = 1
         cursor = 0
@@ -90,7 +90,7 @@ class Lexer:
 
             tmp_vals = []
             for machine in self.state_machines:
-                token, val = machine.run(tmp_inp, self.translator)
+                token, val = machine.tokenize(tmp_inp, self.translator)
                 if token is not None:
                     break
                 else:
