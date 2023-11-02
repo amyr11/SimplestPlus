@@ -25,7 +25,7 @@ class StateMachine:
         self.initial = initial
         self.final = final
 
-    def run(self, inp, translator=DefTranslator(default_defs)):
+    def run(self, inp, translator = DefTranslator()):
         machine = self
         state = machine.initial
         tmp_inp = inp + '\n'
@@ -38,6 +38,7 @@ class StateMachine:
             cur_char = tmp_inp[0]
             val += cur_char
             
+            assert translator is not None, 'Translator can\'t be None'
             ids = translator.translate(cur_char)
             new_state = machine._next(state, ids)
 
@@ -73,7 +74,7 @@ class StateMachine:
         return new_state
 
 class Lexer:
-    def __init__(self, state_machines: list, translator: DefTranslator = DefTranslator(default_defs)):
+    def __init__(self, state_machines: list, translator: DefTranslator = DefTranslator()):
         self.state_machines = state_machines
         self.translator = translator
 
