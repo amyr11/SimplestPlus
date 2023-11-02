@@ -26,7 +26,8 @@ class StateMachine:
         self.final = final
 
     def run(self, inp, translator=DefTranslator(default_defs)):
-        state = self.initial
+        machine = self
+        state = machine.initial
         tmp_inp = inp + '\n'
         val = ''
 
@@ -38,14 +39,19 @@ class StateMachine:
             val += cur_char
             
             ids = translator.translate(cur_char)
-            new_state = self._next(state, ids)
+            new_state = machine._next(state, ids)
 
             if new_state is None:
                 break
-            elif new_state in self.final:
-                val = val[:-1]
-                token = val
-                return token, val
+            else:
+                if isinstance(new_state, tuple):
+                    machine = new_state[0]
+                    new_state = new_state[1]
+
+                if new_state in machine.final:
+                    val = val[:-1]
+                    token = val
+                    return token, val
 
             state = new_state
             tmp_inp = tmp_inp[1:]
