@@ -2,8 +2,8 @@ from simplestplus.regdef import definitions as default_defs
 
 
 class DefTranslator:
-    def __init__(self, definitions: dict = None):
-        self.definitions = default_defs if definitions is None else definitions
+    def __init__(self, definitions: dict = default_defs):
+        self.definitions = definitions
 
     def translate(self, inp):
         ids = {inp}
@@ -25,8 +25,7 @@ class StateMachine:
         self.initial = initial
         self.final = final
 
-    def run(self, inp, definitions=None):
-        translator = DefTranslator(definitions)
+    def run(self, inp, translator=DefTranslator(default_defs)):
         state = self.initial
         tmp_inp = inp + '\n'
         val = ''
@@ -68,9 +67,9 @@ class StateMachine:
         return new_state
 
 class Lexer:
-    def __init__(self, state_machines: list, definitions: dict = None):
+    def __init__(self, state_machines: list, translator: DefTranslator = DefTranslator(default_defs)):
         self.state_machines = state_machines
-        self.definitions = definitions
+        self.translator = translator
 
     def analyze(self, inp):
         tokens = []
@@ -84,7 +83,7 @@ class Lexer:
 
             tmp_vals = []
             for machine in self.state_machines:
-                token, val = machine.run(tmp_inp, self.definitions)
+                token, val = machine.run(tmp_inp, self.translator)
                 if token is not None:
                     break
                 else:
