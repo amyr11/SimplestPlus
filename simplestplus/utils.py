@@ -31,9 +31,6 @@ class StateMachine:
         tmp_inp = inp + '\n'
         val = ''
 
-        if tmp_inp[0] in ['\n', ' ']:
-            return tmp_inp[0], tmp_inp[0]
-
         while tmp_inp != '':
             cur_char = tmp_inp[0]
             val += cur_char
