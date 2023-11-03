@@ -7,12 +7,16 @@ class SimplestplusLexer(Lexer):
             'reserved_symbols',
             transitions={
                 (0, ' '): 1,
+                (1, ' '): 5,
+                (5, ' '): 6,
+                (6, ' '): 7,
+                (7, 'delim_indent'): 8,
                 (1, 'delim_space'): 2,
                 (0, '\n'): 3,
                 (3, 'delim_newline'): 4,
             },
             initial=0,
-            final={2, 4}
+            final={2, 4, 8}
         )
 
         reserved_words = StateMachine(
