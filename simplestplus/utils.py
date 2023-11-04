@@ -1,6 +1,9 @@
 from simplestplus.regdef import definitions as default_defs
 
 
+class Token:
+    pass
+
 class DefTranslator:
     def __init__(self, definitions: dict = default_defs):
         self.definitions = definitions
@@ -53,6 +56,11 @@ class StateMachine:
 
             state = new_state
             tmp_inp = tmp_inp[1:]
+        
+        # if val[-1] == '\n':
+        #     val = val[:-1]
+        # elif val[0] == '\n':
+        #     val = val[1:]
 
         return None, val
 
@@ -69,6 +77,46 @@ class StateMachine:
                 break
 
         return new_state
+    
+class Error:
+    def __init__(self, code, val, row, col, message):
+        self.code = code
+        self.val = val
+        self.row = row
+        self.col = col
+        self.message = message
+
+    def _code_error_string(self):
+        split = self.code.split('\n')
+        out = ''
+        top = self.row > 3
+        start = self.row - 3 if top else 0
+        len_last_row_no = len(str(self.row)) if self.row > 100 else 3
+        if top:
+            out += ' '*3 + '...\n'
+        for i in range(start, self.row):
+            line = split[i]
+            cur_row = i+1
+            len_cur_row_no = len(str(cur_row))
+            len_space = len_last_row_no - len_cur_row_no
+            if cur_row == self.row:
+                tmp_out = '-> ' + ' '*len_space + str(cur_row) + ' '*2
+                out += tmp_out
+                out += line + '\n'
+                out += ' '*(len(tmp_out)+self.col-1) + '~'*(len(self.val)) + '\n'
+            else:
+                out += '   ' + ' '*len_space + str(cur_row) + ' '*2
+                out += line + '\n'
+        return out
+    
+    def as_string(self):
+        out = self._code_error_string()
+        out += '-'*len(self.message) + '\n' + self.message + '\n'
+        return out
+
+class LexicalError(Error):
+    def __init__(self, code, val, row, col):
+        super().__init__(code, val, row, col, f'LexicalError: Invalid lexeme {repr(val)} at ln {row}, col {col}')
 
 class Lexer:
     def __init__(self, state_machines: list, translator: DefTranslator = DefTranslator()):
@@ -95,7 +143,13 @@ class Lexer:
 
             if token is None:
                 val = max(tmp_vals, key=len)
-                return tokens, Lexer.display_code_error(f'LexicalError: Invalid lexeme near line {row}, col {col}', inp, row, col, len(val))
+                if val[-1] == '\n':
+                    val = val[-1]
+                elif val[0] == '\n':
+                    row += 1
+                    col = 1
+                    val = val[1:]
+                return None, LexicalError(inp, val, row, col)
             
             if val == '\n':
                 row += 1
@@ -107,28 +161,3 @@ class Lexer:
             tokens.append(token)
 
         return tokens, None
-
-    @staticmethod
-    def display_code_error(message, inp, row, col, lex_len):
-        split = inp.split('\n')
-        out = ''
-        top = row > 3
-        start = row - 3 if top else 0
-        len_last_row_no = len(str(row)) if row > 100 else 3
-        if top:
-            out += ' '*3 + '...\n'
-        for i in range(start, row):
-            line = split[i]
-            cur_row = i+1
-            len_cur_row_no = len(str(cur_row))
-            len_space = len_last_row_no - len_cur_row_no
-            if cur_row == row:
-                tmp_out = '-> ' + ' '*len_space + str(cur_row) + ' '*2
-                out += tmp_out
-                out += line + '\n'
-                out += ' '*(len(tmp_out)+col-1) + '~'*lex_len + '\n'
-            else:
-                out += '   ' + ' '*len_space + str(cur_row) + ' '*2
-                out += line + '\n'
-        out += '-'*len(message) + '\n' + message + '\n'
-        return out
