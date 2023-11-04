@@ -18,10 +18,10 @@ class DefTranslator:
 class StateMachine:
     def __init__(
             self,
-            name: str = None,
-            transitions: dict = None,
-            initial: int = None,
-            final: int = None
+            transitions: dict,
+            initial: int,
+            final: set[int],
+            name: str = '',
     ):
         self.name = name
         self.transitions = transitions
@@ -79,7 +79,7 @@ class StateMachine:
         return new_state
     
 class Error:
-    def __init__(self, code, val, row, col, message):
+    def __init__(self, code: str, val: str, row: int, col: int, message:str):
         self.code = code
         self.val = val
         self.row = row
@@ -115,7 +115,7 @@ class Error:
         return out
 
 class LexicalError(Error):
-    def __init__(self, code, val, row, col):
+    def __init__(self, code: str, val: str, row: int, col: int):
         super().__init__(code, val, row, col, f'LexicalError: Invalid lexeme {repr(val)} at ln {row}, col {col}')
 
 class Lexer:

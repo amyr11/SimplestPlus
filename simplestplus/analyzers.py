@@ -4,7 +4,7 @@ from simplestplus.utils import Lexer
 class SimplestplusLexer(Lexer):
     def __init__(self):
         reserved_symbols = StateMachine(
-            'reserved_symbols',
+            name='reserved_symbols',
             transitions={
                 (0, ' '): 1,
                 (1, ' '): 5,
@@ -20,7 +20,7 @@ class SimplestplusLexer(Lexer):
         )
 
         reserved_words = StateMachine(
-            'reserved_words',
+            name='reserved_words',
             transitions={
                 (0, 'a'): 1,
                 (1, 'n'): 2,
@@ -32,7 +32,7 @@ class SimplestplusLexer(Lexer):
         )
 
         word_literal = StateMachine(
-            'word_literal',
+            name='word_literal',
             transitions={
                 (0, '"'): 1,
                 (1, 'all_alpha'): 1,
