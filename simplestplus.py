@@ -314,7 +314,7 @@ class StateMachine:
             token = Token(final_state.token_type, val)
             if verbose:
                 print(f'Tokenized {repr(val)} with {token.type}')
-            
+        else:
             if verbose:
                 print(f'Ended in a non-terminal state {state}')
 
