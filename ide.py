@@ -3,14 +3,15 @@ from tkinter import ttk
 from simplestplus import Lexer
 
 def analyze_lexical():
-    lexer = Lexer()
-    code = text_editor.get("1.0", 'end-1c')
-    tokens, error = lexer.tokenize(code)
+    code = text_editor.get("1.0", "end-1c")
+    lexer = Lexer(code)
+    tokens, errors = lexer.tokenize()
     clear()
     for token in tokens:
-        token_table.insert('', 'end', values=(repr(token.val), token.type.value))
-    if error:
+        token_table.insert("", "end", values=(repr(token.val), token.type.value))
+    for error in errors:
         print_to_console(error.as_string())
+        print_to_console(" ")
     else:
         print_to_console("Lexical analysis completed successfully")
 
@@ -35,14 +36,14 @@ def run_analysis():
     analyze_semantic()
 
 def print_to_console(message):
-    console.config(state='normal')  # Temporarily make the console editable
-    console.insert('end', message + '\n')  # Insert the message at the end
-    console.config(state='disabled')  # Make the console read-only again
+    console.config(state="normal")  # Temporarily make the console editable
+    console.insert("end", message + "\n")  # Insert the message at the end
+    console.config(state="disabled")  # Make the console read-only again
 
 def clear_console():
-    console.config(state='normal')  # Temporarily make the console editable
-    console.delete('1.0', 'end')  # Delete all the text in the console
-    console.config(state='disabled')  # Make the console read-only again
+    console.config(state="normal")  # Temporarily make the console editable
+    console.delete("1.0", "end")  # Delete all the text in the console
+    console.config(state="disabled")  # Make the console read-only again
 
 # Create a dark mode color scheme
 dark_bg = "#1E1E1E"  # Background color
@@ -59,7 +60,7 @@ root.configure(bg=dark_bg)  # Set the main window background color
 
 # Create frame for buttons
 button_frame = tk.Frame(root, bg=dark_bg)
-button_frame.grid(row=0, column=0, columnspan=3, sticky='w')
+button_frame.grid(row=0, column=0, columnspan=3, sticky="w")
 
 # Buttons for analysis
 lexical_button = tk.Button(button_frame, text="Lexical Analyzer", command=analyze_lexical, bg="white", fg="black", relief="raised", borderwidth=4)
@@ -70,31 +71,31 @@ semantic_button = tk.Button(button_frame, text="Semantic Analyzer", command=anal
 semantic_button.grid(row=0, column=2, padx=10, pady=10, ipadx=10, ipady=5)
 
 # Create a LabelFrame for the "Text Editor" heading
-text_editor_frame = tk.LabelFrame(root, text="Text Editor", bg=dark_bg, fg=dark_fg, font=("Helvetica", 14), labelanchor='n', borderwidth=4)
-text_editor_frame.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky='nsew')
+text_editor_frame = tk.LabelFrame(root, text="Text Editor", bg=dark_bg, fg=dark_fg, font=("Helvetica", 14), labelanchor="n", borderwidth=4)
+text_editor_frame.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
 
 # Create text editor inside the LabelFrame
-text_editor = tk.Text(text_editor_frame, wrap=tk.WORD, bg=dark_bg, fg=dark_fg)
-text_editor.pack(fill='both', expand=True)
+text_editor = tk.Text(text_editor_frame, wrap=tk.NONE, bg=dark_bg, fg=dark_fg)
+text_editor.pack(fill="both", expand=True)
 
 # Create a LabelFrame for the "Error" label
-error_frame = tk.LabelFrame(root, text="Console", bg=dark_bg, fg=dark_fg, font=("Helvetica", 14), labelanchor='n', borderwidth=4)
-error_frame.grid(row=2, column=0, padx=10, pady=(10, 0), columnspan=3, sticky='nsew')
+error_frame = tk.LabelFrame(root, text="Console", bg=dark_bg, fg=dark_fg, font=("Helvetica", 14), labelanchor="n", borderwidth=4)
+error_frame.grid(row=2, column=0, padx=10, pady=(10, 0), columnspan=3, sticky="nsew")
 
 # Create console for errors inside the LabelFrame with a different background color
 console = tk.Text(error_frame, wrap=tk.WORD, height=10, bg=dark_console_bg, fg=dark_fg)
-console.pack(fill='both', expand=True)
-console.config(state='disabled')  # Make the console read-only
+console.pack(fill="both", expand=True)
+console.config(state="disabled")  # Make the console read-only
 
 # Create a LabelFrame for the "Token Table" heading
-token_table_frame = tk.LabelFrame(root, text="Token Table", bg=dark_bg, fg=dark_fg, font=("Helvetica", 14), labelanchor='n', borderwidth=4)
-token_table_frame.grid(row=1, column=3, padx=10, pady=10, rowspan=2, sticky='nsew')
+token_table_frame = tk.LabelFrame(root, text="Token Table", bg=dark_bg, fg=dark_fg, font=("Helvetica", 14), labelanchor="n", borderwidth=4)
+token_table_frame.grid(row=1, column=3, padx=10, pady=10, rowspan=2, sticky="nsew")
 
 # Create token table inside the LabelFrame
 token_table = ttk.Treeview(token_table_frame, columns=("Lexeme", "Token"), show="headings", style="Treeview")
 token_table.heading("Lexeme", text="Lexeme")
 token_table.heading("Token", text="Token")
-token_table.pack(fill='both', expand=True)
+token_table.pack(fill="both", expand=True)
 
 # Create a frame for the "Clear" and "Run" buttons
 button_frame2 = tk.Frame(root, bg=dark_bg)
