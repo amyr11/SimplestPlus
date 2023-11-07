@@ -818,7 +818,7 @@ class Lexer:
                 320: FinalState(TokenType.NUM_LITERAL),
             },
             transitions = {
-                (0, 'zero'): 300,
+                (0, '0'): 300,
                 (300, 'delim_num_deci'): 301,
                 
                 (0, '-'): 302,
