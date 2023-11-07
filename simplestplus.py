@@ -24,7 +24,7 @@ definitions['delim_word'] = definitions['delim_res_words']
 definitions['delim_id'] = [' ', '\n', '+']
 definitions['delim_gt'] = [' ', '\n']
 definitions['delim_gte'] = [' ', '\n']
-definitions['delim_plus'] = definitions['all_alpha'] + [' ', '\n']
+definitions['delim_plus'] = definitions['all_alpha'] + [' ']
 
 class DefTranslator:
     def __init__(self, definitions: dict[str, list[str]] = definitions):
@@ -298,8 +298,8 @@ class Lexer:
 
     def tokenize(self, code) -> tuple[list[Token], Optional[Error]]:
         def advance(val, row, col, cursor):
-            for char in val:
-                if char == '\n':
+            for i in range(len(val)):
+                if val[i] == '\n' and i != len(val) - 1:
                     row += 1
                     col = 1
                 else:
