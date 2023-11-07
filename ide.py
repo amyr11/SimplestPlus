@@ -10,7 +10,7 @@ def analyze_lexical():
     for token in tokens:
         token_table.insert("", "end", values=(repr(token.val), token.type.value))
     for error in errors:
-        print_to_console(error.as_string())
+        print_to_console(error.as_string(), message_type='error')
         print_to_console(" ")
     else:
         print_to_console("Lexical analysis completed successfully")
@@ -35,9 +35,13 @@ def run_analysis():
     analyze_syntax()
     analyze_semantic()
 
-def print_to_console(message):
+def print_to_console(message, message_type='normal'):
     console.config(state="normal")  # Temporarily make the console editable
-    console.insert("end", message + "\n")  # Insert the message at the end
+    if message_type == 'error':
+        console.tag_config('error', foreground='red')
+        console.insert("end", message + "\n", 'error')  # Insert the message at the end with 'error' tag
+    else:
+        console.insert("end", message + "\n")  # Insert the message at the end
     console.config(state="disabled")  # Make the console read-only again
 
 def clear_console():
@@ -47,7 +51,7 @@ def clear_console():
 
 # Create a dark mode color scheme
 dark_bg = "#1E1E1E"  # Background color
-dark_fg = "#FFFFFF"  # Text color
+dark_fg = "#00FF41"  # Text color
 dark_button_bg = "#1E1E1E"  # Button background color
 dark_console_bg = "#1E1E1E"  # Change the background color for the error console
 dark_token_table_bg = "#0000000"  # Token table background color
