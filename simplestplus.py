@@ -7,7 +7,7 @@ from typing import Optional
 REGULAR DEFINITIONS
 -------------------
 """
-
+# TODO: Refactor reg def
 definitions = {}
 
 definitions['all_alpha'] = list('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
@@ -72,6 +72,7 @@ TOKENS
 """
 
 class TokenType(Enum):
+    # TODO: Refactor TokenType
     IDENTIFIER = 'IDENTIFIER'
     WORD_LITERAL = 'WORD_LITERAL'
     
@@ -191,6 +192,7 @@ class TokenType(Enum):
 
 
 class Token:
+    # TODO: Unique token for identifiers, seen identifers, same token
     def __init__(self, t_type: TokenType, t_val: str):
         self.type = t_type
         self.val = t_val
@@ -270,6 +272,8 @@ STATE MACHINE
 """
 
 class StateMachine:
+    # TODO: Final state checker (if in transition keys)
+    # TODO: Duplicate transition input checker
     def __init__(self, initial: int, transitions: dict, final: dict, fallback: Optional['StateMachine'] = None):
         self.initial = initial
         self.final = final
@@ -804,6 +808,7 @@ class Lexer:
             },        
         )
 
+        # TODO: Distinguish negative from subtract
         self._num_literal_machine = StateMachine(
             initial = 0,
             final = {
