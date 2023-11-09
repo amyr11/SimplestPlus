@@ -1,12 +1,13 @@
 import tkinter as tk
 import tkinter.font as tkfont
 from tkinter import ttk
-from simplestplus import Lexer
+
+from src.lexer import Lexer
 
 
 def analyze_lexical():
     code = text_editor.get("1.0", "end-1c").replace("\t", "    ")
-    
+
     lexer = Lexer(code)
     tokens, errors = lexer.tokenize()
     clear()
