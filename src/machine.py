@@ -62,9 +62,12 @@ class StateMachine:
 
         if state in machine.final.keys():
             final_state = machine.final[state]
+
             if final_state.retract:
                 val = val[:-1]
+
             token = Token(final_state.token_type, val)
+
             if verbose:
                 print(f"Tokenized {repr(val)} with {token.type}")
         else:

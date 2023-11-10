@@ -8,10 +8,11 @@ ERRORS
 
 
 class Error:
-    def __init__(self, code: str, row: int, col: int, message: str):
+    def __init__(self, code: str, row: int, col: int, val: str, message: str):
         self.code = code
         self.row = row
         self.col = col
+        self.val = val
         self.message = message
 
     def _code_error_string(self) -> str:
@@ -31,7 +32,7 @@ class Error:
                 tmp_out = "-> " + " " * len_space + str(cur_row) + " " * 2
                 out += tmp_out
                 out += line + "\n"
-                out += " " * (len(tmp_out) + self.col - 1) + "^" + "\n"
+                out += " " * (len(tmp_out) + self.col - 1) + "~"*(len(self.val)) + "\n"
             else:
                 out += "   " + " " * len_space + str(cur_row) + " " * 2
                 out += line + "\n"
@@ -49,16 +50,18 @@ class LexicalError(Error):
             code,
             row,
             col,
+            val,
             f"LexicalError: Invalid lexeme {repr(val)} at ln {row}, col {col}",
         )
 
 
 class InvalidIdentifier(Error):
-    def __init__(self, code: str, token: Token):
+    def __init__(self, code: str, token: Token, message: str):
         t_row, t_col = token.get_position()
         super().__init__(
             code,
             t_row,
             t_col,
-            f"TokenError: Invalid use of reserved word `{token.val}` at ln {t_row}, col {t_col}",
+            token.val,
+            f"InvalidIdentifier: `{token.val}` at ln {t_row}, col {t_col}. {message}",
         )

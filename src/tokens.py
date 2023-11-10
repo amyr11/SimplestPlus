@@ -8,10 +8,6 @@ TOKENS
 
 
 class TokenType(Enum):
-    # TODO: Refactor TokenType
-    IDENTIFIER = "IDENTIFIER"
-    WORD_LITERAL = "WORD_LITERAL"
-
     AND = "and"
     BACK = "back"
     BLANK = "blank"
@@ -47,6 +43,49 @@ class TokenType(Enum):
     WIKI = "wiki"
     WORD = "word"
     YES = "yes"
+
+    IDENTIFIER = "ID"
+
+    SPACE = "SPACE"
+    INDENT = "INDENT"
+    NEWLINE = "NEWLINE"
+    MULTIPLY = "MULTIPLY"
+    MULTIPLY_EQUAL = "MULTIPLY_EQUAL"
+    POWER = "POWER"
+    POWER_EQUAL = "POWER_EQUAL"
+    ADD = "ADD"
+    ADD_EQUAL = "ADD_EQUAL"
+    SUBTRACT = "SUBTRACT"
+    SUBTRACT_EQUAL = "SUBTRACT_EQUAL"
+    DIVIDE = "DIVIDE"
+    DIVIDE_EQUAL = "DIVIDE_EQUAL"
+    FLOOR = "FLOOR"
+    FLOOR_EQUAL = "FLOOR_EQUAL"
+    MODULO = "MODULO"
+    MODULO_EQUAL = "MODULO_EQUAL"
+    ASSIGN = "ASSIGN"
+    EQUAL_TO = "EQUAL_TO"
+    NOT_EQUAL = "NOT_EQUAL"
+    GREATER_THAN = "GREATER_THAN"
+    GREATER_THAN_EQUAL = "GREATER_THAN_EQUAL"
+    LESS_THAN = "LESS_THAN"
+    LESS_THAN_EQUAL = "LESS_THAN_EQUAL"
+    OPAR = "OPAR"
+    CPAR = "CPAR"
+    OBRACE = "OBRACE"
+    CBRACE = "CBRACE"
+    OBRACK = "OBRACK"
+    CBRACK = "CBRACK"
+    COMMA = "COMMA"
+    PERIOD = "PERIOD"
+    COLON = "COLON"
+
+    WORD_LITERAL = "WORD_LITERAL"
+    NUM_LITERAL = "NUM_LITERAL"
+    DECI_LITERAL = "DECI_LITERAL"
+
+    S_COMMENT = "S_COMMENT"
+    M_COMMENT = "M_COMMENT"
 
     reserved_words = [
         AND,
@@ -86,56 +125,19 @@ class TokenType(Enum):
         YES,
     ]
 
-    SPACE = "SPACE"
-    INDENT = "INDENT"
-    NEWLINE = "NEWLINE"
-    MULTIPLY = "MULTIPLY"
-    MULTIPLY_EQUAL = "MULTIPLY_EQUAL"
-    POWER = "POWER"
-    POWER_EQUAL = "POWER_EQUAL"
-    ADD = "ADD"
-    ADD_EQUAL = "ADD_EQUAL"
-    SUBTRACT = "SUBTRACT"
-    SUBTRACT_EQUAL = "SUBTRACT_EQUAL"
-    DIVIDE = "DIVIDE"
-    DIVIDE_EQUAL = "DIVIDE_EQUAL"
-    FLOOR = "FLOOR"
-    FLOOR_EQUAL = "FLOOR_EQUAL"
-    MODULO = "MODULO"
-    MODULO_EQUAL = "MODULO_EQUAL"
-    ASSIGN = "ASSIGN"
-    EQUAL_TO = "EQUAL_TO"
-    NOT_EQUAL = "NOT_EQUAL"
-    GREATER_THAN = "GREATER_THAN"
-    GREATER_THAN_EQUAL = "GREATER_THAN_EQUAL"
-    LESS_THAN = "LESS_THAN"
-    LESS_THAN_EQUAL = "LESS_THAN_EQUAL"
-    OPAR = "OPAR"
-    CPAR = "CPAR"
-    OBRACE = "OBRACE"
-    CBRACE = "CBRACE"
-    OBRACK = "OBRACK"
-    CBRACK = "CBRACK"
-    COMMA = "COMMA"
-    PERIOD = "PERIOD"
-    COLON = "COLON"
-
-    NUM_LITERAL = "NUM_LITERAL"
-    DECI_LITERAL = "DECI_LITERAL"
-
-    S_COMMENT = "S_COMMENT"
-    M_COMMENT = "M_COMMENT"
-
 
 class Token:
     def __init__(self, t_type: TokenType, t_val: str):
         self.type = t_type
         self.val = t_val
+        self.id = 1
         self._row = None
         self._col = None
 
-    def __repr__(self) -> str:
-        return f"Lexeme: {repr(self.val)}\nToken: {self.type}"
+    def __str__(self):
+        if self.type == TokenType.IDENTIFIER:
+            return f"{self.type.value}_{self.id}"
+        return self.type.value
 
     def set_position(self, row, col):
         self._row = row

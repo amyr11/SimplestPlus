@@ -10,12 +10,12 @@ LEXICAL ANALYZER
 ----------------
 """
 
-
 class Lexer:
     def __init__(self, code: str):
         self._machines = machines
         self._code = code
         self._tokens = []
+        self._identifiers = {}
         self._errors = []
 
     def tokenize(self, verbose=True) -> tuple[list[Token], list[Error]]:
@@ -69,8 +69,8 @@ class Lexer:
                 row, col, cursor = advance(val, row, col, cursor)
                 continue
 
-            row, col, cursor = advance(val, row, col, cursor)
             token.set_position(row, col)
+            row, col, cursor = advance(val, row, col, cursor)
 
             # Verify token according to rules
             token_error = self._verify_token(token)
@@ -96,15 +96,30 @@ class Lexer:
 
         return preprocessed_code
 
-    def _verify_token(self, token) -> Optional[Error]:
-        # TODO: Other rules
+    def _verify_token(self, token: Token) -> Optional[Error]:
+        MAX_ID_LEN = 20
+
         if (
             token.type == TokenType.IDENTIFIER
             and token.val in TokenType.reserved_words.value
         ):
-            return InvalidIdentifier(self._code, token)
+            return InvalidIdentifier(
+                self._code, token, "Reserved words can't be used as identifiers."
+            )
+
+        if token.type == TokenType.IDENTIFIER and len(token.val) > MAX_ID_LEN:
+            return InvalidIdentifier(
+                self._code, token, f"Identifier length must be < {MAX_ID_LEN}."
+            )
+
         return None
 
-    def _append_token(self, token) -> None:
-        # TODO: Unique token for identifiers, seen identifers, same token
+    def _append_token(self, token: Token) -> None:
+        if token.type == TokenType.IDENTIFIER:
+            if token.val in self._identifiers:
+                token.id = self._identifiers[token.val]
+            else:
+                token.id = len(self._identifiers) + 1
+                self._identifiers[token.val] = token.id
+
         self._tokens.append(token)

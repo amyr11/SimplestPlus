@@ -2,12 +2,14 @@ from .tokens import TokenType
 from .machine import FinalState, MachineGroup, StateMachine
 
 identifiers_machine = StateMachine(
-        initial=0,
-    final={2: FinalState(TokenType.IDENTIFIER)},
+    initial=0,
+    final={
+        245: FinalState(TokenType.IDENTIFIER)
+    },
     transitions={
-        (0, "all_alpha"): 1,
-        (1, "all_id"): 1,
-        (1, "delim_id"): 2,
+        (0, "all_alpha"): 244,
+        (244, "all_id"): 244,
+        (244, "delim_id"): 245,
     },
 )
 

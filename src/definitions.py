@@ -126,7 +126,7 @@ definitions["delim_cpar"] = (
     + definitions["delim_break"]
     + [":", ")", ",", "]", "}"]
 )
-definitions["delim_obrace"] = definitions["delim_break"] + ['"']
+definitions["delim_obrace"] = definitions["delim_break"] + definitions["all_alpha"] + ['"']
 definitions["delim_cbrace"] = definitions["delim_break"] + [","]
 definitions["delim_obrack"] = (
     definitions["delim_break"] + definitions["alpha_num"] + ["-", "{", "[", "]", '"']
