@@ -148,7 +148,7 @@ error_frame = tk.LabelFrame(
 error_frame.grid(row=2, column=0, padx=10, pady=(10, 0), columnspan=3, sticky="nsew")
 
 # Create console for errors inside the LabelFrame with a different background color
-console = tk.Text(error_frame, wrap=tk.WORD, height=10, bg=dark_console_bg, fg=dark_fg)
+console = tk.Text(error_frame, wrap=tk.NONE, height=10, bg=dark_console_bg, fg=dark_fg)
 console.pack(fill="both", expand=True)
 console.config(state="disabled")  # Make the console read-only
 
