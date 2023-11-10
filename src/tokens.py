@@ -128,7 +128,6 @@ class TokenType(Enum):
 
 
 class Token:
-    # TODO: Unique token for identifiers, seen identifers, same token
     def __init__(self, t_type: TokenType, t_val: str):
         self.type = t_type
         self.val = t_val

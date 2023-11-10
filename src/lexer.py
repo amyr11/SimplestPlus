@@ -84,15 +84,17 @@ class Lexer:
             if verbose:
                 print(f"Token of val {repr(token.val)} verified\n")
 
-            self._tokens.append(token)
+            self._append_token(token)
 
         return self._tokens, self._errors
 
     def _preprocessed_code(self) -> str:
-            # Remove the excess spaces after each line before the newline
-            preprocessed_code = "\n".join([line.rstrip() for line in self._code.split("\n")])
+        # Remove the excess spaces after each line before the newline
+        preprocessed_code = "\n".join(
+            [line.rstrip() for line in self._code.split("\n")]
+        )
 
-            return preprocessed_code
+        return preprocessed_code
 
     def _verify_token(self, token) -> Optional[Error]:
         # TODO: Other rules
@@ -102,3 +104,7 @@ class Lexer:
         ):
             return InvalidIdentifier(self._code, token)
         return None
+
+    def _append_token(self, token) -> None:
+        # TODO: Unique token for identifiers, seen identifers, same token
+        self._tokens.append(token)
