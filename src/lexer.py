@@ -1,6 +1,6 @@
 from typing import Optional
 
-from .errors import Error, InvalidIdentifier, LexicalError
+from .errors import Error, InvalidIdentifier, LexicalError, TokenError
 from .tokens import Token, TokenType
 from .states import machines
 
@@ -9,6 +9,7 @@ from .states import machines
 LEXICAL ANALYZER
 ----------------
 """
+
 
 class Lexer:
     def __init__(self, code: str):
@@ -103,8 +104,8 @@ class Lexer:
             token.type == TokenType.IDENTIFIER
             and token.val in TokenType.reserved_words.value
         ):
-            return InvalidIdentifier(
-                self._code, token, "Reserved words can't be used as identifiers."
+            return TokenError(
+                self._code, token, "Invalid use of reserved word."
             )
 
         if token.type == TokenType.IDENTIFIER and len(token.val) > MAX_ID_LEN:

@@ -32,7 +32,9 @@ class Error:
                 tmp_out = "-> " + " " * len_space + str(cur_row) + " " * 2
                 out += tmp_out
                 out += line + "\n"
-                out += " " * (len(tmp_out) + self.col - 1) + "~"*(len(self.val)) + "\n"
+                out += (
+                    " " * (len(tmp_out) + self.col - 1) + "~" * (len(self.val)) + "\n"
+                )
             else:
                 out += "   " + " " * len_space + str(cur_row) + " " * 2
                 out += line + "\n"
@@ -52,6 +54,18 @@ class LexicalError(Error):
             col,
             val,
             f"LexicalError: Invalid lexeme {repr(val)} at ln {row}, col {col}",
+        )
+
+
+class TokenError(Error):
+    def __init__(self, code: str, token: Token, message: str):
+        t_row, t_col = token.get_position()
+        super().__init__(
+            code,
+            t_row,
+            t_col,
+            token.val,
+            f"TokenError: `{token.val}` at ln {t_row}, col {t_col}. {message}",
         )
 
 
