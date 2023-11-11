@@ -14,7 +14,7 @@ identifiers_machine = StateMachine(
 )
 
 reserved_words_machine = StateMachine(
-        initial=0,
+    initial=0,
     final={
         4: FinalState(TokenType.AND),
         9: FinalState(TokenType.BACK),
@@ -232,7 +232,7 @@ reserved_words_machine = StateMachine(
 )
 
 reserved_symbols_machine = StateMachine(
-        initial=0,
+    initial=0,
     final={
         175: FinalState(TokenType.SPACE, retract=False),
         176: FinalState(TokenType.SPACE, retract=False),
@@ -341,7 +341,7 @@ reserved_symbols_machine = StateMachine(
 )
 
 word_literal_machine = StateMachine(
-        initial=0,
+    initial=0,
     final={286: FinalState(TokenType.WORD_LITERAL)},
     transitions={
         (0, '"'): 284,
@@ -357,7 +357,7 @@ word_literal_machine = StateMachine(
 )
 
 deci_literal_machine = StateMachine(
-        initial=321,
+    initial=321,
     final={
         324: FinalState(TokenType.DECI_LITERAL),
         326: FinalState(TokenType.DECI_LITERAL),
@@ -434,7 +434,7 @@ num_literal_machine = StateMachine(
 )
 
 s_comment_machine = StateMachine(
-        initial=0,
+    initial=0,
     final={291: FinalState(TokenType.S_COMMENT)},
     transitions={
         (0, "#"): 289,
@@ -445,7 +445,7 @@ s_comment_machine = StateMachine(
 )
 
 m_comment_machine = StateMachine(
-        initial=0,
+    initial=0,
     final={299: FinalState(TokenType.M_COMMENT)},
     transitions={
         (0, "'"): 292,
