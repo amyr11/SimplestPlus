@@ -352,6 +352,7 @@ word_literal_machine = StateMachine(
         (287, "all_word"): 284,
         (287, '"'): 288,
         (288, '"'): 285,
+        (288, "all_word"): 284
     },
 )
 
