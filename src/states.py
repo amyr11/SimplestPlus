@@ -423,7 +423,7 @@ num_literal_machine = StateMachine(
         (313, "all_digits"): 315,
         (313, "."): (deci_literal_machine, 322),
         (315, "delim_num_dec"): 316,
-        (315, "all_digiits"): 317,
+        (315, "all_digits"): 317,
         (315, "."): (deci_literal_machine, 322),
         (317, "delim_num_deci"): 318,
         (317, "all_digits"): 319,
