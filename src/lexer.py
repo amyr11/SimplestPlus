@@ -1,6 +1,6 @@
 from typing import Optional
 
-from .errors import Error, InvalidIdentifier, LexicalError, TokenError
+from .errors import Error, InvalidIdentifier, LexicalError, TokenError, InvalidComment
 from .tokens import Token, TokenType
 from .states import machines
 
@@ -99,6 +99,7 @@ class Lexer:
 
     def _verify_token(self, token: Token) -> Optional[Error]:
         MAX_ID_LEN = 20
+        MAX_S_COMM_LEN = 79
 
         if (
             token.type == TokenType.IDENTIFIER
@@ -110,8 +111,14 @@ class Lexer:
 
         if token.type == TokenType.IDENTIFIER and len(token.val) > MAX_ID_LEN:
             return InvalidIdentifier(
-                self._code, token, f"Identifier length must be < {MAX_ID_LEN}."
+                self._code, token, f"Identifier length must be <= {MAX_ID_LEN}."
             )
+        
+        if token.type == TokenType.S_COMMENT and len(token.val) - 1 > MAX_S_COMM_LEN:
+            return InvalidComment(
+                self._code, token, f"Inline comment length must be <= {MAX_S_COMM_LEN}."
+            )
+
 
         return None
 

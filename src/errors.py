@@ -79,3 +79,14 @@ class InvalidIdentifier(Error):
             token.val,
             f"InvalidIdentifier: `{token.val}` at ln {t_row}, col {t_col}. {message}",
         )
+
+class InvalidComment(Error):
+    def __init__(self, code: str, token: Token, message: str):
+        t_row, t_col = token.get_position()
+        super().__init__(
+            code,
+            t_row,
+            t_col,
+            token.val,
+            f"InvalidComment: `{token.val}` at ln {t_row}, col {t_col}. {message}",
+        )
