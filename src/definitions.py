@@ -127,7 +127,7 @@ definitions["delim_obrack"] = [
     "]",
     '"',
 ]
-definitions["delim_cbrack"] = [" ", "\n", ",", "[", ")", "}"]
+definitions["delim_cbrack"] = [" ", "\n", ",", "[", "]", ")", "}"]
 definitions["delim_comma"] = [
     *definitions["alpha_num"],
     " ",
