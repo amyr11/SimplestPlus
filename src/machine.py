@@ -13,7 +13,6 @@ STATE MACHINE
 
 class StateMachine:
     # TODO: Final state checker (if in transition keys)
-    # TODO: Duplicate transition input checker
     def __init__(
         self,
         name: str,
