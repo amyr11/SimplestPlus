@@ -103,9 +103,7 @@ definitions["delim_word"] = definitions["delim_break"] + [",", "]", ")", "+", ":
 definitions["all_word"] = (
     definitions["alpha_num"] + definitions["special_char_wo_dq"] + [" "]
 )
-definitions["all_word_wo_bs"] = (
-    definitions["alpha_num"] + definitions["special_char_wo_bs"] + [" "]
-)
+definitions["all_word_wo_bs"] = [char for char in definitions["all_word"] if char != '\\']
 definitions["all_mul_com"] = (
     definitions["alpha_num"] + definitions["special_char"] + [" "]
 )
@@ -137,12 +135,14 @@ def getDefinitions():
 
 
 class DefTranslator:
-    def __init__(self, definitions: dict[str, list[str]] = getDefinitions()):
+    def __init__(self, definitions: dict[str, list[str]] | None = None):
+        if definitions is None:
+            definitions = getDefinitions()
         self.definitions = definitions
 
-    def translate(self, inp) -> set[str]:
-        ids = {inp}
-        for id, symbols in definitions.items():
+    def translate(self, inp) -> list[str]:
+        ids = [inp]
+        for id, symbols in self.definitions.items():
             if inp in symbols:
-                ids.add(id)
+                ids.append(id)
         return ids

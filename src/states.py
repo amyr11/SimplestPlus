@@ -2,10 +2,9 @@ from .tokens import TokenType
 from .machine import FinalState, MachineGroup, StateMachine
 
 identifiers_machine = StateMachine(
+    name="identifiers",
     initial=0,
-    final={
-        245: FinalState(TokenType.IDENTIFIER)
-    },
+    final={245: FinalState(TokenType.IDENTIFIER)},
     transitions={
         (0, "all_alpha"): 244,
         (244, "all_id"): 244,
@@ -14,6 +13,7 @@ identifiers_machine = StateMachine(
 )
 
 reserved_words_machine = StateMachine(
+    name="reserved_words",
     initial=0,
     final={
         4: FinalState(TokenType.AND),
@@ -232,6 +232,7 @@ reserved_words_machine = StateMachine(
 )
 
 reserved_symbols_machine = StateMachine(
+    name="reserved_symbols",
     initial=0,
     final={
         175: FinalState(TokenType.SPACE, retract=False),
@@ -341,6 +342,7 @@ reserved_symbols_machine = StateMachine(
 )
 
 word_literal_machine = StateMachine(
+    name="word_literal",
     initial=0,
     final={286: FinalState(TokenType.WORD_LITERAL)},
     transitions={
@@ -352,11 +354,12 @@ word_literal_machine = StateMachine(
         (287, "all_word"): 284,
         (287, '"'): 288,
         (288, '"'): 285,
-        (288, "all_word"): 284
+        (288, "all_word"): 284,
     },
 )
 
 deci_literal_machine = StateMachine(
+    name="deci_literal",
     initial=321,
     final={
         324: FinalState(TokenType.DECI_LITERAL),
@@ -385,6 +388,7 @@ deci_literal_machine = StateMachine(
 
 # TODO: Distinguish negative from subtract
 num_literal_machine = StateMachine(
+    name="num_literal",
     initial=0,
     final={
         301: FinalState(TokenType.NUM_LITERAL),
@@ -434,6 +438,7 @@ num_literal_machine = StateMachine(
 )
 
 s_comment_machine = StateMachine(
+    name="s_comment",
     initial=0,
     final={291: FinalState(TokenType.S_COMMENT)},
     transitions={
@@ -445,6 +450,7 @@ s_comment_machine = StateMachine(
 )
 
 m_comment_machine = StateMachine(
+    name="m_comment",
     initial=0,
     final={301: FinalState(TokenType.M_COMMENT)},
     transitions={
@@ -464,12 +470,12 @@ m_comment_machine = StateMachine(
         (299, "'"): 300,
         (299, "all_mul_com_wo_sq"): 296,
         (300, "delim_comment"): 301,
-        (300, "all_mul_com"): 296
+        (300, "all_mul_com"): 296,
     },
 )
 
 machines = MachineGroup(
-        [
+    [
         reserved_words_machine,
         identifiers_machine,
         reserved_symbols_machine,
