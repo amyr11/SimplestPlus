@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.font as tkfont
 from tkinter import ttk
+from tkinter import filedialog
 
 from src.lexer import Lexer
 
@@ -62,6 +63,23 @@ def clear_console():
     console.delete("1.0", "end")  # Delete all the text in the console
     console.config(state="disabled")  # Make the console read-only again
 
+def update_line_numbers():
+    pass
+
+def open_file_dialog():
+    file_path = filedialog.askopenfilename(title="Open File", filetypes=[("SimplestPlus files", "*.simp"), ("All files", "*.*")])
+    # load the file content to the text editor
+    with open(file_path, "r") as file:
+        text_editor.delete("1.0", "end")
+        text_editor.insert("1.0", file.read())
+    print(f"The selected file is {0}", file_path)
+
+def save_file_dialog():
+    file_path = filedialog.asksaveasfilename(title="Save File", filetypes=[("SimplestPlus files", "*.simp"), ("All files", "*.*")])
+    # save the file content to the text editor
+    with open(file_path, "w") as file:
+        file.write(text_editor.get("1.0", "end-1c"))
+    print(f"The selected file is {0}", file_path)
 
 # Create a dark mode color scheme
 dark_bg = "#1E1E1E"  # Background color
@@ -111,6 +129,33 @@ semantic_button = tk.Button(
     borderwidth=4,
 )
 semantic_button.grid(row=0, column=2, padx=10, pady=10, ipadx=10, ipady=5)
+
+# add frame for Open and Save buttons
+file_button_frame = tk.Frame(root, bg=dark_bg)
+file_button_frame.grid(row=0, column=3, sticky="e")
+
+# Buttons for file operations
+open_button = tk.Button(
+    file_button_frame,
+    text="Open File",
+    command=open_file_dialog,
+    bg="white",
+    fg="black",
+    relief="raised",
+    borderwidth=4,
+)
+open_button.grid(row=0, column=0, padx=10, pady=10, ipadx=10, ipady=5)
+
+save_button = tk.Button(
+    file_button_frame,
+    text="Save File",
+    command=save_file_dialog,
+    bg="white",
+    fg="black",
+    relief="raised",
+    borderwidth=4,
+)
+save_button.grid(row=0, column=1, padx=10, pady=10, ipadx=10, ipady=5)
 
 # Create a LabelFrame for the "Text Editor" heading
 text_editor_frame = tk.LabelFrame(
