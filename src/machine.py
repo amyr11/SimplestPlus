@@ -1,4 +1,5 @@
 from typing import Optional
+from uu import Error
 
 from .definitions import DefTranslator
 from .tokens import Token, TokenType
@@ -15,21 +16,27 @@ class StateMachine:
     # TODO: Duplicate transition input checker
     def __init__(
         self,
+        name: str,
         initial: int,
         transitions: dict,
         final: dict,
         fallback: Optional["StateMachine"] = None,
+        translator: DefTranslator | None = None,
     ):
-        self.initial = initial
-        self.final = final
-        self.transitions = transitions
-        self.fallback = fallback
+        self._name = name
+        self._initial = initial
+        self._final = final
+        self._transitions = transitions
+        self._fallback = fallback
 
-    def tokenize_first(
-        self, code, translator=DefTranslator(), verbose=True
-    ) -> tuple[Optional[Token], str]:
+        if translator is None:
+            self._translator = DefTranslator()
+
+        self._check_transition_duplicates()
+
+    def tokenize_first(self, code: str, verbose=True) -> tuple[Optional[Token], str]:
         machine = self
-        state = machine.initial
+        state = machine._initial
         tmp_code = code + "\0"
         token = None
         val = ""
@@ -38,8 +45,7 @@ class StateMachine:
         while tmp_code != "" and code != "":
             cur_char = tmp_code[0]
 
-            assert translator is not None, "Translator can't be None"
-            ids = translator.translate(cur_char)
+            ids = self._translator.translate(cur_char)
             new_state = machine._next(state, ids)
 
             if new_state is None:
@@ -60,8 +66,8 @@ class StateMachine:
             if verbose:
                 print(f"Went to state {state}")
 
-        if state in machine.final.keys():
-            final_state = machine.final[state]
+        if state in machine._final.keys():
+            final_state = machine._final[state]
 
             if final_state.retract:
                 val = val[:-1]
@@ -76,10 +82,10 @@ class StateMachine:
 
         return token, val
 
-    def _next(self, state, ids) -> Optional[int]:
+    def _next(self, state: int, ids: list[str]) -> Optional[int]:
         for id in ids:
             try:
-                next_state = self.transitions[(state, id)]
+                next_state = self._transitions[(state, id)]
                 if next_state is not None:
                     return next_state
             except:
@@ -87,19 +93,49 @@ class StateMachine:
 
         return None
 
-    def is_accepting_char(self, char) -> bool:
+    def is_accepting_char(self, char: str) -> bool:
         translator = DefTranslator()
         ids = translator.translate(char)
 
         for id in ids:
             try:
-                self.transitions[(self.initial, id)]
-                if self.transitions[(self.initial, id)] is not None:
+                self._transitions[(self._initial, id)]
+                if self._transitions[(self._initial, id)] is not None:
                     return True
             except:
                 continue
 
         return False
+
+    def _check_transition_duplicates(self):
+        states = {key[0] for key in self._transitions.keys()}
+
+        for state in states:
+            transition_inputs = [
+                key[1] for key in self._transitions.keys() if key[0] == state
+            ]
+
+            if len(transition_inputs) == 1:
+                continue
+
+            inputs = []
+
+            for transition_input in transition_inputs:
+                cur_inputs = []
+
+                if transition_input in self._translator.definitions:
+                    cur_inputs = self._translator.definitions[transition_input]
+                else:
+                    cur_inputs = [transition_input]
+
+                duplicates = set(inputs) & set(cur_inputs)
+
+                if len(duplicates) > 0:
+                    raise Exception(
+                        f"('{self._name}' machine) Duplicate input/s {duplicates} in state {state}'s transitions."
+                    )
+
+                inputs.extend(cur_inputs)
 
 
 class MachineGroup:

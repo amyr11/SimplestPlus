@@ -67,7 +67,7 @@ class Lexer:
 
             while token is None and machine is not None:
                 token, val = machine.tokenize_first(tmp_code, verbose=verbose)
-                machine = machine.fallback
+                machine = machine._fallback
 
                 if verbose and (machine is not None and token is None):
                     print("Going to fallback machine")
