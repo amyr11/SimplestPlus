@@ -5,6 +5,7 @@ from tkinter import filedialog
 
 from src.lexer import Lexer
 
+
 def analyze_lexical():
     code = text_editor.get("1.0", "end-1c").replace("\t", "    ")
 
@@ -62,11 +63,14 @@ def clear_console():
     console.delete("1.0", "end")  # Delete all the text in the console
     console.configure(state="disabled")  # Make the console read-only again
 
+
 def update_line_numbers():
     pass
 
+
 def open_file_dialog():
-    file_path = filedialog.askopenfilename(title="Open File", filetypes=[("SimplestPlus files", "*.simp"), ("All files", "*.*")])
+    file_path = filedialog.askopenfilename(title="Open File", filetypes=[
+                                           ("SimplestPlus files", "*.simp"), ("All files", "*.*")])
     # load the file content to the text editor
     with open(file_path, "r") as file:
         text_editor.delete("1.0", "end")
@@ -74,14 +78,17 @@ def open_file_dialog():
         root.title(f"Simplest+ IDE | {file_path}")
     print(f"The selected file is {0}", file_path)
 
+
 def save_file_dialog():
-    file_path = filedialog.asksaveasfilename(title="Save File", filetypes=[("SimplestPlus files", "*.simp"), ("All files", "*.*")])
+    file_path = filedialog.asksaveasfilename(title="Save File", filetypes=[
+                                             ("SimplestPlus files", "*.simp"), ("All files", "*.*")])
     if not file_path.endswith(".simp"):
         file_path += ".simp"
     with open(file_path, "w") as file:
         file.write(text_editor.get("1.0", "end-1c"))
         root.title(f"Simplest+ IDE | {file_path}")
     print(f"The selected file is {0}", file_path)
+
 
 # Create a dark mode color scheme
 dark_bg = "#1E2429"  # Background color
@@ -172,7 +179,8 @@ save_button = ctk.CTkButton(
 save_button.grid(row=0, column=1, padx=10, pady=10, ipadx=10, ipady=5)
 
 # Create text editor inside the LabelFrame
-text_editor = ctk.CTkTextbox(root, wrap="none", bg_color="#23292F", fg_color="transparent", width=400, font=("Consolas", 14))
+text_editor = ctk.CTkTextbox(root, wrap="none", bg_color="#23292F",
+                             fg_color="transparent", width=400, font=("Consolas", 14))
 text_editor.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
 
 # Set tab width to 4 spaces
@@ -191,11 +199,13 @@ error_frame = ctk.CTkLabel(
     font=("Helvetica", 14, "bold"),
     anchor="n"
 )
-error_frame.grid(row=2, column=0, padx=10, pady=(5, 0), columnspan=3, sticky="nsew")
+error_frame.grid(row=2, column=0, padx=10, pady=(
+    5, 0), columnspan=3, sticky="nsew")
 
 # Create console for errors inside the LabelFrame with a different background color
-console = ctk.CTkTextbox(master=error_frame, wrap="none", height=200, bg_color=dark_console_bg, fg_color="transparent", font=("Consolas", 14))
-console.grid(row=0, column=0, padx=0, pady=(20,0), sticky="nsew")
+console = ctk.CTkTextbox(master=error_frame, wrap="none", height=200,
+                         bg_color=dark_console_bg, fg_color="transparent", font=("Consolas", 14))
+console.grid(row=0, column=0, padx=0, pady=(20, 0), sticky="nsew")
 console.configure(state="disabled")  # Make the console read-only
 
 # Create a LabelFrame for the "Token Table" heading
@@ -208,7 +218,8 @@ token_table_frame = ctk.CTkLabel(
     font=("Helvetica", 14, "bold"),
     anchor="n",
 )
-token_table_frame.grid(row=1, column=3, padx=10, pady=10, rowspan=2, sticky="nsew")
+token_table_frame.grid(row=1, column=3, padx=10,
+                       pady=10, rowspan=2, sticky="nsew")
 
 # Create token table inside the LabelFrame
 token_table = ttk.Treeview(
@@ -216,7 +227,8 @@ token_table = ttk.Treeview(
 )
 token_table.heading("Lexeme", text="Lexeme")
 token_table.heading("Token", text="Token")
-token_table.grid(row=0, column=0, padx=10, pady=(20,0), ipadx=10, ipady=5, sticky="nsew")
+token_table.grid(row=0, column=0, padx=10, pady=(
+    20, 0), ipadx=10, ipady=5, sticky="nsew")
 # token_table.pack(fill="both", expand=True)
 
 # Create a frame for the "Clear" and "Run" buttons
@@ -250,11 +262,13 @@ run_button.grid(row=0, column=1, padx=10, pady=10, ipadx=20, ipady=10)
 
 # Configure row and column weights to make the text editor area larger compared to the error console
 root.grid_rowconfigure(1, weight=3)  # Allocate more weight to the text editor
-root.grid_rowconfigure(3, weight=3)  # Allocate the same weight to the error console
+# Allocate the same weight to the error console
+root.grid_rowconfigure(3, weight=3)
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
 root.grid_columnconfigure(2, weight=1)
-root.grid_columnconfigure(3, weight=3)  # Allocate more weight to the token table
+# Allocate more weight to the token table
+root.grid_columnconfigure(3, weight=3)
 
 # Create a custom style for the token table with dark mode colors
 style = ttk.Style()
