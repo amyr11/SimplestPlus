@@ -76,7 +76,8 @@ def open_file_dialog():
 
 def save_file_dialog():
     file_path = filedialog.asksaveasfilename(title="Save File", filetypes=[("SimplestPlus files", "*.simp"), ("All files", "*.*")])
-    # save the file content to the text editor
+    if not file_path.endswith(".simp"):
+        file_path += ".simp"
     with open(file_path, "w") as file:
         file.write(text_editor.get("1.0", "end-1c"))
     print(f"The selected file is {0}", file_path)
