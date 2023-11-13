@@ -16,24 +16,25 @@ class StateMachine:
     # TODO: Duplicate transition input checker
     def __init__(
         self,
+        name: str,
         initial: int,
         transitions: dict,
         final: dict,
         fallback: Optional["StateMachine"] = None,
+        translator: DefTranslator | None = None,
     ):
+        self._name = name
         self._initial = initial
         self._final = final
         self._transitions = transitions
         self._fallback = fallback
 
-    def tokenize_first(
-        self, code: str, translator: DefTranslator | None = None, verbose=True
-    ) -> tuple[Optional[Token], str]:
         if translator is None:
-            translator = DefTranslator()
+            self._translator = DefTranslator()
 
-        self._check_transition_duplicates(translator)
+        self._check_transition_duplicates()
 
+    def tokenize_first(self, code: str, verbose=True) -> tuple[Optional[Token], str]:
         machine = self
         state = machine._initial
         tmp_code = code + "\0"
@@ -44,7 +45,7 @@ class StateMachine:
         while tmp_code != "" and code != "":
             cur_char = tmp_code[0]
 
-            ids = translator.translate(cur_char)
+            ids = self._translator.translate(cur_char)
             new_state = machine._next(state, ids)
 
             if new_state is None:
@@ -106,7 +107,7 @@ class StateMachine:
 
         return False
 
-    def _check_transition_duplicates(self, translator: DefTranslator):
+    def _check_transition_duplicates(self):
         states = {key[0] for key in self._transitions.keys()}
 
         for state in states:
@@ -122,8 +123,8 @@ class StateMachine:
             for transition_input in transition_inputs:
                 cur_inputs = []
 
-                if transition_input in translator.definitions:
-                    cur_inputs = translator.definitions[transition_input]
+                if transition_input in self._translator.definitions:
+                    cur_inputs = self._translator.definitions[transition_input]
                 else:
                     cur_inputs = [transition_input]
 
@@ -131,7 +132,7 @@ class StateMachine:
 
                 if len(duplicates) > 0:
                     raise Exception(
-                        f"Duplicate input/s {duplicates} in state {state}'s transitions."
+                        f"('{self._name}' machine) Duplicate input/s {duplicates} in state {state}'s transitions."
                     )
 
                 inputs.extend(cur_inputs)
