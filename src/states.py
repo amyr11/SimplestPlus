@@ -405,6 +405,7 @@ num_literal_machine = StateMachine(
     transitions={
         (0, "0"): 300,
         (300, "delim_num_deci"): 301,
+        (300, "."): (deci_literal_machine, 322),
         (0, "-"): 302,
         (0, "digits"): 303,
         (302, "digit"): 303,
