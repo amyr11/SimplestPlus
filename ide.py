@@ -1,10 +1,9 @@
-import tkinter as tk
 import tkinter.font as tkfont
+import customtkinter as ctk
 from tkinter import ttk
 from tkinter import filedialog
 
 from src.lexer import Lexer
-
 
 def analyze_lexical():
     code = text_editor.get("1.0", "end-1c").replace("\t", "    ")
@@ -47,7 +46,7 @@ def run_analysis():
 
 
 def print_to_console(message, message_type="normal"):
-    console.config(state="normal")  # Temporarily make the console editable
+    console.configure(state="normal")  # Temporarily make the console editable
     if message_type == "error":
         console.tag_config("error", foreground="red")
         console.insert(
@@ -55,13 +54,13 @@ def print_to_console(message, message_type="normal"):
         )  # Insert the message at the end with 'error' tag
     else:
         console.insert("end", message + "\n")  # Insert the message at the end
-    console.config(state="disabled")  # Make the console read-only again
+    console.configure(state="disabled")  # Make the console read-only again
 
 
 def clear_console():
-    console.config(state="normal")  # Temporarily make the console editable
+    console.configure(state="normal")  # Temporarily make the console editable
     console.delete("1.0", "end")  # Delete all the text in the console
-    console.config(state="disabled")  # Make the console read-only again
+    console.configure(state="disabled")  # Make the console read-only again
 
 def update_line_numbers():
     pass
@@ -72,6 +71,7 @@ def open_file_dialog():
     with open(file_path, "r") as file:
         text_editor.delete("1.0", "end")
         text_editor.insert("1.0", file.read())
+        root.title(f"Simplest+ IDE | {file_path}")
     print(f"The selected file is {0}", file_path)
 
 def save_file_dialog():
@@ -80,168 +80,171 @@ def save_file_dialog():
         file_path += ".simp"
     with open(file_path, "w") as file:
         file.write(text_editor.get("1.0", "end-1c"))
+        root.title(f"Simplest+ IDE | {file_path}")
     print(f"The selected file is {0}", file_path)
 
 # Create a dark mode color scheme
-dark_bg = "#1E1E1E"  # Background color
-dark_fg = "#00FF41"  # Text color
-dark_button_bg = "#1E1E1E"  # Button background color
+dark_bg = "#1E2429"  # Background color
+dark_fg = "#1E2429"  # Text color
+dark_button_bg = "#353D46"  # CTkButton background color
+dark_button_hover_color = "#3E4752"  # CTkButton hover color
 dark_console_bg = "#1E1E1E"  # Change the background color for the error console
 dark_token_table_bg = "#0000000"  # Token table background color
 dark_token_table_fg = "#FFFFFF"  # Token table text color
 
+analysis_button_fg = "#2e433d"  # Analysis button text color
+analysis_button_hover_color = "#295246"  # Analysis button hover color
+analysis_button_text_color = "#3c874a"  # Analysis button text color
+
+dark_button_text_color = "#6E787D"  # Button text color
+
 # Create the main window
-root = tk.Tk()
-root.title("Simplest+ IDE")
-root.configure(bg=dark_bg)  # Set the main window background color
+root = ctk.CTk(fg_color=dark_bg)
+root.title("Simplest+ IDE | New File")
+root.minsize(1000, 600)
 
 # Create frame for buttons
-button_frame = tk.Frame(root, bg=dark_bg)
+button_frame = ctk.CTkFrame(root, fg_color="transparent")
 button_frame.grid(row=0, column=0, columnspan=3, sticky="w")
 
 # Buttons for analysis
-lexical_button = tk.Button(
+lexical_button = ctk.CTkButton(
     button_frame,
     text="Lexical Analyzer",
     command=analyze_lexical,
-    bg="white",
-    fg="black",
-    relief="raised",
-    borderwidth=4,
+    fg_color=analysis_button_fg,
+    corner_radius=10,
+    text_color=analysis_button_text_color,
+    hover_color=analysis_button_hover_color,
+    font=("Helvetica", 14, "bold"),
 )
 lexical_button.grid(row=0, column=0, padx=10, pady=10, ipadx=10, ipady=5)
-syntax_button = tk.Button(
+syntax_button = ctk.CTkButton(
     button_frame,
     text="Syntax Analyzer",
     command=analyze_syntax,
-    bg="white",
-    fg="black",
-    relief="raised",
-    borderwidth=4,
+    fg_color=analysis_button_fg,
+    corner_radius=10,
+    text_color=analysis_button_text_color,
+    hover_color=analysis_button_hover_color,
+    font=("Helvetica", 14, "bold"),
 )
 syntax_button.grid(row=0, column=1, padx=10, pady=10, ipadx=10, ipady=5)
-semantic_button = tk.Button(
+semantic_button = ctk.CTkButton(
     button_frame,
     text="Semantic Analyzer",
     command=analyze_semantic,
-    bg="white",
-    fg="black",
-    relief="raised",
-    borderwidth=4,
+    fg_color=analysis_button_fg,
+    corner_radius=10,
+    text_color=analysis_button_text_color,
+    hover_color=analysis_button_hover_color,
+    font=("Helvetica", 14, "bold"),
 )
 semantic_button.grid(row=0, column=2, padx=10, pady=10, ipadx=10, ipady=5)
 
 # add frame for Open and Save buttons
-file_button_frame = tk.Frame(root, bg=dark_bg)
+file_button_frame = ctk.CTkFrame(root, fg_color="transparent")
 file_button_frame.grid(row=0, column=3, sticky="e")
 
 # Buttons for file operations
-open_button = tk.Button(
+open_button = ctk.CTkButton(
     file_button_frame,
     text="Open File",
     command=open_file_dialog,
-    bg="white",
-    fg="black",
-    relief="raised",
-    borderwidth=4,
+    fg_color=dark_button_bg,
+    corner_radius=10,
+    text_color=dark_button_text_color,
+    hover_color=dark_button_hover_color,
+    font=("Helvetica", 14, "bold"),
 )
 open_button.grid(row=0, column=0, padx=10, pady=10, ipadx=10, ipady=5)
 
-save_button = tk.Button(
+save_button = ctk.CTkButton(
     file_button_frame,
     text="Save File",
     command=save_file_dialog,
-    bg="white",
-    fg="black",
-    relief="raised",
-    borderwidth=4,
+    fg_color=dark_button_bg,
+    corner_radius=10,
+    text_color=dark_button_text_color,
+    hover_color=dark_button_hover_color,
+    font=("Helvetica", 14, "bold"),
 )
 save_button.grid(row=0, column=1, padx=10, pady=10, ipadx=10, ipady=5)
 
-# Create a LabelFrame for the "Text Editor" heading
-text_editor_frame = tk.LabelFrame(
-    root,
-    text="Text Editor",
-    bg=dark_bg,
-    fg=dark_fg,
-    font=("Helvetica", 14),
-    labelanchor="n",
-    borderwidth=4,
-)
-text_editor_frame.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
-
 # Create text editor inside the LabelFrame
-text_editor = tk.Text(text_editor_frame, wrap=tk.NONE, bg=dark_bg, fg=dark_fg)
-
-text_editor.pack(fill="both", expand=True)
+text_editor = ctk.CTkTextbox(root, wrap="none", bg_color="#23292F", fg_color="transparent", width=400, font=("Consolas", 14))
+text_editor.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
 
 # Set tab width to 4 spaces
-tab_width = tkfont.Font(font=text_editor["font"]).measure(
+tab_width = ctk.CTkFont().measure(
     " " * 4
 )  # Measure the width of 4 spaces
-text_editor.config(tabs=(tab_width,))
+text_editor.configure(tabs=(tab_width,))
 
 # Create a LabelFrame for the "Error" label
-error_frame = tk.LabelFrame(
+error_frame = ctk.CTkLabel(
     root,
     text="Console",
-    bg=dark_bg,
-    fg=dark_fg,
-    font=("Helvetica", 14),
-    labelanchor="n",
-    borderwidth=4,
+    bg_color=dark_bg,
+    fg_color=dark_fg,
+    text_color=dark_button_text_color,
+    font=("Helvetica", 14, "bold"),
+    anchor="n"
 )
-error_frame.grid(row=2, column=0, padx=10, pady=(10, 0), columnspan=3, sticky="nsew")
+error_frame.grid(row=2, column=0, padx=10, pady=(5, 0), columnspan=3, sticky="nsew")
 
 # Create console for errors inside the LabelFrame with a different background color
-console = tk.Text(error_frame, wrap=tk.NONE, height=10, bg=dark_console_bg, fg=dark_fg)
-console.pack(fill="both", expand=True)
-console.config(state="disabled")  # Make the console read-only
+console = ctk.CTkTextbox(master=error_frame, wrap="none", height=200, bg_color=dark_console_bg, fg_color="transparent", font=("Consolas", 14))
+console.grid(row=0, column=0, padx=0, pady=(20,0), sticky="nsew")
+console.configure(state="disabled")  # Make the console read-only
 
 # Create a LabelFrame for the "Token Table" heading
-token_table_frame = tk.LabelFrame(
+token_table_frame = ctk.CTkLabel(
     root,
     text="Token Table",
-    bg=dark_bg,
-    fg=dark_fg,
-    font=("Helvetica", 14),
-    labelanchor="n",
-    borderwidth=4,
+    bg_color=dark_bg,
+    fg_color=dark_fg,
+    text_color=dark_button_text_color,
+    font=("Helvetica", 14, "bold"),
+    anchor="n",
 )
 token_table_frame.grid(row=1, column=3, padx=10, pady=10, rowspan=2, sticky="nsew")
 
 # Create token table inside the LabelFrame
 token_table = ttk.Treeview(
-    token_table_frame, columns=("Lexeme", "Token"), show="headings", style="Treeview"
+    token_table_frame, columns=("Lexeme", "Token"), show="headings", style="Treeview",
 )
 token_table.heading("Lexeme", text="Lexeme")
 token_table.heading("Token", text="Token")
-token_table.pack(fill="both", expand=True)
+token_table.grid(row=0, column=0, padx=10, pady=(20,0), ipadx=10, ipady=5, sticky="nsew")
+# token_table.pack(fill="both", expand=True)
 
 # Create a frame for the "Clear" and "Run" buttons
-button_frame2 = tk.Frame(root, bg=dark_bg)
+button_frame2 = ctk.CTkFrame(root, fg_color="transparent")
 button_frame2.grid(row=4, column=3, padx=10, pady=10)
 
 # Add "Clear" and "Run" buttons inside the new frame with white text color
-clear_button = tk.Button(
+clear_button = ctk.CTkButton(
     button_frame2,
     text="Clear",
     command=clear,
-    bg="white",
-    fg="black",
-    relief="raised",
-    borderwidth=4,
+    fg_color=dark_button_bg,
+    corner_radius=10,
+    text_color=dark_button_text_color,
+    hover_color=dark_button_hover_color,
+    font=("Helvetica", 14, "bold"),
 )
 clear_button.grid(row=0, column=0, padx=10, pady=10, ipadx=20, ipady=10)
 
-run_button = tk.Button(
+run_button = ctk.CTkButton(
     button_frame2,
     text="Run",
     command=run_analysis,
-    bg="white",
-    fg="black",
-    relief="raised",
-    borderwidth=4,
+    fg_color=dark_button_bg,
+    corner_radius=10,
+    text_color=dark_button_text_color,
+    hover_color=dark_button_hover_color,
+    font=("Helvetica", 14, "bold"),
 )
 run_button.grid(row=0, column=1, padx=10, pady=10, ipadx=20, ipady=10)
 
@@ -255,8 +258,24 @@ root.grid_columnconfigure(3, weight=3)  # Allocate more weight to the token tabl
 
 # Create a custom style for the token table with dark mode colors
 style = ttk.Style()
+style.theme_use("default")
 style.configure(
-    "Treeview", background=dark_token_table_bg, foreground=dark_token_table_fg
+    "Treeview", background=dark_bg, foreground="white", fieldbackground=dark_bg, borderwidth=0
+)
+style.configure(
+    "Treeview.Heading",
+    background=dark_bg,
+    fieldbackground=dark_bg,
+    foreground=dark_button_text_color,
+    font=("Helvetica", 12, "bold"),
+    borderwidth=0,
+)
+# remove background on treeview heading on hover
+style.map(
+    "Treeview.Heading",
+    relief=[("active", "flat")],
+    background=[("active", dark_bg)],
+    fieldbackground=[("active", dark_bg)],
 )
 
 # Start the main event loop
