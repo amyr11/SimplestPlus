@@ -151,7 +151,7 @@ definitions["all_word_wo_bs"] = (
 definitions["all_mul_com"] = (
     definitions["alpha_num"]
     + definitions["special_char_wo_sq"]
-    + definitions["delim_break"]
+    + [" "] 
 )
 definitions["delim_comment"] = ["\n"]
 definitions["delim_num_deci"] = definitions["arith_op"] + [
