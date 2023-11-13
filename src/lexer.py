@@ -21,12 +21,6 @@ class Lexer:
 
     def tokenize(self, verbose=True) -> tuple[list[Token], list[Error]]:
         def advance(val, tmp_row, tmp_col, tmp_cursor):
-            # if val == "\n":
-            #     row += 1
-            #     col = 1
-            # else:
-            #     col += len(val)
-            # cursor += len(val)
             for char in val:
                 if char == '\n':
                     tmp_row += 1

@@ -76,7 +76,7 @@ class StateMachine:
                 print(f"Tokenized {repr(val)} with {token.type}")
         else:
             if verbose:
-                print(f"Ended in a non-terminal state {state}")
+                print(f"Ended in a non-terminal state {state}\n")
 
         return token, val
 

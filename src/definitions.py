@@ -3,62 +3,78 @@
 REGULAR DEFINITIONS
 -------------------
 """
-# TODO: Refactor reg def
+
+
+def without(l: list, chars: list[str]):
+    return [char for char in l if char not in chars]
+
+
 definitions = {}
 
-definitions["all_alpha"] = list("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+# Sets
 definitions["digits"] = list("123456789")
-definitions["all_digits"] = definitions["digits"] + ["0"]
-definitions["alpha_num"] = definitions["all_alpha"] + definitions["all_digits"]
+definitions["all_digits"] = [*definitions["digits"], "0"]
+definitions["all_alpha"] = list("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+definitions["alpha_num"] = [*definitions["all_alpha"], *definitions["all_digits"]]
 definitions["arith_op"] = ["+", "-", "*", "/", "%"]
 definitions["rel_op"] = ["=", "!", ">", "<"]
-definitions["special_char"] = (
-    definitions["arith_op"]
-    + definitions["rel_op"]
-    + [
-        '"',
-        "#",
-        "$",
-        "&",
-        "'",
-        "(",
-        ")",
-        ",",
-        ".",
-        ":",
-        ";",
-        "?",
-        "@",
-        "[",
-        "\\",
-        "]",
-        "^",
-        "_",
-        "`",
-        "{",
-        "|",
-        "}",
-        "~",
-        "±",
-        "§",
-    ]
-)
-definitions["special_char_wo_sq"] = [
-    char for char in definitions["special_char"] if char != "'"
+definitions["special_char"] = [
+    *definitions["arith_op"],
+    *definitions["rel_op"],
+    '"',
+    "#",
+    "$",
+    "&",
+    "'",
+    "(",
+    ")",
+    ",",
+    ".",
+    ":",
+    ";",
+    "?",
+    "@",
+    "[",
+    "\\",
+    "]",
+    "^",
+    "_",
+    "`",
+    "{",
+    "|",
+    "}",
+    "~",
+    "±",
+    "§",
 ]
-definitions["special_char_wo_bs"] = [
-    char for char in definitions["special_char"] if char != "\\"
+definitions["special_char_wo_dq"] = without(definitions["special_char"], ['"'])
+definitions["special_char_wo_bs"] = without(definitions["special_char"], ["\\"])
+definitions["special_char_wo_sq"] = without(definitions["special_char"], ["'"])
+definitions["all_id"] = [*definitions["alpha_num"], "_"]
+definitions["delim_word"] = [" ", "\n", ",", "]", ")", "+", ":", "#"]
+definitions["all_word"] = [
+    *definitions["alpha_num"],
+    *definitions["special_char_wo_dq"],
+    " ",
 ]
-definitions["special_char_wo_dq"] = [
-    char for char in definitions["special_char"] if char != '"'
+definitions["all_word_wo_bs"] = without(definitions["all_word"], ["\\"])
+definitions["all_mul_com"] = [
+    *definitions["alpha_num"],
+    *definitions["special_char"],
+    " ",
 ]
-definitions["delim_reserve"] = [" "]
-definitions["delim_colon"] = [":"]
-definitions["delim_func"] = ["("]
+definitions["all_mul_com_wo_sq"] = [
+    *definitions["alpha_num"],
+    *definitions["special_char_wo_sq"],
+    " ",
+]
+
+# Delims
 definitions["delim_dtype"] = [" ", "("]
 definitions["delim_break"] = [" ", "\n"]
-definitions["delim_value"] = definitions["delim_break"] + [")", "]", "}", ",", ":"]
-definitions["delim_indent"] = definitions["all_alpha"] + [
+definitions["delim_value"] = [" ", "\n", ")", "]", "}", ",", ":"]
+definitions["delim_indent"] = [
+    *definitions["all_alpha"],
     " ",
     "#",
     "'",
@@ -68,50 +84,81 @@ definitions["delim_indent"] = definitions["all_alpha"] + [
     "{",
     ")",
 ]
-definitions["delim_arith"] = (
-    definitions["alpha_num"] + definitions["delim_dtype"] + ["-"]
-)
-definitions["delim_plus"] = definitions["delim_arith"] + ['"']
-definitions["delim_minus"] = (
-    definitions["digits"] + definitions["all_alpha"] + definitions["delim_dtype"]
-)
-definitions["delim_opar"] = definitions["delim_plus"] + ["[", "{", "(", ")", "\n"]
-definitions["delim_cpar"] = (
-    definitions["arith_op"]
-    + definitions["rel_op"]
-    + definitions["delim_break"]
-    + [":", ")", ",", "]", "}"]
-)
-definitions["delim_obrace"] = (
-    definitions["delim_break"] + definitions["all_alpha"] + ['"']
-)
-definitions["delim_cbrace"] = definitions["delim_break"] + [","]
-definitions["delim_obrack"] = (
-    definitions["delim_break"] + definitions["alpha_num"] + ["-", "{", "[", "]", '"']
-)
-definitions["delim_cbrack"] = definitions["delim_break"] + [",", "[", ")", "}"]
-definitions["delim_comma"] = definitions["delim_opar"] + ["\n"]
+definitions["delim_arith"] = [*definitions["alpha_num"], " ", "(", "-"]
+definitions["delim_plus"] = [*definitions["alpha_num"], " ", "(", "-", '"']
+definitions["delim_minus"] = [
+    *definitions["digits"],
+    *definitions["all_alpha"],
+    " ",
+    "(",
+]
+definitions["delim_opar"] = [
+    *definitions["alpha_num"],
+    " ",
+    "(",
+    "-",
+    '"',
+    "[",
+    "{",
+    "(",
+    ")",
+    "\n",
+]
+definitions["delim_cpar"] = [
+    *definitions["arith_op"],
+    *definitions["rel_op"],
+    " ",
+    "\n",
+    ":",
+    ")",
+    ",",
+    "]",
+    "}",
+]
+definitions["delim_obrace"] = [*definitions["all_alpha"], " ", "\n", '"']
+definitions["delim_cbrace"] = [" ", "\n", ","]
+definitions["delim_obrack"] = [
+    *definitions["alpha_num"],
+    " ",
+    "\n",
+    "-",
+    "{",
+    "[",
+    "]",
+    '"',
+]
+definitions["delim_cbrack"] = [" ", "\n", ",", "[", ")", "}"]
+definitions["delim_comma"] = [
+    *definitions["alpha_num"],
+    " ",
+    "(",
+    "-",
+    '"',
+    "[",
+    "{",
+    "(",
+    ")",
+    "\n",
+]
 definitions["delim_period"] = definitions["all_alpha"]
-definitions["delim_id"] = (
-    definitions["arith_op"]
-    + definitions["rel_op"]
-    + definitions["delim_break"]
-    + ["(", "[", ")", ",", ".", ":", "#"]
-)
-definitions["all_id"] = definitions["alpha_num"] + ["_"]
-definitions["delim_word"] = definitions["delim_break"] + [",", "]", ")", "+", ":", "#"]
-definitions["all_word"] = (
-    definitions["alpha_num"] + definitions["special_char_wo_dq"] + [" "]
-)
-definitions["all_word_wo_bs"] = [char for char in definitions["all_word"] if char != '\\']
-definitions["all_mul_com"] = (
-    definitions["alpha_num"] + definitions["special_char"] + [" "]
-)
-definitions["all_mul_com_wo_sq"] = (
-    definitions["alpha_num"] + definitions["special_char_wo_sq"] + [" "]
-)
-definitions["delim_comment"] = ["\n"]
-definitions["delim_num_deci"] = definitions["arith_op"] + [
+definitions["delim_id"] = [
+    *definitions["arith_op"],
+    *definitions["rel_op"],
+    " ",
+    "\n",
+    "(",
+    "[",
+    ")",
+    "]",
+    "}",
+    ",",
+    ".",
+    ":",
+    "#",
+]
+definitions["delim_num_deci"] = [
+    *definitions["arith_op"],
+    " ",
     ",",
     "}",
     ")",
@@ -119,9 +166,10 @@ definitions["delim_num_deci"] = definitions["arith_op"] + [
     ":",
     "#",
     '"',
-    " ",
     "\n",
 ]
+
+
 # definitions['delim_space'] = definitions['alpha_num'] + definitions['arith_op'] + definitions['rel_op'] + ['\n', '(', '{', '[', ')', '}', ']', ',', ':', '"', '#']
 # definitions['delim_newln'] = definitions['delim_indent'] + ['\n']
 
