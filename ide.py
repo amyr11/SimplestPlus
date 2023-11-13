@@ -180,7 +180,7 @@ save_button.grid(row=0, column=1, padx=10, pady=10, ipadx=10, ipady=5)
 
 # Create text editor and maximize it to fill the entire row
 text_editor = ctk.CTkTextbox(root, wrap="none", bg_color="#23292F",
-                             fg_color="transparent", font=("Consolas", 14))
+                             fg_color="transparent", font=("FiraCode Nerd Font", 14))
 text_editor.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
 
 # Set tab width to 4 spaces
@@ -204,7 +204,7 @@ error_frame.grid(row=2, column=0, padx=10, pady=(
 
 # Create console for errors inside the LabelFrame with a different background color
 console = ctk.CTkTextbox(master=error_frame, wrap="none",
-                         bg_color=dark_console_bg, fg_color="transparent", font=("Consolas", 14))
+                         bg_color=dark_console_bg, fg_color="transparent", font=("FiraCode Nerd Font", 14))
 console.grid(row=0, column=0, padx=0, pady=(20, 10), sticky="nsew")
 console.configure(state="disabled")  # Make the console read-only
 
