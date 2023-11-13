@@ -178,9 +178,9 @@ save_button = ctk.CTkButton(
 )
 save_button.grid(row=0, column=1, padx=10, pady=10, ipadx=10, ipady=5)
 
-# Create text editor inside the LabelFrame
+# Create text editor and maximize it to fill the entire row
 text_editor = ctk.CTkTextbox(root, wrap="none", bg_color="#23292F",
-                             fg_color="transparent", width=400, font=("Consolas", 14))
+                             fg_color="transparent", font=("Consolas", 14))
 text_editor.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
 
 # Set tab width to 4 spaces
@@ -203,9 +203,9 @@ error_frame.grid(row=2, column=0, padx=10, pady=(
     5, 0), columnspan=3, sticky="nsew")
 
 # Create console for errors inside the LabelFrame with a different background color
-console = ctk.CTkTextbox(master=error_frame, wrap="none", height=200,
+console = ctk.CTkTextbox(master=error_frame, wrap="none",
                          bg_color=dark_console_bg, fg_color="transparent", font=("Consolas", 14))
-console.grid(row=0, column=0, padx=0, pady=(20, 0), sticky="nsew")
+console.grid(row=0, column=0, padx=0, pady=(20, 10), sticky="nsew")
 console.configure(state="disabled")  # Make the console read-only
 
 # Create a LabelFrame for the "Token Table" heading
@@ -233,7 +233,7 @@ token_table.grid(row=0, column=0, padx=10, pady=(
 
 # Create a frame for the "Clear" and "Run" buttons
 button_frame2 = ctk.CTkFrame(root, fg_color="transparent")
-button_frame2.grid(row=4, column=3, padx=10, pady=10)
+button_frame2.grid(row=2, column=3, padx=10, pady=(200, 0))
 
 # Add "Clear" and "Run" buttons inside the new frame with white text color
 clear_button = ctk.CTkButton(
@@ -261,14 +261,13 @@ run_button = ctk.CTkButton(
 run_button.grid(row=0, column=1, padx=10, pady=10, ipadx=20, ipady=10)
 
 # Configure row and column weights to make the text editor area larger compared to the error console
-root.grid_rowconfigure(1, weight=3)  # Allocate more weight to the text editor
-# Allocate the same weight to the error console
-root.grid_rowconfigure(3, weight=3)
+root.grid_rowconfigure(1, weight=1)  # Allocate more weight to the text editor
+# # Allocate the same weight to the error console
+root.grid_rowconfigure(3, weight=0)
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
 root.grid_columnconfigure(2, weight=1)
-# Allocate more weight to the token table
-root.grid_columnconfigure(3, weight=3)
+root.grid_columnconfigure(3, weight=0)
 
 # Create a custom style for the token table with dark mode colors
 style = ttk.Style()
@@ -281,7 +280,7 @@ style.configure(
     background=dark_bg,
     fieldbackground=dark_bg,
     foreground=dark_button_text_color,
-    font=("Helvetica", 12, "bold"),
+    font=("Helvetica", 11, "bold"),
     borderwidth=0,
 )
 # remove background on treeview heading on hover
