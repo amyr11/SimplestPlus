@@ -39,63 +39,19 @@ definitions["special_char"] = (
         "|",
         "}",
         "~",
+        "±",
+        "§",
     ]
 )
-definitions["special_char_wo_sq"] = (
-    definitions["arith_op"]
-    + definitions["rel_op"]
-    + [
-        '"',
-        "#",
-        "$",
-        "&",
-        "(",
-        ")",
-        ",",
-        ".",
-        ":",
-        ";",
-        "?",
-        "@",
-        "[",
-        "\\",
-        "]",
-        "^",
-        "_",
-        "`",
-        "{",
-        "|",
-        "}",
-        "~",
-    ]
-)
-definitions["special_char_wo_bs"] = (
-    definitions["arith_op"]
-    + definitions["rel_op"]
-    + [
-        "#",
-        "$",
-        "&",
-        "'",
-        "(",
-        ")",
-        ",",
-        ".",
-        ":",
-        ";",
-        "?",
-        "@",
-        "[",
-        "]",
-        "^",
-        "_",
-        "`",
-        "{",
-        "|",
-        "}",
-        "~",
-    ]
-)
+definitions["special_char_wo_sq"] = [
+    char for char in definitions["special_char"] if char != "'"
+]
+definitions["special_char_wo_bs"] = [
+    char for char in definitions["special_char"] if char != "\\"
+]
+definitions["special_char_wo_dq"] = [
+    char for char in definitions["special_char"] if char != '"'
+]
 definitions["delim_reserve"] = [" "]
 definitions["delim_colon"] = [":"]
 definitions["delim_func"] = ["("]
@@ -144,14 +100,17 @@ definitions["delim_id"] = (
 )
 definitions["all_id"] = definitions["alpha_num"] + ["_"]
 definitions["delim_word"] = definitions["delim_break"] + [",", "]", ")", "+", ":", "#"]
-definitions["all_word"] = definitions["alpha_num"] + definitions["special_char"] + [" "]
+definitions["all_word"] = (
+    definitions["alpha_num"] + definitions["special_char_wo_dq"] + [" "]
+)
 definitions["all_word_wo_bs"] = (
     definitions["alpha_num"] + definitions["special_char_wo_bs"] + [" "]
 )
 definitions["all_mul_com"] = (
-    definitions["alpha_num"]
-    + definitions["special_char_wo_sq"]
-    + [" "] 
+    definitions["alpha_num"] + definitions["special_char"] + [" "]
+)
+definitions["all_mul_com_wo_sq"] = (
+    definitions["alpha_num"] + definitions["special_char_wo_sq"] + [" "]
 )
 definitions["delim_comment"] = ["\n"]
 definitions["delim_num_deci"] = definitions["arith_op"] + [

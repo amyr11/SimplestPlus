@@ -16,6 +16,7 @@ class Error:
         self.message = message
 
     def _code_error_string(self) -> str:
+        # TODO: Fix multiple line errors formatting
         split = self.code.split("\n")
         out = ""
         top = self.row > 3

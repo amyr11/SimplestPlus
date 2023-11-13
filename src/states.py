@@ -446,17 +446,25 @@ s_comment_machine = StateMachine(
 
 m_comment_machine = StateMachine(
     initial=0,
-    final={299: FinalState(TokenType.M_COMMENT)},
+    final={301: FinalState(TokenType.M_COMMENT)},
     transitions={
         (0, "'"): 292,
         (292, "'"): 293,
         (293, "'"): 294,
-        (294, "all_mul_com"): 295,
-        (295, "all_mul_com"): 295,
-        (295, "'"): 296,
-        (296, "'"): 297,
+        (294, "\n"): 295,
+        (295, "\n"): 295,
+        (295, "all_mul_com"): 296,
+        (296, "all_mul_com"): 296,
+        (296, "\n"): 297,
+        (297, "\n"): 297,
+        (297, "all_mul_com_wo_sq"): 296,
         (297, "'"): 298,
-        (298, "delim_comment"): 299,
+        (298, "'"): 299,
+        (298, "all_mul_com_wo_sq"): 296,
+        (299, "'"): 300,
+        (299, "all_mul_com_wo_sq"): 296,
+        (300, "delim_comment"): 301,
+        (300, "all_mul_com"): 296
     },
 )
 
