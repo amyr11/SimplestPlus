@@ -12,7 +12,6 @@ STATE MACHINE
 
 
 class StateMachine:
-    # TODO: Final state checker (if in transition keys)
     def __init__(
         self,
         name: str,
