@@ -69,6 +69,8 @@ definitions["all_mul_com_wo_sq"] = [
     " ",
 ]
 
+definitions["all_mul_com_wo_sq_s"] = without(definitions["all_mul_com_wo_sq"], [" "])
+
 # Delims
 definitions["delim_dtype"] = [" ", "("]
 definitions["delim_break"] = [" ", "\n"]
