@@ -51,7 +51,7 @@ definitions["special_char_wo_dq"] = without(definitions["special_char"], ['"'])
 definitions["special_char_wo_bs"] = without(definitions["special_char"], ["\\"])
 definitions["special_char_wo_sq"] = without(definitions["special_char"], ["'"])
 definitions["all_id"] = [*definitions["alpha_num"], "_"]
-definitions["delim_word"] = [" ", "\n", ",", "]", ")", "+", ":", "#", "!", "="]
+definitions["delim_word"] = [" ", "\n", ",", "]", ")", "}", "+", ":", "#", "!", "="]
 definitions["all_word"] = [
     *definitions["alpha_num"],
     *definitions["special_char_wo_dq"],
