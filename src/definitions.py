@@ -158,6 +158,7 @@ definitions["delim_id"] = [
 ]
 definitions["delim_num_deci"] = [
     *definitions["arith_op"],
+    *definitions["rel_op"],
     " ",
     ",",
     "}",
