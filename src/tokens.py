@@ -134,7 +134,12 @@ class Token:
         self._row = None
         self._col = None
 
-    def __str__(self):
+    def val_string(self):
+        if self.val == "\n":
+            return "\\n"
+        return self.val
+
+    def token_string(self):
         if self.type == TokenType.IDENTIFIER:
             return f"{self.type.value}_{self.id}"
         return self.type.value
