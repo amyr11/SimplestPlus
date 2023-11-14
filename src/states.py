@@ -306,7 +306,7 @@ reserved_symbols_machine = StateMachine(
         (207, "="): 209,
         (209, "delim_arith"): 210,
         (0, "="): 211,
-        (211, "delim_plus"): 212,
+        (211, "delim_assign"): 212,
         (211, "="): 213,
         (213, "delim_plus"): 214,
         (0, "!"): 215,

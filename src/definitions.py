@@ -86,6 +86,7 @@ definitions["delim_indent"] = [
 ]
 definitions["delim_arith"] = [*definitions["alpha_num"], " ", "(", "-"]
 definitions["delim_plus"] = [*definitions["alpha_num"], " ", "(", "-", '"']
+definitions["delim_assign"] = [*definitions["alpha_num"], " ", "(", "-", '"', "{", "["]
 definitions["delim_minus"] = [
     *definitions["digits"],
     *definitions["all_alpha"],
