@@ -386,7 +386,6 @@ deci_literal_machine = StateMachine(
     },
 )
 
-# TODO: Distinguish negative from subtract
 num_literal_machine = StateMachine(
     name="num_literal",
     initial=0,
