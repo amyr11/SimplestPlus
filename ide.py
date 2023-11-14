@@ -13,7 +13,7 @@ def analyze_lexical():
     tokens, errors = lexer.tokenize()
     clear()
     for token in tokens:
-        token_table.insert("", "end", values=(token.val_string(), token))
+        token_table.insert("", "end", values=(token.val_string(), token.token_string()))
     for error in errors:
         print_to_console(error.as_string(), message_type="error")
         print_to_console(" ")
