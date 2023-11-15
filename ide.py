@@ -219,7 +219,7 @@ token_table_frame = ctk.CTkLabel(
     anchor="n",
 )
 token_table_frame.grid(row=1, column=3, padx=10,
-                       pady=10, rowspan=2, sticky="nsew")
+                       pady=(10,60), rowspan=2, sticky="nsew")
 
 # Create token table inside the LabelFrame
 token_table = ttk.Treeview(
