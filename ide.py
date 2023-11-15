@@ -103,7 +103,9 @@ def save_file_dialog():
 
     file_path = filedialog.asksaveasfilename(title="Save File", filetypes=[
                                              ("SimplestPlus files", "*.simp"), ("All files", "*.*")])
-    if not len(file_path): return
+    if not len(file_path): 
+        file_is_modified = True
+        return
     if not file_path.endswith(".simp"):
         file_path += ".simp"
         with open(file_path, "w") as file:
@@ -111,6 +113,23 @@ def save_file_dialog():
             root.title(f"Simplest+ IDE | {file_path}")
         file_is_modified = False
     print(f"The selected file is {file_path}")
+
+def new_file_dialog():
+    global file_is_modified
+    # add prompt to save file if it is modified
+    if file_is_modified:
+        choice = messagebox.askyesnocancel("Save File", "The current file is modified. Do you want to save it?")
+        print(choice)
+        if choice:
+            file_is_modified = False
+            return save_file_dialog()
+        elif choice is None:
+            return
+    
+    file_is_modified = False
+    text_editor.delete("1.0", "end")
+    clear()
+    root.title("Simplest+ IDE | New File")
 
 
 # Create a dark mode color scheme
@@ -200,6 +219,18 @@ save_button = ctk.CTkButton(
     font=("Helvetica", 14, "bold"),
 )
 save_button.grid(row=0, column=1, padx=10, pady=10, ipadx=10, ipady=5)
+
+new_button = ctk.CTkButton(
+    file_button_frame,
+    text="New File",
+    command=new_file_dialog,
+    fg_color=dark_button_bg,
+    corner_radius=10,
+    text_color=dark_button_text_color,
+    hover_color=dark_button_hover_color,
+    font=("Helvetica", 14, "bold"),
+)
+new_button.grid(row=0, column=2, padx=10, pady=10, ipadx=10, ipady=5)
 
 # Create text editor and maximize it to fill the entire row
 text_editor = ctk.CTkTextbox(root, wrap="none", bg_color="#23292F",
