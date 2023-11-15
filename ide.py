@@ -82,12 +82,12 @@ def open_file_dialog():
 def save_file_dialog():
     file_path = filedialog.asksaveasfilename(title="Save File", filetypes=[
                                              ("SimplestPlus files", "*.simp"), ("All files", "*.*")])
-    if not file_path.endswith(".simp"):
+    if len(file_path) and not file_path.endswith(".simp"):
         file_path += ".simp"
-    with open(file_path, "w") as file:
-        file.write(text_editor.get("1.0", "end-1c"))
-        root.title(f"Simplest+ IDE | {file_path}")
-    print(f"The selected file is {0}", file_path)
+        with open(file_path, "w") as file:
+            file.write(text_editor.get("1.0", "end-1c"))
+            root.title(f"Simplest+ IDE | {file_path}")
+    print(f"The selected file is {file_path}")
 
 
 # Create a dark mode color scheme
