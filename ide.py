@@ -205,8 +205,9 @@ open_button = ctk.CTkButton(
     text_color=dark_button_text_color,
     hover_color=dark_button_hover_color,
     font=("Helvetica", 14, "bold"),
+    width=0
 )
-open_button.grid(row=0, column=0, padx=10, pady=10, ipadx=10, ipady=5)
+open_button.grid(row=0, column=0, padx=10, pady=10, ipadx=0, ipady=5)
 
 save_button = ctk.CTkButton(
     file_button_frame,
@@ -217,8 +218,9 @@ save_button = ctk.CTkButton(
     text_color=dark_button_text_color,
     hover_color=dark_button_hover_color,
     font=("Helvetica", 14, "bold"),
+    width=0
 )
-save_button.grid(row=0, column=1, padx=10, pady=10, ipadx=10, ipady=5)
+save_button.grid(row=0, column=1, padx=10, pady=10, ipadx=0, ipady=5)
 
 new_button = ctk.CTkButton(
     file_button_frame,
@@ -229,8 +231,9 @@ new_button = ctk.CTkButton(
     text_color=dark_button_text_color,
     hover_color=dark_button_hover_color,
     font=("Helvetica", 14, "bold"),
+    width=0
 )
-new_button.grid(row=0, column=2, padx=10, pady=10, ipadx=10, ipady=5)
+new_button.grid(row=0, column=2, padx=10, pady=10, ipadx=0, ipady=5)
 
 # Create text editor and maximize it to fill the entire row
 text_editor = ctk.CTkTextbox(root, wrap="none", bg_color="#23292F",
