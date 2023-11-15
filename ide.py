@@ -1,10 +1,10 @@
 import tkinter.font as tkfont
 import customtkinter as ctk
-from tkinter import ttk
-from tkinter import filedialog
+from tkinter import ttk, filedialog, messagebox
 
 from src.lexer import Lexer
 
+file_is_modified = False
 
 def analyze_lexical():
     code = text_editor.get("1.0", "end-1c").replace("\t", "    ")
@@ -69,24 +69,47 @@ def update_line_numbers():
 
 
 def open_file_dialog():
+    global file_is_modified
+    # add prompt to save file if it is modified
+    if file_is_modified:
+        choice = messagebox.askyesno("Save File", "The current file is modified. Do you want to save it?")
+        print(choice)
+        if choice:
+            return save_file_dialog()
+
     file_path = filedialog.askopenfilename(title="Open File", filetypes=[
                                            ("SimplestPlus files", "*.simp"), ("All files", "*.*")])
     # load the file content to the text editor
+    if not len(file_path): return
     with open(file_path, "r") as file:
         text_editor.delete("1.0", "end")
         text_editor.insert("1.0", file.read())
         root.title(f"Simplest+ IDE | {file_path}")
-    print(f"The selected file is {0}", file_path)
+    file_is_modified = False
+    print(f"The selected file is {0}", file_path) 
 
 
 def save_file_dialog():
+    global file_is_modified
+
+    # if file already exists, save it
+    if file_is_modified:
+        file_path = root.title().split("|")[1].strip()[:-1]
+        with open(file_path, "w") as file:
+            file.write(text_editor.get("1.0", "end-1c"))
+            root.title(f"Simplest+ IDE | {file_path}")
+        file_is_modified = False
+        return
+
     file_path = filedialog.asksaveasfilename(title="Save File", filetypes=[
                                              ("SimplestPlus files", "*.simp"), ("All files", "*.*")])
-    if len(file_path) and not file_path.endswith(".simp"):
+    if not len(file_path): return
+    if not file_path.endswith(".simp"):
         file_path += ".simp"
         with open(file_path, "w") as file:
             file.write(text_editor.get("1.0", "end-1c"))
             root.title(f"Simplest+ IDE | {file_path}")
+        file_is_modified = False
     print(f"The selected file is {file_path}")
 
 
@@ -182,6 +205,15 @@ save_button.grid(row=0, column=1, padx=10, pady=10, ipadx=10, ipady=5)
 text_editor = ctk.CTkTextbox(root, wrap="none", bg_color="#23292F",
                              fg_color="transparent", font=("FiraCode Nerd Font", 14))
 text_editor.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
+
+def toggle_file_is_modified():
+    global file_is_modified
+    if file_is_modified: return
+    file_is_modified = True
+    root.title(root.title() + "*")
+
+# check if the current file is modified
+text_editor.bind("<Key>", lambda e: toggle_file_is_modified())
 
 # Set tab width to 4 spaces
 tab_width = ctk.CTkFont().measure(
