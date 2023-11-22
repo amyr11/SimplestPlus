@@ -27,15 +27,20 @@ class TokenType(Enum):
     HOME = "home"
     IN = "in"
     INCASE = "incase"
+    INHERITS = "inherits"
+    INITIALIZE = "initialize"
     INP = "inp"
     INSTEAD = "instead"
+    NEW = "new"
     NO = "no"
     NOT = "not"
     NUM = "num"
     OR = "or"
     OUT = "out"
+    PARENT = "parent"
     RANGE = "range"
     RESTRICTED = "restricted"
+    SELF = "self"
     SKIP = "skip"
     STOP = "stop"
     UNLESS = "unless"
@@ -107,15 +112,20 @@ class TokenType(Enum):
         HOME,
         IN,
         INCASE,
+        INHERITS,
+        INITIALIZE,
         INP,
         INSTEAD,
+        NEW,
         NO,
         NOT,
         NUM,
         OR,
         OUT,
+        PARENT,
         RANGE,
         RESTRICTED,
+        SELF,
         SKIP,
         STOP,
         UNLESS,
