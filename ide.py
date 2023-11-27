@@ -5,6 +5,7 @@ from tkinter import ttk, filedialog, messagebox
 from src.lexer import Lexer
 
 file_is_modified = False
+saved_as_file = False
 
 def analyze_lexical():
     code = text_editor.get("1.0", "end-1c").replace("\t", "    ")
