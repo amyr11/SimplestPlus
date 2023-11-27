@@ -102,10 +102,10 @@ def open_file_dialog():
 
 
 def save_file_dialog():
-    global file_is_modified
+    global file_is_modified, saved_as_file
 
     # if file already exists, save it
-    if file_is_modified:
+    if file_is_modified and saved_as_file:
         file_path = root.title().split("|")[1].strip()[:-1]
         with open(file_path, "w") as file:
             file.write(text_editor.get("1.0", "end-1c"))
@@ -113,10 +113,12 @@ def save_file_dialog():
         file_is_modified = False
         return
 
-    file_path = filedialog.asksaveasfilename(title="Save File", filetypes=[
+    # if file is not saved, save it as a new file
+    if not saved_as_file:
+        file_path = filedialog.asksaveasfilename(title="Save File", filetypes=[
                                              ("SimplestPlus files", "*.simp"), ("All files", "*.*")])
-    if not len(file_path): 
-        file_is_modified = True
+    if not len(file_path):
+        saved_as_file = False
         return
     if not file_path.endswith(".simp"):
         file_path += ".simp"
@@ -124,6 +126,7 @@ def save_file_dialog():
             file.write(text_editor.get("1.0", "end-1c"))
             root.title(f"Simplest+ IDE | {file_path}")
         file_is_modified = False
+        saved_as_file = True
     print(f"The selected file is {file_path}")
 
 def new_file_dialog():
