@@ -70,7 +70,7 @@ def update_line_numbers():
 
 
 def open_file_dialog():
-    global file_is_modified
+    global file_is_modified, saved_as_file
     # add prompt to save file if it is modified
     if file_is_modified:
         choice = messagebox.askyesno("Save File", "The current file is modified. Do you want to save it?")
@@ -82,11 +82,21 @@ def open_file_dialog():
                                            ("SimplestPlus files", "*.simp"), ("All files", "*.*")])
     # load the file content to the text editor
     if not len(file_path): return
+    if root.state() != "normal" and main_window.state() == "normal":
+        main_window.destroy()
+        with open(file_path, "r") as file:
+            text_editor.delete("1.0", "end")
+            text_editor.insert("1.0", file.read())
+            root.title(f"Simplest+ IDE | {file_path}")
+        file_is_modified = False
+        saved_as_file = True
+        return root.mainloop() 
     with open(file_path, "r") as file:
         text_editor.delete("1.0", "end")
         text_editor.insert("1.0", file.read())
         root.title(f"Simplest+ IDE | {file_path}")
     file_is_modified = False
+    saved_as_file = True
     print(f"The selected file is {0}", file_path) 
 
 
