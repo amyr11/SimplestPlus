@@ -130,7 +130,7 @@ def save_file_dialog():
     print(f"The selected file is {file_path}")
 
 def new_file_dialog():
-    global file_is_modified
+    global file_is_modified, saved_as_file
     # add prompt to save file if it is modified
     if file_is_modified:
         choice = messagebox.askyesnocancel("Save File", "The current file is modified. Do you want to save it?")
@@ -142,6 +142,7 @@ def new_file_dialog():
             return
     
     file_is_modified = False
+    saved_as_file = False
     text_editor.delete("1.0", "end")
     clear()
     root.title("Simplest+ IDE | New File")
