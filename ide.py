@@ -97,6 +97,7 @@ def open_file_dialog():
         root.title(f"Simplest+ IDE | {file_path}")
     file_is_modified = False
     saved_as_file = True
+
     print(f"The selected file is {0}", file_path) 
 
 
