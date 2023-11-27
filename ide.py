@@ -147,6 +147,63 @@ analysis_button_text_color = "#3c874a"  # Analysis button text color
 
 dark_button_text_color = "#6E787D"  # Button text color
 
+main_window = ctk.CTk(fg_color=dark_bg)
+main_window.title("Simplest+ IDE")
+main_window.minsize(400, 300)
+
+# Welcome texts
+ctk.CTkLabel(
+    main_window,
+    text="Welcome to Simplest+ IDE!",
+    bg_color=dark_bg,
+    fg_color=dark_fg,
+    text_color=dark_button_text_color,
+    font=("Helvetica", 18, "bold"),
+    anchor="n"
+).place(relx=0.5, rely=0.2, anchor="center")
+
+ctk.CTkLabel(
+    main_window,
+    text="Open or create a new file to get started.",
+    bg_color=dark_bg,
+    fg_color=dark_fg,
+    text_color=dark_button_text_color,
+    font=("Helvetica", 16),
+    anchor="n"
+).place(relx=0.5, rely=0.4, anchor="center")
+
+# New File Button
+ctk.CTkButton(    
+    main_window,
+    text="New File",
+    command=lambda: init_ide(main_window),
+    fg_color=dark_button_bg,
+    corner_radius=20,
+    text_color=dark_button_text_color,
+    hover_color=dark_button_hover_color,
+    font=("Helvetica", 14, "bold"),
+    height=40,
+    width=100
+).place(relx=0.5, rely=0.6,anchor="center")
+
+def init_ide(master: ctk.CTk):
+    master.destroy()
+    root.mainloop()
+
+# Open File Button
+ctk.CTkButton(
+    main_window,
+    text="Open File",
+    command=open_file_dialog,
+    fg_color=dark_button_bg,
+    corner_radius=20,
+    text_color=dark_button_text_color,
+    hover_color=dark_button_hover_color,
+    font=("Helvetica", 14, "bold"),
+    height=40,
+    width=100
+).place(relx=0.5, rely=0.75 ,anchor="center")
+
 # Create the main window
 root = ctk.CTk(fg_color=dark_bg)
 root.title("Simplest+ IDE | New File")
@@ -358,4 +415,5 @@ style.map(
 )
 
 # Start the main event loop
-root.mainloop()
+# root.mainloop()
+main_window.mainloop()
