@@ -18,7 +18,7 @@ def analyze_lexical():
     for error in errors:
         print_to_console(error.as_string(), message_type="error")
         print_to_console(" ")
-    else:
+    if len(errors) == 0:
         print_to_console("Lexical analysis completed successfully")
 
 
