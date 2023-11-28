@@ -53,7 +53,7 @@ class TokenType(Enum):
 
     SPACE = "SPACE"
     INDENT = "INDENT"
-    NEWLINE = "NEWLINE"
+    NEWLINE = "\\n"
     MULTIPLY = "MULTIPLY"
     MULTIPLY_ASSIGN = "MULTIPLY_ASSIGN"
     POWER = "POWER"
