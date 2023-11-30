@@ -27,15 +27,20 @@ class TokenType(Enum):
     HOME = "home"
     IN = "in"
     INCASE = "incase"
+    INHERITS = "inherits"
+    INITIALIZE = "initialize"
     INP = "inp"
     INSTEAD = "instead"
+    NEW = "new"
     NO = "no"
     NOT = "not"
     NUM = "num"
     OR = "or"
     OUT = "out"
+    PARENT = "parent"
     RANGE = "range"
     RESTRICTED = "restricted"
+    SELF = "self"
     SKIP = "skip"
     STOP = "stop"
     UNLESS = "unless"
@@ -48,7 +53,7 @@ class TokenType(Enum):
 
     SPACE = "SPACE"
     INDENT = "INDENT"
-    NEWLINE = "NEWLINE"
+    NEWLINE = "\\n"
     MULTIPLY = "MULTIPLY"
     MULTIPLY_ASSIGN = "MULTIPLY_ASSIGN"
     POWER = "POWER"
@@ -107,15 +112,20 @@ class TokenType(Enum):
         HOME,
         IN,
         INCASE,
+        INHERITS,
+        INITIALIZE,
         INP,
         INSTEAD,
+        NEW,
         NO,
         NOT,
         NUM,
         OR,
         OUT,
+        PARENT,
         RANGE,
         RESTRICTED,
+        SELF,
         SKIP,
         STOP,
         UNLESS,

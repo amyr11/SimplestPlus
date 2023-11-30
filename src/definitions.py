@@ -170,6 +170,7 @@ definitions["delim_reserve"] = [" "]
 definitions["delim_colon"] = [":"]
 definitions["delim_func"] = ["("]
 definitions["delim_comment"] = ["\n"]
+definitions["delim_access"] = ["."]
 
 
 # definitions['delim_space'] = definitions['alpha_num'] + definitions['arith_op'] + definitions['rel_op'] + ['\n', '(', '{', '[', ')', '}', ']', ',', ':', '"', '#']
