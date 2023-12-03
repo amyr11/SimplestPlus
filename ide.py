@@ -183,11 +183,11 @@ text_editor = ctk.CTkTextbox(root, wrap="none", bg_color="#23292F",
                              fg_color="transparent", font=("FiraCode Nerd Font", 14))
 text_editor.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
 
-# Set tab width to 4 spaces
-tab_width = ctk.CTkFont().measure(
-    " " * 4
-)  # Measure the width of 4 spaces
-text_editor.configure(tabs=(tab_width,))
+# # Set tab width to 4 spaces
+# tab_width = ctk.CTkFont().measure(
+#     " " * 4
+# )  # Measure the width of 4 spaces
+# text_editor.configure(tabs=(tab_width,))
 
 # Create a LabelFrame for the "Error" label
 error_frame = ctk.CTkLabel(

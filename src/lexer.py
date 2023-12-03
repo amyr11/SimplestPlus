@@ -97,7 +97,7 @@ class Lexer:
         for line in self._code.split("\n"):
             i = len(line) - 1
 
-            while i > 0:
+            while i >= 0:
                 if line[i] in [" ", "\t"]:
                     line = line[:i]
                 else:
