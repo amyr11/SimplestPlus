@@ -109,7 +109,7 @@ class GrammarHelper:
 
             return all_follow_set_cache[production]
 
-        all_follow_set = dict()
+        all_follow_set = {}
 
         for production in self._cfg.keys():
             all_follow_set[production] = get_follow_set(
