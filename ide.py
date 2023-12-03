@@ -78,27 +78,28 @@ def open_file_dialog():
         if choice:
             return save_file_dialog()
 
-    file_path = filedialog.askopenfilename(title="Open File", filetypes=[
+    file = filedialog.askopenfile(title="Open File", filetypes=[
                                            ("SimplestPlus files", "*.simp"), ("All files", "*.*")])
-    # load the file content to the text editor
-    if not len(file_path): return
+    
+    # open the file and load the content to the text editor
+    if not file: return
     if root.state() != "normal" and main_window.state() == "normal":
         main_window.destroy()
-        with open(file_path, "r") as file:
+        with open(file.name, "r") as file:
             text_editor.delete("1.0", "end")
             text_editor.insert("1.0", file.read())
-            root.title(f"Simplest+ IDE | {file_path}")
+            root.title(f"Simplest+ IDE | {file.name}")
         file_is_modified = False
         saved_as_file = True
-        return root.mainloop() 
-    with open(file_path, "r") as file:
+        return root.mainloop()
+    with open(file.name, "r") as file:
         text_editor.delete("1.0", "end")
         text_editor.insert("1.0", file.read())
-        root.title(f"Simplest+ IDE | {file_path}")
+        root.title(f"Simplest+ IDE | {file.name}")
     file_is_modified = False
     saved_as_file = True
 
-    print(f"The selected file is {0}", file_path) 
+    print(f"The selected file is {file.name}") 
 
 
 def save_file_dialog():
