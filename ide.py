@@ -224,6 +224,10 @@ root = ctk.CTk(fg_color=dark_bg)
 root.title("Simplest+ IDE | New File")
 root.minsize(1000, 600)
 
+root.bind("<Control-n>", lambda e: new_file_dialog())
+root.bind("<Control-o>", lambda e: open_file_dialog())
+root.bind("<Control-s>", lambda e: save_file_dialog())
+
 # Create frame for buttons
 button_frame = ctk.CTkFrame(root, fg_color="transparent")
 button_frame.grid(row=0, column=0, columnspan=3, sticky="w")
