@@ -52,7 +52,7 @@ class TokenType(Enum):
     IDENTIFIER = "ID"
 
     SPACE = "SPACE"
-    INDENT = "INDENT"
+    TAB = "\\t"
     NEWLINE = "\\n"
     MULTIPLY = "MULTIPLY"
     MULTIPLY_ASSIGN = "MULTIPLY_ASSIGN"
@@ -147,6 +147,8 @@ class Token:
     def val_string(self):
         if self.val == "\n":
             return "\\n"
+        elif self.val == "\t":
+            return "\\t"
         return self.val
 
     def token_string(self):

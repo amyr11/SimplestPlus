@@ -36,6 +36,7 @@ definitions["special_char"] = [
     "@",
     "[",
     "\\",
+    "\t",
     "]",
     "^",
     "_",
@@ -47,11 +48,11 @@ definitions["special_char"] = [
     "±",
     "§",
 ]
+definitions["special_char_wo_t"] = without(definitions["special_char"], ['\t'])
 definitions["special_char_wo_dq"] = without(definitions["special_char"], ['"'])
 definitions["special_char_wo_bs"] = without(definitions["special_char"], ["\\"])
 definitions["special_char_wo_sq"] = without(definitions["special_char"], ["'"])
 definitions["all_id"] = [*definitions["alpha_num"], "_"]
-definitions["delim_word"] = [" ", "\n", ",", "]", ")", "}", "+", ":", "#", "!", "="]
 definitions["all_word"] = [
     *definitions["alpha_num"],
     *definitions["special_char_wo_dq"],
@@ -72,6 +73,7 @@ definitions["all_mul_com_wo_sq"] = [
 definitions["all_mul_com_wo_sq_s"] = without(definitions["all_mul_com_wo_sq"], [" "])
 
 # Delims
+definitions["delim_word"] = [" ", "\n", ",", "]", ")", "}", "+", ":", "#", "!", "="]
 definitions["delim_dtype"] = [" ", "("]
 definitions["delim_break"] = [" ", "\n"]
 definitions["delim_value"] = [" ", "\n", ")", "]", "}", ",", ":"]
@@ -113,7 +115,7 @@ definitions["delim_cpar"] = [
     "}",
 ]
 definitions["delim_obrace"] = [*definitions["all_alpha"], " ", "\n", '"']
-definitions["delim_cbrace"] = [" ", "\n", ","]
+definitions["delim_cbrace"] = [" ", "\n", ",", "}", ")", "']"]
 definitions["delim_obrack"] = [
     *definitions["alpha_num"],
     " ",
@@ -173,8 +175,26 @@ definitions["delim_comment"] = ["\n"]
 definitions["delim_access"] = ["."]
 
 
-# definitions['delim_space'] = definitions['alpha_num'] + definitions['arith_op'] + definitions['rel_op'] + ['\n', '(', '{', '[', ')', '}', ']', ',', ':', '"', '#']
-# definitions['delim_newln'] = definitions['delim_indent'] + ['\n']
+definitions["delim_tab"] = [
+    "\t",
+    *definitions["digits"],
+    *definitions["all_digits"],
+    *definitions["all_alpha"],
+    *definitions["alpha_num"],
+    *definitions["arith_op"],
+    *definitions["rel_op"],
+    *definitions["special_char"]
+]
+
+definitions["delim_space"] = [
+    *definitions["digits"],
+    *definitions["all_digits"],
+    *definitions["all_alpha"],
+    *definitions["alpha_num"],
+    *definitions["arith_op"],
+    *definitions["rel_op"],
+    *definitions["special_char_wo_t"]
+]
 
 
 def getDefinitions():

@@ -22,7 +22,7 @@ class Lexer:
     def tokenize(self, verbose=True) -> tuple[list[Token], list[Error]]:
         def advance(val, tmp_row, tmp_col, tmp_cursor):
             for char in val:
-                if char == '\n':
+                if char == "\n":
                     tmp_row += 1
                     tmp_col = 1
                 else:
@@ -92,11 +92,21 @@ class Lexer:
 
     def _preprocessed_code(self) -> str:
         # Remove the excess spaces after each line before the newline
-        preprocessed_code = "\n".join(
-            [line.rstrip() for line in self._code.split("\n")]
-        )
+        preprocessed_code = ""
 
-        return preprocessed_code
+        for line in self._code.split("\n"):
+            i = len(line) - 1
+
+            while i > 0:
+                if line[i] in [" ", "\t"]:
+                    line = line[:i]
+                else:
+                    break
+                i -= 1
+
+            preprocessed_code += line + "\n"
+
+        return preprocessed_code[:-1]
 
     def _verify_token(self, token: Token) -> Optional[Error]:
         MAX_ID_LEN = 20
@@ -106,20 +116,17 @@ class Lexer:
             token.type == TokenType.IDENTIFIER
             and token.val in TokenType.reserved_words.value
         ):
-            return TokenError(
-                self._code, token, "Invalid use of reserved word."
-            )
+            return TokenError(self._code, token, "Invalid use of reserved word.")
 
         if token.type == TokenType.IDENTIFIER and len(token.val) > MAX_ID_LEN:
             return InvalidIdentifier(
                 self._code, token, f"Identifier length must be <= {MAX_ID_LEN}."
             )
-        
+
         if token.type == TokenType.S_COMMENT and len(token.val) - 1 > MAX_S_COMM_LEN:
             return InvalidComment(
                 self._code, token, f"Inline comment length must be <= {MAX_S_COMM_LEN}."
             )
-
 
         return None
 
