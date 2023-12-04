@@ -70,9 +70,7 @@ CFG = {
     ],
     "<code_block>": [
         [
-            "<tab>",
             "<statement>",
-            "<newline>",
             "<next_code_block>",
         ],
     ],
@@ -350,21 +348,28 @@ CFG = {
     ],
     "<statement>": [
         [
+            "<tab>",
             "<function_call>",
+            "<newline>",
         ],
         [
+            "<tab>",
             "<frozen_var>",
             "<data_type>",
             TokenType.IDENTIFIER,
             TokenType.ASSIGN,
             "<value>",
+            "<newline>",
         ],
         [
+            "<tab>",
             "<variable>",
             "<assign_operator>",
             "<value>",
+            "<newline>",
         ],
         [
+            "<tab>",
             TokenType.INCASE,
             "<expression>",
             TokenType.COLON,
@@ -372,16 +377,20 @@ CFG = {
             "<code_block>",
             "<unless>",
             "<instead>",
+            "<newline>",
         ],
         [
+            "<tab>",
             TokenType.GIVEN,
             "<variable>",
             TokenType.COLON,
             "<newline>",
             "<event>",
             "<default>",
+            "<newline>",
         ],
         [
+            "<tab>",
             TokenType.EVERY,
             "<data_type>",
             TokenType.IDENTIFIER,
@@ -392,6 +401,7 @@ CFG = {
             "<code_block>",
         ],
         [
+            "<tab>",
             TokenType.DURING,
             "<expression>",
             TokenType.COLON,
@@ -399,26 +409,37 @@ CFG = {
             "<code_block>",
         ],
         [
+            "<tab>",
             TokenType.GO,
             TokenType.COLON,
             "<newline>",
             "<code_block>",
+            "<tab>",
             TokenType.DURING,
             "<expression>",
+            "<newline>",
         ],
         [
+            "<tab>",
             TokenType.BACK,
             "<expression>",
+            "<newline>",
         ],
         [
+            "<tab>",
             TokenType.GLOBAL,
             TokenType.IDENTIFIER,
+            "<newline>",
         ],
         [
+            "<tab>",
             TokenType.STOP,
+            "<newline>",
         ],
         [
+            "<tab>",
             TokenType.SKIP,
+            "<newline>",
         ],
     ],
     "<frozen_var>": [
@@ -457,6 +478,7 @@ CFG = {
     ],
     "<unless>": [
         [
+            "<tab>",
             TokenType.UNLESS,
             "<expression>",
             TokenType.COLON,
@@ -478,6 +500,7 @@ CFG = {
     ],
     "<instead>": [
         [
+            "<tab>",
             TokenType.INSTEAD,
             TokenType.COLON,
             "<newline>",
@@ -489,6 +512,7 @@ CFG = {
     ],
     "<default>": [
         [
+            "<tab>",
             TokenType.DEFAULT,
             TokenType.COLON,
             "<newline>",
@@ -500,6 +524,7 @@ CFG = {
     ],
     "<event>": [
         [
+            "<tab>",
             TokenType.EVENT,
             "<event_value>",
             TokenType.COLON,
@@ -1704,7 +1729,7 @@ CFG = {
 #     ],
 #     "<tab>": [
 #         [
-#             TokenType.TAB,
+#             "<tab>",
 #             "<next_tab>",
 #         ],
 #     ],
