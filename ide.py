@@ -84,14 +84,13 @@ def open_file_dialog():
     # open the file and load the content to the text editor
     if not file: return
     if root.state() != "normal" and main_window.state() == "normal":
-        main_window.destroy()
         with open(file.name, "r") as file:
             text_editor.delete("1.0", "end")
             text_editor.insert("1.0", file.read())
             root.title(f"Simplest+ IDE | {file.name}")
         file_is_modified = False
         saved_as_file = True
-        return root.mainloop()
+        return init_ide(main_window)
     with open(file.name, "r") as file:
         text_editor.delete("1.0", "end")
         text_editor.insert("1.0", file.read())
