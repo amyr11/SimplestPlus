@@ -4,11 +4,11 @@ import os
 import sys
 
 
-def test_lexical(file_path):
+def test_lexical(file_path, verbose):
     with open(file_path, "r") as f:
         test_file = f.read()
     lexer = Lexer(test_file)
-    tokens, errors = lexer.tokenize(verbose=False)
+    tokens, errors = lexer.tokenize(verbose)
     table = PrettyTable(["Lexeme", "Token", "Line", "Column"])
     table.align = "l"
     for token in tokens:
@@ -24,7 +24,7 @@ def test_lexical(file_path):
     return errors
 
 
-def test_syntax(file_path):
+def test_syntax(file_path, verbose):
     return []
 
 
@@ -34,7 +34,7 @@ def test_dir(mode_func, folder_path=""):
     test_files = os.listdir(folder_path)
     for file in test_files:
         file_path = os.path.join(folder_path, file)
-        errors = mode_func(file_path)
+        errors = mode_func(file_path, False)
         if errors:
             all_passed = False
         error_files[file] = errors
@@ -63,12 +63,17 @@ def test_dir(mode_func, folder_path=""):
 
 
 def print_usage():
-    print("Usage: python test.py <mode> [<file_path>]")
+    print("Usage: python test.py <mode> [<file_path>] [-v]")
     print("\n<mode>:\n    'lexical'\n    'syntax'")
     print("\n<file_path>:\n    File name inside tests/lexical or tests/syntax only.")
+    print("\n-v:\n    Verbose flag.")
+
 
 def print_no_file_found(path):
     print(f"{path} doesn't exist.")
+    print()
+    print()
+    print_usage()
 
 
 def test():
@@ -86,13 +91,22 @@ def test():
     file_path = None if len(sys.argv) < 3 else sys.argv[2]
     test_folder = "tests/lexical" if mode == "lexical" else "tests/syntax"
 
+    verbose = False
+    if len(sys.argv) == 4:
+        verbose_arg = sys.argv[3]
+        if verbose_arg != "-v":
+            print_usage()
+            return
+        else:
+            verbose = True
+
     if file_path:
         full_path = os.path.join(test_folder, file_path)
         if not os.path.exists(full_path):
             print_no_file_found(full_path)
             return
 
-        errors = mode_func(full_path)
+        errors = mode_func(full_path, verbose)
         for error in errors:
             print(error.as_string())
     else:
