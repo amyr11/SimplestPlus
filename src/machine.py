@@ -61,7 +61,7 @@ class StateMachine:
             val += cur_char
 
             if verbose:
-                print(f"Went to state {state}")
+                print(f"With {repr(cur_char)}, went to state {state}")
 
         if state in machine._final.keys():
             final_state = machine._final[state]
