@@ -140,6 +140,7 @@ definitions["delim_comma"] = [
     "{",
     "(",
     ")",
+    "#",
     "\n",
 ]
 definitions["delim_period"] = definitions["all_alpha"]
