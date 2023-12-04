@@ -1,8 +1,15 @@
 from prettytable import PrettyTable
-
 from src.lexer import Lexer
+import sys
 
-with open("samples/sample.simp", "r") as f:
+
+if len(sys.argv) < 2:
+    print("Please provide the filename as a command-line argument.")
+    sys.exit(1)
+
+filename = sys.argv[1]
+
+with open(filename, "r") as f:
     sample_code = f.read()
 
 lexer = Lexer(sample_code)
