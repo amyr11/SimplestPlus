@@ -55,6 +55,8 @@ def test_dir(mode_func, folder_path=""):
     else:
         print(f"{file_errors_count} file/s produced errors:\n")
         for file_path in error_files:
+            if len(error_files[file_path]) == 0:
+                continue
             print("*" * 50)
             print(file_path)
             print("*" * 50 + "\n")
