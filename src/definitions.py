@@ -68,15 +68,10 @@ definitions["all_s_com"] = [
 definitions["all_word_wo_bs"] = without(definitions["all_word"], ["\\"])
 definitions["all_mul_com"] = [
     *definitions["alpha_num"],
-    *definitions["special_char"],
-    " ",
-]
-definitions["all_mul_com_wo_sq"] = [
-    *definitions["alpha_num"],
     *definitions["special_char_wo_sq"],
     " ",
 ]
-definitions["all_mul_com_wo_sq_s"] = without(definitions["all_mul_com_wo_sq"], [" "])
+definitions["all_mul_com_wo_s"] = without(definitions["all_mul_com"], [" "])
 
 # Delims
 definitions["delim_word"] = [" ", "\n", ",", "]", ")", "}", "+", ":", "#", "!", "="]
@@ -185,9 +180,6 @@ definitions["delim_access"] = ["."]
 
 definitions["delim_tab"] = [
     "\t",
-    *definitions["digits"],
-    *definitions["all_digits"],
-    *definitions["all_alpha"],
     *definitions["alpha_num"],
     *definitions["arith_op"],
     *definitions["rel_op"],
@@ -195,9 +187,6 @@ definitions["delim_tab"] = [
 ]
 
 definitions["delim_space"] = [
-    *definitions["digits"],
-    *definitions["all_digits"],
-    *definitions["all_alpha"],
     *definitions["alpha_num"],
     *definitions["arith_op"],
     *definitions["rel_op"],
