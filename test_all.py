@@ -17,6 +17,7 @@ for folder in test_sub_folders:
         lexer = Lexer(test_file)
         tokens, errors = lexer.tokenize(verbose=False)
         table = PrettyTable(["Lexeme", "Token", "Line", "Column"])
+        table.align = "l"
         for token in tokens:
             row, col = token.get_position()
             table.add_row([token.val_string(), token.token_string(), row, col])
