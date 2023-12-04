@@ -50,6 +50,7 @@ CFG = {
             TokenType.OPAR,
             "<parameter>",
             TokenType.CPAR,
+            TokenType.COLON,
             "<newline>",
             "<code_block>",
         ],
@@ -62,6 +63,7 @@ CFG = {
             TokenType.OPAR,
             "<parameter>",
             TokenType.CPAR,
+            TokenType.COLON,
             "<newline>",
             "<code_block>",
         ],
@@ -134,9 +136,7 @@ CFG = {
     "<next_parameter>": [
         [
             TokenType.COMMA,
-            "<data_type>",
-            TokenType.IDENTIFIER,
-            "<next_parameter>",
+            "<parameter>",
         ],
         [
             None,
@@ -149,9 +149,7 @@ CFG = {
             "<inheritance>",
             TokenType.COLON,
             "<newline>",
-            "<group_global>",
-            "<initializer>",
-            "<next_group_global>",
+            "<group_body>",
         ]
     ],
     "<inheritance>": [
@@ -161,6 +159,18 @@ CFG = {
         ],
         [
             None,
+        ],
+    ],
+    "<group_body>": [
+        [
+            "<group_global>",
+            "<initializer>",
+            "<next_group_global>",
+        ],
+        [
+            "<next_group_global>",
+            "<initializer>",
+            "<group_global>",
         ],
     ],
     "<group_global>": [
@@ -339,6 +349,9 @@ CFG = {
         ],
     ],
     "<statement>": [
+        [
+            "<function_call>",
+        ],
         [
             "<frozen_var>",
             "<data_type>",
