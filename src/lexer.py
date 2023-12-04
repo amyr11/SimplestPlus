@@ -71,6 +71,8 @@ class Lexer:
                 row, col, cursor = advance(val, row, col, cursor)
                 continue
 
+            if preprocessed_code[cursor - 1] == "\t":
+                col += 3
             token.set_position(row, col)
             row, col, cursor = advance(val, row, col, cursor)
 
