@@ -138,6 +138,95 @@ class GrammarHelper:
             f.write("\n\n")
             f.write(self._set_str(self.follow_set, "FOLLOW SET"))
 
+    def export_all_md(self, path):
+        with open(path, "w") as f:
+            f.write(self._all_md())
+
+    def _all_md(self):
+        out = ""
+        out += "## CFG\n\n"
+        out += "| No. | Production | -> | Right Side |\n"
+        out += "| --- | ---------- | -- | ---------- |\n"
+        counter = 1
+        for left, right in self._cfg.items():
+            for right_prod in right:
+                out += f"| {counter} | \{left} | -> | "
+                counter += 1
+                for i, right_prod_item in enumerate(right_prod):
+                    if i > 0:
+                        out += " "
+                    if isinstance(right_prod_item, TokenType):
+                        out += f"{right_prod_item.value}"
+                    else:
+                        if right_prod_item is None:
+                            out += "λ"
+                        else:
+                            out += f"\{right_prod_item}"
+                out += " |\n"
+        out += "\n\n"
+        out += "## FIRST SET\n\n"
+        out += "| No. | Production | First Set |\n"
+        out += "| --- | ---------- | --------- |\n"
+        counter = 1
+        for left, right in self.first_set.items():
+            out += f"| {counter} | \{left} | "
+            counter += 1
+            out += "{"
+            for i, item in enumerate(
+                sorted(
+                    right,
+                    key=(
+                        lambda x: x
+                        if isinstance(x, str)
+                        else x.value
+                        if isinstance(x, TokenType)
+                        else "λ"
+                    ),
+                )
+            ):
+                if i > 0:
+                    out += ", "
+                if isinstance(item, TokenType):
+                    out += f"{item.value}"
+                else:
+                    if item is None:
+                        item = "λ"
+                    out += f"{item}"
+            out += "}"
+            out += " |\n"
+        out += "\n\n"
+        out += "## FOLLOW SET\n\n"
+        out += "| No. | Production | Follow Set |\n"
+        out += "| --- | ---------- | ---------- |\n"
+        counter = 1
+        for left, right in self.follow_set.items():
+            out += f"| {counter} | \{left} | "
+            counter += 1
+            out += "{"
+            for i, item in enumerate(
+                sorted(
+                    right,
+                    key=(
+                        lambda x: x
+                        if isinstance(x, str)
+                        else x.value
+                        if isinstance(x, TokenType)
+                        else "λ"
+                    ),
+                )
+            ):
+                if i > 0:
+                    out += ", "
+                if isinstance(item, TokenType):
+                    out += f"{item.value}"
+                else:
+                    if item is None:
+                        item = "λ"
+                    out += f"{item}"
+            out += "}"
+            out += " |\n"
+        return out
+
     def _set_str(self, s, name):
         out = ""
         out += "-" * len(name) + "\n"
