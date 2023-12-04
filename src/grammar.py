@@ -242,8 +242,7 @@ CFG = {
         ],
         [
             TokenType.NOT,
-            "<operand>",
-            "<next_operand>",
+            "<expression>",
         ],
     ],
     "<next_operand>": [
