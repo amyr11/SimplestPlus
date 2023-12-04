@@ -1,4 +1,4 @@
-from tokens import TokenType
+from .tokens import TokenType
 
 CFG = {
     "<program>": [

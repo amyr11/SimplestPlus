@@ -11,8 +11,5 @@ __pycache__/
 .DS_Store
 */.DS_Store
 
-dump/
+test/dump/
 samples/
-
-test.ipynb
-test.py

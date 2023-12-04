@@ -1,5 +1,5 @@
-from tokens import TokenType
-from grammar import CFG
+from .tokens import TokenType
+from .grammar import CFG
 
 
 class GrammarHelper:
@@ -122,15 +122,27 @@ class GrammarHelper:
         return isinstance(item, TokenType)
 
     def display_first_set(self):
-        self._display_set(self.first_set, "FIRST SET")
+        print(self._set_str(self.first_set, "FIRST SET"), end="\n\n")
 
     def display_follow_set(self):
-        self._display_set(self.follow_set, "FOLLOW SET")
+        print(self._set_str(self.follow_set, "FOLLOW SET"), end="\n\n")
 
-    def _display_set(self, s, name):
-        print("-" * len(name))
-        print(name)
-        print("-" * len(name))
+    def display_cfg(self):
+        print(self._cfg_str(), end="\n\n")
+
+    def export_cfg_first_follow(self, path):
+        with open(path, "w") as f:
+            f.write(self._cfg_str())
+            f.write("\n\n")
+            f.write(self._set_str(self.first_set, "FIRST SET"))
+            f.write("\n\n")
+            f.write(self._set_str(self.follow_set, "FOLLOW SET"))
+
+    def _set_str(self, s, name):
+        out = ""
+        out += "-" * len(name) + "\n"
+        out += name + "\n"
+        out += "-" * len(name) + "\n"
         counter = 1
         max_len = len(max(s.keys(), key=(lambda x: len(x))))
         max_counter_text = f"{len(s.keys()) + 1}. "
@@ -139,9 +151,9 @@ class GrammarHelper:
             spaces = " " * (
                 (len(max_counter_text) + max_len) - (len(counter_text) + len(left)) + 2
             )
-            print(f"{counter_text}{left}{spaces}->  ", end="")
+            out += f"{counter_text}{left}{spaces}->  "
             counter += 1
-            print("{", end="")
+            out += "{"
             for i, item in enumerate(
                 sorted(
                     right,
@@ -155,21 +167,23 @@ class GrammarHelper:
                 )
             ):
                 if i > 0:
-                    print(", ", end="")
+                    out += ", "
                 if isinstance(item, TokenType):
-                    print(f"{item.value}", end="")
+                    out += f"{item.value}"
                 else:
                     if item is None:
                         item = "λ"
-                    print(f"{item}", end="")
-            print("}", end="")
-            print()
-        print()
+                    out += f"{item}"
+            out += "}"
+            out += "\n"
 
-    def display_cfg(self):
-        print("---")
-        print("CFG")
-        print("---")
+        return out
+
+    def _cfg_str(self):
+        out = ""
+        out += "---" + "\n"
+        out += "CFG" + "\n"
+        out += "---" + "\n"
         counter = 1
         max_len = len(max(self._cfg.keys(), key=(lambda x: len(x))))
         max_counter_text = f"{len(self._cfg.keys()) + 1}. "
@@ -181,22 +195,17 @@ class GrammarHelper:
                     - (len(counter_text) + len(left))
                     + 2
                 )
-                print(f"{counter_text}{left}{spaces}->  ", end="")
+                out += f"{counter_text}{left}{spaces}->  "
                 counter += 1
                 for i, right_prod_item in enumerate(right_prod):
                     if i > 0:
-                        print(" ", end="")
+                        out += " "
                     if isinstance(right_prod_item, TokenType):
-                        print(f"{right_prod_item.value}", end="")
+                        out += f"{right_prod_item.value}"
                     else:
                         if right_prod_item is None:
                             right_prod_item = "λ"
-                        print(f"{right_prod_item}", end="")
-                print()
-        print()
+                        out += f"{right_prod_item}"
+                out += "\n"
 
-
-grammar_helper = GrammarHelper()
-grammar_helper.display_cfg()
-grammar_helper.display_first_set()
-grammar_helper.display_follow_set()
+        return out
