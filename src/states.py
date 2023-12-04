@@ -476,8 +476,8 @@ s_comment_machine = StateMachine(
     final={353: FinalState(TokenType.S_COMMENT)},
     transitions={
         (0, "#"): 351,
-        (351, "all_word"): 352,
-        (352, "all_word"): 352,
+        (351, "all_s_com"): 352,
+        (352, "all_s_com"): 352,
         (352, "delim_comment"): 353,
     },
 )
