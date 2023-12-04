@@ -406,6 +406,20 @@ CFG = {
             TokenType.DURING,
             "<expression>",
         ],
+        [
+            TokenType.BACK,
+            "<expression>",
+        ],
+        [
+            TokenType.GLOBAL,
+            TokenType.IDENTIFIER,
+        ],
+        [
+            TokenType.STOP,
+        ],
+        [
+            TokenType.SKIP,
+        ],
     ],
     "<frozen_var>": [
         [
