@@ -72,29 +72,40 @@ class GrammarHelper:
                     if production not in right_prod:
                         continue
 
-                    next_item_index = right_prod.index(production) + 1
-                    resolved = False
+                    production_indeces = []
 
-                    while not resolved and next_item_index < len(right_prod):
-                        # Set the next item to the immediate item after the current non-terminal
-                        next_item = right_prod[next_item_index]
+                    for i, item in enumerate(right_prod):
+                        if item == production:
+                            production_indeces.append(i)
 
-                        if self._is_terminal(next_item):
-                            all_follow_set_cache[production].add(next_item)
-                            resolved = True
-                        else:
-                            # Add the first set of the next non-terminal without the null
-                            next_first_set = all_first_set[next_item]
+                    for production_index in production_indeces:
+                        next_item_index = production_index + 1
+                        resolved = False
 
-                            all_follow_set_cache[production].update(
-                                [item for item in next_first_set if item is not None]
-                            )
+                        while not resolved and next_item_index < len(right_prod):
+                            # Set the next item to the immediate item after the current non-terminal
+                            next_item = right_prod[next_item_index]
 
-                            # If the first set of the next non-terminal contains null
-                            if None in next_first_set:
-                                next_item_index += 1
-                            else:
+                            if self._is_terminal(next_item):
+                                all_follow_set_cache[production].add(next_item)
                                 resolved = True
+                            else:
+                                # Add the first set of the next non-terminal without the null
+                                next_first_set = all_first_set[next_item]
+
+                                all_follow_set_cache[production].update(
+                                    [
+                                        item
+                                        for item in next_first_set
+                                        if item is not None
+                                    ]
+                                )
+
+                                # If the first set of the next non-terminal contains null
+                                if None in next_first_set:
+                                    next_item_index += 1
+                                else:
+                                    resolved = True
 
                     if not resolved:
                         # Add to the follow set the follow set of the left production of the current production row
