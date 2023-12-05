@@ -98,6 +98,8 @@ def open_file_dialog():
     file_is_modified = False
     saved_as_file = True
 
+    if text_editor_label.winfo_exists():
+        text_editor_label.destroy()
     print(f"The selected file is {file.name}") 
 
 
@@ -143,6 +145,8 @@ def new_file_dialog():
     saved_as_file = False
     text_editor.delete("1.0", "end")
     clear()
+    if text_editor_label.winfo_exists():
+        text_editor_label.destroy()
     root.title("Simplest+ IDE | New File")
 
 
