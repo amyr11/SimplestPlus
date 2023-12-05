@@ -156,7 +156,10 @@ class GrammarHelper:
                     if i > 0:
                         out += " "
                     if isinstance(right_prod_item, TokenType):
-                        out += f"{right_prod_item.value}"
+                        if right_prod_item.value in ["\\n", "\\t"]:
+                            out += f"\{right_prod_item.value}"
+                        else:
+                            out += f"{right_prod_item.value}"
                     else:
                         if right_prod_item is None:
                             out += "λ"
@@ -187,7 +190,10 @@ class GrammarHelper:
                 if i > 0:
                     out += ", "
                 if isinstance(item, TokenType):
-                    out += f"{item.value}"
+                    if item.value in ["\\n", "\\t"]:
+                        out += f"\{item.value}"
+                    else:
+                        out += f"{item.value}"
                 else:
                     if item is None:
                         item = "λ"
@@ -218,7 +224,10 @@ class GrammarHelper:
                 if i > 0:
                     out += ", "
                 if isinstance(item, TokenType):
-                    out += f"{item.value}"
+                    if item.value in ["\\n", "\\t"]:
+                        out += f"\{item.value}"
+                    else:
+                        out += f"{item.value}"
                 else:
                     if item is None:
                         item = "λ"
