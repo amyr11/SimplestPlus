@@ -13,7 +13,7 @@ def test_lexical(file_path, verbose):
     table.align = "l"
     for token in tokens:
         row, col = token.get_position()
-        table.add_row([token.val_string(), token.token_string(), row, col])
+        table.add_row([token.val_string().replace("\t", "\\t"), token.token_string(), row, col])
     if len(errors) > 0:
         print(f"(Failed) {file_path.split('/')[-1]}")
     else:
