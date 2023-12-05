@@ -29,18 +29,3 @@ empty my_func():
 	'''
 	Multiline comment
 '''
-
-empty my_func():
-	#Comment
-	out("Hello")#Comment
-	#Comment
-
-wiki my_wiki = {
-	"a": 1,# Comment
-	"b": 2, # Comment
-}
-
-wiki my_wiki = {
-	"a": 1,# Comment"b": 2, # Comment,
-	"b": 2
-}
