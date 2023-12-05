@@ -9,49 +9,22 @@ class GrammarHelper:
         self.follow_set = self._follow_set()
 
     def _first_set(self):
-        all_first_set_cache = {}
-
         def get_first_set(production, cfg):
-            all_first_set_cache[production] = set()
+            first_set = set()
 
-            assert (
-                production in cfg.keys()
-            ), f"Production {production} not found in CFG."
+            assert production in cfg.keys(), f"Production {production} not found in CFG."
 
             for right_prod in cfg[production]:
-                index = 0
-                resolved = False
+                first = right_prod[0]
 
-                while not resolved and index < len(right_prod):
-                    first = right_prod[index]
+                if first is None or self._is_terminal(first):
+                    # Terminal
+                    first_set.add(first)
+                else:
+                    # Non-terminal
+                    first_set.update(get_first_set(first, cfg))
 
-                    if first is None or self._is_terminal(first):
-                        # Terminal
-                        all_first_set_cache[production].add(first)
-                        resolved = True
-                    else:
-                        # Non-terminal
-                        if first in all_first_set_cache.keys():
-                            tmp_first_set = all_first_set_cache[first]
-                        else:
-                            tmp_first_set = get_first_set(first, cfg)
-
-                        # Add the first set of the non-terminal without the null
-                        all_first_set_cache[production].update(
-                            [item for item in tmp_first_set if item is not None]
-                        )
-
-                        # If the current first set contains null, get the first set of the next item
-                        if None in tmp_first_set:
-                            index += 1
-                        else:
-                            resolved = True
-
-                # If null is in first set of all items
-                if not resolved:
-                    all_first_set_cache[production].add(None)
-
-            return all_first_set_cache[production]
+            return first_set
 
         all_first_set = {}
 
