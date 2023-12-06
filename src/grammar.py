@@ -1,31 +1,5 @@
 from .tokens import TokenType
 
-# CFG = {
-#     "<program>": [
-#         [
-#             "<expression>",
-#             TokenType.COLON,
-#         ],
-#     ],
-#     "<expression>": [
-#         [
-#             "<operand>",
-#             "<operator>",
-#             "<operand>",
-#         ],
-#     ],
-#     "<operand>": [
-#         [
-#             TokenType.IDENTIFIER,
-#         ],
-#     ],
-#     "<operator>": [
-#         [
-#             TokenType.PLUS,
-#         ],
-#     ],
-# }
-
 CFG = {
     "<program>": [
         [
@@ -83,7 +57,6 @@ CFG = {
     ],
     "<method>": [
         [
-            "<access_specifier>",
             "<return_type>",
             TokenType.IDENTIFIER,
             TokenType.OPAR,
@@ -96,6 +69,7 @@ CFG = {
     ],
     "<code_block>": [
         [
+            "<tab>",
             "<statement>",
             "<next_code_block>",
         ],
@@ -200,14 +174,18 @@ CFG = {
     "<group_global>": [
         [
             "<tab>",
-            "<field>",
-            "<newline>",
+            "<access_specifier>",
+            "<group_global1>",
             "<next_group_global>",
         ],
+    ],
+    "<group_global1>": [
         [
-            "<tab>",
+            "<field>",
+            "<newline>",
+        ],
+        [
             "<method>",
-            "<next_group_global>",
         ],
     ],
     "<next_group_global>": [
@@ -235,13 +213,11 @@ CFG = {
     ],
     "<field>": [
         [
-            "<access_specifier>",
             "<data_type>",
             TokenType.IDENTIFIER,
             "<field_value>",
         ],
         [
-            "<access_specifier>",
             TokenType.FROZEN,
             "<data_type>",
             TokenType.IDENTIFIER,
@@ -374,12 +350,10 @@ CFG = {
     ],
     "<statement>": [
         [
-            "<tab>",
             "<function_call>",
             "<newline>",
         ],
         [
-            "<tab>",
             "<frozen_var>",
             "<data_type>",
             TokenType.IDENTIFIER,
@@ -388,14 +362,12 @@ CFG = {
             "<newline>",
         ],
         [
-            "<tab>",
             "<variable>",
             "<assign_operator>",
             "<value>",
             "<newline>",
         ],
         [
-            "<tab>",
             TokenType.INCASE,
             "<expression>",
             TokenType.COLON,
@@ -405,7 +377,6 @@ CFG = {
             "<instead>",
         ],
         [
-            "<tab>",
             TokenType.GIVEN,
             "<variable>",
             TokenType.COLON,
@@ -414,7 +385,6 @@ CFG = {
             "<default>",
         ],
         [
-            "<tab>",
             TokenType.EVERY,
             "<data_type>",
             TokenType.IDENTIFIER,
@@ -425,7 +395,6 @@ CFG = {
             "<code_block>",
         ],
         [
-            "<tab>",
             TokenType.DURING,
             "<expression>",
             TokenType.COLON,
@@ -433,7 +402,6 @@ CFG = {
             "<code_block>",
         ],
         [
-            "<tab>",
             TokenType.GO,
             TokenType.COLON,
             "<newline>",
@@ -444,24 +412,20 @@ CFG = {
             "<newline>",
         ],
         [
-            "<tab>",
             TokenType.BACK,
             "<expression>",
             "<newline>",
         ],
         [
-            "<tab>",
             TokenType.GLOBAL,
             TokenType.IDENTIFIER,
             "<newline>",
         ],
         [
-            "<tab>",
             TokenType.STOP,
             "<newline>",
         ],
         [
-            "<tab>",
             TokenType.SKIP,
             "<newline>",
         ],

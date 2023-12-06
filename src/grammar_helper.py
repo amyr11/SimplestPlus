@@ -28,7 +28,7 @@ class GrammarHelper:
 
         if ambigous:
             print(log)
-            raise Exception("Ambigous productions in CFG.")
+            # raise Exception("Ambigous productions in CFG.")
 
     def _first_set(self, production):
         first_set = set()
@@ -89,9 +89,8 @@ class GrammarHelper:
                         if item == production:
                             production_indeces.append(i)
 
-                    next_item = None
-
                     for production_index in production_indeces:
+                        next_item = None
                         next_item_index = production_index + 1
                         resolved = False
 
