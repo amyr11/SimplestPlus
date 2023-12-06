@@ -6,40 +6,66 @@ from .grammar import CFG
 class GrammarHelper:
     def __init__(self):
         self.cfg = CFG
-        self.first_set = self._first_set()
-        self.follow_set = self._follow_set()
+        self.check_cfg_ambiguity()
+        self.first_set = self._get_all_first_set()
+        self.follow_set = self._get_all_follow_set()
 
-    def _first_set(self):
-        def get_first_set(production, cfg):
-            first_set = set()
-
-            assert (
-                production in cfg.keys()
-            ), f"Production {production} not found in CFG."
-
-            for right_prod in cfg[production]:
-                first = right_prod[0]
-
-                if first is None or self._is_terminal(first):
-                    # Terminal
-                    first_set.add(first)
+    def check_cfg_ambiguity(self):
+        ambigous = False
+        log = ""
+        counter = 0
+        for left, right in self.cfg.items():
+            seen_first_sets = []
+            for right_prod in right:
+                counter += 1
+                right_prod_first = self._first_set(right_prod[0])
+                if len(seen_first_sets) > 0:
+                    for seen_first in seen_first_sets:
+                        if seen_first == right_prod_first:
+                            ambigous = True
+                            log += f"Ambigous {right_prod[0]} in production no. {counter} ({left})\n"
                 else:
-                    # Non-terminal
-                    first_set.update(get_first_set(first, cfg))
+                    seen_first_sets.append(right_prod_first)
 
+        if ambigous:
+            print(log)
+            raise Exception("Ambigous productions in CFG.")
+
+    def _first_set(self, production):
+        first_set = set()
+
+        if production is None or self._is_terminal(production):
+            first_set.add(production)
             return first_set
 
+        assert (
+            production in self.cfg.keys()
+        ), f"Production {production} not found in CFG."
+
+        for right_prod in self.cfg[production]:
+            first = right_prod[0]
+
+            if first is None or self._is_terminal(first):
+                # Terminal
+                first_set.add(first)
+            else:
+                # Non-terminal
+                first_set.update(self._first_set(first))
+
+        return first_set
+
+    def _get_all_first_set(self):
         all_first_set = {}
 
         for production in self.cfg.keys():
-            all_first_set[production] = get_first_set(production, self.cfg)
+            all_first_set[production] = self._first_set(production)
 
         return all_first_set
 
-    def _follow_set(self):
+    def _get_all_follow_set(self):
         all_follow_set_cache = {}
 
-        def get_follow_set(production, cfg, all_first_set, from_production=None):
+        def _follow_set(production, cfg, all_first_set, from_production=None):
             if from_production is not None:
                 tmp_log = f"Resolving pending {production} from {from_production}:\n"
             else:
@@ -120,7 +146,7 @@ class GrammarHelper:
             if len(pending_follow_sets) > 0:
                 log += f"Resolving pending follow sets from {production}: {pending_follow_sets}\n"
             for pending_production in pending_follow_sets:
-                pending_follow_set, pending_log = get_follow_set(
+                pending_follow_set, pending_log = _follow_set(
                     pending_production, cfg, all_first_set, production
                 )
                 follow_set.update(pending_follow_set)
@@ -137,7 +163,7 @@ class GrammarHelper:
         logs = ""
 
         for production in self.cfg.keys():
-            all_follow_set[production], log = get_follow_set(
+            all_follow_set[production], log = _follow_set(
                 production, self.cfg, self.first_set
             )
             logs += log + "\n\n\n"
@@ -160,7 +186,7 @@ class GrammarHelper:
     def displaycfg(self):
         print(self.cfg_str(), end="\n\n")
 
-    def exportcfg_first_follow(self, path):
+    def export_cfg_first_follow(self, path):
         with open(path, "w") as f:
             f.write(self.cfg_str())
             f.write("\n\n")
