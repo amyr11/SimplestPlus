@@ -1,0 +1,26 @@
+# "This is a comment as well" # yes
+# 'This is a comment as well'
+
+home():# Comment
+
+home(): # Comment
+
+empty my_func():
+#Comment
+	out("Hello")#Comment
+#Comment
+
+empty my_func():
+	#Comment
+	out("Hello")#Comment
+	#Comment
+
+wiki my_wiki = {
+	"a": 1,# Comment
+	"b": 2, # Comment
+}
+
+wiki my_wiki = {
+	"a": 1,# Comment"b": 2, # Comment,
+	"b": 2
+}

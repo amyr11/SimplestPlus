@@ -71,6 +71,8 @@ class Lexer:
                 row, col, cursor = advance(val, row, col, cursor)
                 continue
 
+            if preprocessed_code[cursor - 1] == "\t":
+                col += 3
             token.set_position(row, col)
             row, col, cursor = advance(val, row, col, cursor)
 
@@ -97,7 +99,7 @@ class Lexer:
         for line in self._code.split("\n"):
             i = len(line) - 1
 
-            while i > 0:
+            while i >= 0:
                 if line[i] in [" ", "\t"]:
                     line = line[:i]
                 else:

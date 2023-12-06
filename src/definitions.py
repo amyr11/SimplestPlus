@@ -5,6 +5,9 @@ REGULAR DEFINITIONS
 """
 
 
+from typing import Optional
+
+
 def without(l: list, chars: list[str]):
     return [char for char in l if char not in chars]
 
@@ -48,7 +51,8 @@ definitions["special_char"] = [
     "±",
     "§",
 ]
-definitions["special_char_wo_t"] = without(definitions["special_char"], ['\t'])
+definitions["special_char_wo_t"] = without(definitions["special_char"], ["\t"])
+definitions["special_char_wo_t_sq"] = without(definitions["special_char_wo_t"], ["'"])
 definitions["special_char_wo_dq"] = without(definitions["special_char"], ['"'])
 definitions["special_char_wo_bs"] = without(definitions["special_char"], ["\\"])
 definitions["special_char_wo_sq"] = without(definitions["special_char"], ["'"])
@@ -58,19 +62,17 @@ definitions["all_word"] = [
     *definitions["special_char_wo_dq"],
     " ",
 ]
+definitions["all_s_com"] = [
+    *definitions["all_word"],
+    '"',
+]
 definitions["all_word_wo_bs"] = without(definitions["all_word"], ["\\"])
 definitions["all_mul_com"] = [
-    *definitions["alpha_num"],
-    *definitions["special_char"],
-    " ",
-]
-definitions["all_mul_com_wo_sq"] = [
     *definitions["alpha_num"],
     *definitions["special_char_wo_sq"],
     " ",
 ]
-
-definitions["all_mul_com_wo_sq_s"] = without(definitions["all_mul_com_wo_sq"], [" "])
+definitions["all_mul_com_wo_t"] = without(definitions["all_mul_com"], ["\t"])
 
 # Delims
 definitions["delim_word"] = [" ", "\n", ",", "]", ")", "}", "+", ":", "#", "!", "="]
@@ -113,6 +115,7 @@ definitions["delim_cpar"] = [
     ",",
     "]",
     "}",
+    "#",
 ]
 definitions["delim_obrace"] = [*definitions["all_alpha"], " ", "\n", '"']
 definitions["delim_cbrace"] = [" ", "\n", ",", "}", ")", "']"]
@@ -137,6 +140,7 @@ definitions["delim_comma"] = [
     "{",
     "(",
     ")",
+    "#",
     "\n",
 ]
 definitions["delim_period"] = definitions["all_alpha"]
@@ -177,23 +181,17 @@ definitions["delim_access"] = ["."]
 
 definitions["delim_tab"] = [
     "\t",
-    *definitions["digits"],
-    *definitions["all_digits"],
-    *definitions["all_alpha"],
     *definitions["alpha_num"],
     *definitions["arith_op"],
     *definitions["rel_op"],
-    *definitions["special_char"]
+    *definitions["special_char"],
 ]
 
 definitions["delim_space"] = [
-    *definitions["digits"],
-    *definitions["all_digits"],
-    *definitions["all_alpha"],
     *definitions["alpha_num"],
     *definitions["arith_op"],
     *definitions["rel_op"],
-    *definitions["special_char_wo_t"]
+    *definitions["special_char_wo_t_sq"],
 ]
 
 
@@ -206,7 +204,7 @@ def getDefinitions():
 
 
 class DefTranslator:
-    def __init__(self, definitions: dict[str, list[str]] | None = None):
+    def __init__(self, definitions: Optional[dict[str, list[str]]] = None):
         if definitions is None:
             definitions = getDefinitions()
         self.definitions = definitions

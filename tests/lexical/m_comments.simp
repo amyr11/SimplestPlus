@@ -1,0 +1,31 @@
+'''
+'a'
+'''
+
+'''
+''a''
+'''
+
+'''
+a'a'a'a
+'''
+
+'''
+
+
+a
+
+'''
+
+'''
+# This is a comment
+'''
+
+empty my_func():
+	'''
+	Multiline comment
+	'''
+	out("Hello")#Comment
+	'''
+	Multiline comment
+'''

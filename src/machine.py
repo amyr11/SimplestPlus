@@ -1,5 +1,4 @@
 from typing import Optional
-from uu import Error
 
 from .definitions import DefTranslator
 from .tokens import Token, TokenType
@@ -19,7 +18,7 @@ class StateMachine:
         transitions: dict,
         final: dict,
         fallback: Optional["StateMachine"] = None,
-        translator: DefTranslator | None = None,
+        translator: Optional[DefTranslator] = None,
     ):
         self._name = name
         self._initial = initial
@@ -62,7 +61,7 @@ class StateMachine:
             val += cur_char
 
             if verbose:
-                print(f"Went to state {state}")
+                print(f"With {repr(cur_char)}, went to state {state}")
 
         if state in machine._final.keys():
             final_state = machine._final[state]
