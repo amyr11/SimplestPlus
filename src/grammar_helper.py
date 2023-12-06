@@ -1,3 +1,4 @@
+from operator import itemgetter
 from .tokens import TokenType
 from .grammar import CFG
 
@@ -98,7 +99,7 @@ class GrammarHelper:
 
                         if not resolved and left != from_production:
                             if next_item is None:
-                                log += f"From production {production_row_no}, {production} is the last item, adding {left}'s follow set to {production}'s follow set ({production} -> FOLLOW({left})).\n" 
+                                log += f"From production {production_row_no}, {production} is the last item, adding {left}'s follow set to {production}'s follow set ({production} -> FOLLOW({left})).\n"
                             else:
                                 log += f"From production {production_row_no}, {next_item} is the last item, adding {left}'s follow set to {production}'s follow set ({production} -> FOLLOW({left})).\n"
                             if left in all_follow_set_cache:
@@ -184,7 +185,7 @@ class GrammarHelper:
                 for i, right_prod_item in enumerate(right_prod):
                     if i > 0:
                         out += " "
-                    if isinstance(right_prod_item, TokenType):
+                    if self._is_terminal(right_prod_item):
                         if right_prod_item.value in ["\\n", "\\t"]:
                             out += f"\{right_prod_item.value}"
                         else:
@@ -211,14 +212,14 @@ class GrammarHelper:
                         lambda x: x
                         if isinstance(x, str)
                         else x.value
-                        if isinstance(x, TokenType)
+                        if self._is_terminal(x)
                         else "λ"
                     ),
                 )
             ):
                 if i > 0:
                     out += ", "
-                if isinstance(item, TokenType):
+                if self._is_terminal(itemgetter):
                     if item.value in ["\\n", "\\t"]:
                         out += f"\{item.value}"
                     else:
@@ -245,14 +246,14 @@ class GrammarHelper:
                         lambda x: x
                         if isinstance(x, str)
                         else x.value
-                        if isinstance(x, TokenType)
+                        if self._is_terminal(x)
                         else "λ"
                     ),
                 )
             ):
                 if i > 0:
                     out += ", "
-                if isinstance(item, TokenType):
+                if self._is_terminal(item):
                     if item.value in ["\\n", "\\t"]:
                         out += f"\{item.value}"
                     else:
@@ -288,14 +289,14 @@ class GrammarHelper:
                         lambda x: x
                         if isinstance(x, str)
                         else x.value
-                        if isinstance(x, TokenType)
+                        if self._is_terminal(x)
                         else "λ"
                     ),
                 )
             ):
                 if i > 0:
                     out += ", "
-                if isinstance(item, TokenType):
+                if self._is_terminal(item):
                     out += f"{item.value}"
                 else:
                     if item is None:
@@ -327,7 +328,7 @@ class GrammarHelper:
                 for i, right_prod_item in enumerate(right_prod):
                     if i > 0:
                         out += " "
-                    if isinstance(right_prod_item, TokenType):
+                    if self._is_terminal(right_prod_item):
                         out += f"{right_prod_item.value}"
                     else:
                         if right_prod_item is None:
