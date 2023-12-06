@@ -7,6 +7,7 @@ from src.lexer import Lexer
 file_is_modified = False
 saved_as_file = False
 
+
 def analyze_lexical():
     code = text_editor.get("1.0", "end-1c")
 
@@ -73,24 +74,22 @@ def open_file_dialog():
     global file_is_modified, saved_as_file
     # add prompt to save file if it is modified
     if file_is_modified:
-        choice = messagebox.askyesno("Save File", "The current file is modified. Do you want to save it?")
+        choice = messagebox.askyesno(
+            "Save File", "The current file is modified. Do you want to save it?"
+        )
         print(choice)
         if choice:
             return save_file_dialog()
 
-    file = filedialog.askopenfile(title="Open File", filetypes=[
-                                           ("SimplestPlus files", "*.simp"), ("All files", "*.*")])
-    
+    file = filedialog.askopenfile(
+        title="Open File",
+        filetypes=[("SimplestPlus files", "*.simp"), ("All files", "*.*")],
+    )
+
     # open the file and load the content to the text editor
-    if not file: return
-    if root.state() != "normal" and main_window.state() == "normal":
-        with open(file.name, "r") as file:
-            text_editor.delete("1.0", "end")
-            text_editor.insert("1.0", file.read())
-            root.title(f"Simplest+ IDE | {file.name}")
-        file_is_modified = False
-        saved_as_file = True
-        return init_ide(main_window)
+    if not file:
+        return
+    
     with open(file.name, "r") as file:
         text_editor.delete("1.0", "end")
         text_editor.insert("1.0", file.read())
@@ -100,7 +99,7 @@ def open_file_dialog():
 
     if text_editor_label.winfo_exists():
         text_editor_label.destroy()
-    print(f"The selected file is {file.name}") 
+    print(f"The selected file is {file.name}")
 
 
 def save_file_dialog():
@@ -117,9 +116,13 @@ def save_file_dialog():
 
     # if file is not saved, save it as file
     if not saved_as_file:
-        file = filedialog.asksaveasfile(title="Save File", filetypes=[
-                                             ("SimplestPlus files", "*.simp"), ("All files", "*.*")], defaultextension=".simp")
-        if not file: return
+        file = filedialog.asksaveasfile(
+            title="Save File",
+            filetypes=[("SimplestPlus files", "*.simp"), ("All files", "*.*")],
+            defaultextension=".simp",
+        )
+        if not file:
+            return
         with open(file.name, "w") as file:
             file.write(text_editor.get("1.0", "end-1c"))
             root.title(f"Simplest+ IDE | {file.name}")
@@ -129,18 +132,21 @@ def save_file_dialog():
 
     print(f"The selected file is {file.name}")
 
+
 def new_file_dialog():
     global file_is_modified, saved_as_file
     # add prompt to save file if it is modified
     if file_is_modified:
-        choice = messagebox.askyesnocancel("Save File", "The current file is modified. Do you want to save it?")
+        choice = messagebox.askyesnocancel(
+            "Save File", "The current file is modified. Do you want to save it?"
+        )
         print(choice)
         if choice:
             file_is_modified = False
             return save_file_dialog()
         elif choice is None:
             return
-    
+
     file_is_modified = False
     saved_as_file = False
     text_editor.delete("1.0", "end")
@@ -164,63 +170,6 @@ analysis_button_hover_color = "#295246"  # Analysis button hover color
 analysis_button_text_color = "#3c874a"  # Analysis button text color
 
 dark_button_text_color = "#6E787D"  # Button text color
-
-main_window = ctk.CTk(fg_color=dark_bg)
-main_window.title("Simplest+ IDE")
-main_window.minsize(400, 300)
-
-# Welcome texts
-ctk.CTkLabel(
-    main_window,
-    text="Welcome to Simplest+ IDE!",
-    bg_color=dark_bg,
-    fg_color=dark_fg,
-    text_color=dark_button_text_color,
-    font=("Helvetica", 18, "bold"),
-    anchor="n"
-).place(relx=0.5, rely=0.2, anchor="center")
-
-ctk.CTkLabel(
-    main_window,
-    text="Open or create a new file to get started.",
-    bg_color=dark_bg,
-    fg_color=dark_fg,
-    text_color=dark_button_text_color,
-    font=("Helvetica", 16),
-    anchor="n"
-).place(relx=0.5, rely=0.4, anchor="center")
-
-# New File Button
-ctk.CTkButton(    
-    main_window,
-    text="New File",
-    command=lambda: init_ide(main_window),
-    fg_color=dark_button_bg,
-    corner_radius=20,
-    text_color=dark_button_text_color,
-    hover_color=dark_button_hover_color,
-    font=("Helvetica", 14, "bold"),
-    height=40,
-    width=100
-).place(relx=0.5, rely=0.6,anchor="center")
-
-def init_ide(master: ctk.CTk):
-    master.destroy()
-    root.mainloop()
-
-# Open File Button
-ctk.CTkButton(
-    main_window,
-    text="Open File",
-    command=open_file_dialog,
-    fg_color=dark_button_bg,
-    corner_radius=20,
-    text_color=dark_button_text_color,
-    hover_color=dark_button_hover_color,
-    font=("Helvetica", 14, "bold"),
-    height=40,
-    width=100
-).place(relx=0.5, rely=0.75 ,anchor="center")
 
 # Create the main window
 root = ctk.CTk(fg_color=dark_bg)
@@ -284,7 +233,7 @@ open_button = ctk.CTkButton(
     text_color=dark_button_text_color,
     hover_color=dark_button_hover_color,
     font=("Helvetica", 14, "bold"),
-    width=0
+    width=0,
 )
 open_button.grid(row=0, column=0, padx=10, pady=10, ipadx=0, ipady=5)
 
@@ -297,7 +246,7 @@ save_button = ctk.CTkButton(
     text_color=dark_button_text_color,
     hover_color=dark_button_hover_color,
     font=("Helvetica", 14, "bold"),
-    width=0
+    width=0,
 )
 save_button.grid(row=0, column=1, padx=10, pady=10, ipadx=0, ipady=5)
 
@@ -310,37 +259,50 @@ new_button = ctk.CTkButton(
     text_color=dark_button_text_color,
     hover_color=dark_button_hover_color,
     font=("Helvetica", 14, "bold"),
-    width=0
+    width=0,
 )
 new_button.grid(row=0, column=2, padx=10, pady=10, ipadx=0, ipady=5)
 
 # Create text editor and maximize it to fill the entire row
-text_editor = ctk.CTkTextbox(root, wrap="none", bg_color="#23292F",
-                             fg_color="transparent", font=("FiraCode Nerd Font", 14))
+text_editor = ctk.CTkTextbox(
+    root,
+    wrap="none",
+    bg_color="#23292F",
+    fg_color="transparent",
+    font=("FiraCode Nerd Font", 14),
+)
 text_editor.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
 
-text_editor_label = ctk.CTkLabel(root, text="Open or create a new file to get started.", bg_color=dark_bg,
-                                 fg_color=dark_fg, text_color=dark_button_text_color, font=("Helvetica", 14, "bold"))
+text_editor_label = ctk.CTkLabel(
+    root,
+    text="Open or create a new file to get started.",
+    bg_color=dark_bg,
+    fg_color=dark_fg,
+    text_color=dark_button_text_color,
+    font=("Helvetica", 14, "bold"),
+)
 text_editor_label.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
+
 
 def toggle_file_is_modified():
     global file_is_modified
-    if file_is_modified: return
+    if file_is_modified:
+        return
     file_is_modified = True
     root.title(root.title() + "*")
+
 
 # check if the current file is modified
 text_editor.bind("<Key>", lambda e: toggle_file_is_modified())
 
-text_editor_label = ctk.CTkLabel(root, text="Open or create a new file to get started.", bg_color=dark_bg,
-                                 fg_color=dark_fg, text_color=dark_button_text_color, font=("Helvetica", 14, "bold"))
-text_editor_label.grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
 
 def toggle_file_is_modified():
     global file_is_modified
-    if file_is_modified: return
+    if file_is_modified:
+        return
     file_is_modified = True
     root.title(root.title() + "*")
+
 
 # check if the current file is modified
 text_editor.bind("<Key>", lambda e: toggle_file_is_modified())
@@ -359,14 +321,18 @@ error_frame = ctk.CTkLabel(
     fg_color=dark_fg,
     text_color=dark_button_text_color,
     font=("Helvetica", 14, "bold"),
-    anchor="n"
+    anchor="n",
 )
-error_frame.grid(row=2, column=0, padx=10, pady=(
-    5, 0), columnspan=3, sticky="nsew")
+error_frame.grid(row=2, column=0, padx=10, pady=(5, 0), columnspan=3, sticky="nsew")
 
 # Create console for errors inside the LabelFrame with a different background color
-console = ctk.CTkTextbox(master=error_frame, wrap="none",
-                         bg_color=dark_console_bg, fg_color="transparent", font=("FiraCode Nerd Font", 14))
+console = ctk.CTkTextbox(
+    master=error_frame,
+    wrap="none",
+    bg_color=dark_console_bg,
+    fg_color="transparent",
+    font=("FiraCode Nerd Font", 14),
+)
 console.grid(row=0, column=0, padx=0, pady=(20, 10), sticky="nsew")
 console.configure(state="disabled")  # Make the console read-only
 
@@ -380,17 +346,22 @@ token_table_frame = ctk.CTkLabel(
     font=("Helvetica", 14, "bold"),
     anchor="n",
 )
-token_table_frame.grid(row=1, column=3, padx=10,
-                       pady=(10,70), rowspan=2, sticky="nsew")
+token_table_frame.grid(
+    row=1, column=3, padx=10, pady=(10, 70), rowspan=2, sticky="nsew"
+)
 
 # Create token table inside the LabelFrame
 token_table = ttk.Treeview(
-    token_table_frame, columns=("Lexeme", "Token"), show="headings", style="Treeview",
+    token_table_frame,
+    columns=("Lexeme", "Token"),
+    show="headings",
+    style="Treeview",
 )
 token_table.heading("Lexeme", text="Lexeme")
 token_table.heading("Token", text="Token")
-token_table.grid(row=0, column=0, padx=10, pady=(
-    20, 0), ipadx=10, ipady=5, sticky="nsew")
+token_table.grid(
+    row=0, column=0, padx=10, pady=(20, 0), ipadx=10, ipady=5, sticky="nsew"
+)
 # token_table.pack(fill="both", expand=True)
 
 # Create a frame for the "Clear" and "Run" buttons
@@ -435,7 +406,11 @@ root.grid_columnconfigure(3, weight=0)
 style = ttk.Style()
 style.theme_use("default")
 style.configure(
-    "Treeview", background=dark_bg, foreground="white", fieldbackground=dark_bg, borderwidth=0
+    "Treeview",
+    background=dark_bg,
+    foreground="white",
+    fieldbackground=dark_bg,
+    borderwidth=0,
 )
 style.configure(
     "Treeview.Heading",
@@ -454,5 +429,4 @@ style.map(
 )
 
 # Start the main event loop
-# root.mainloop()
-main_window.mainloop()
+root.mainloop()
