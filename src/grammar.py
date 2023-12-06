@@ -55,18 +55,6 @@ CFG = {
             "<code_block>",
         ],
     ],
-    "<method>": [
-        [
-            "<return_type>",
-            TokenType.IDENTIFIER,
-            TokenType.OPAR,
-            "<parameter>",
-            TokenType.CPAR,
-            TokenType.COLON,
-            "<newline>",
-            "<code_block>",
-        ],
-    ],
     "<code_block>": [
         [
             "<tab>",
@@ -185,7 +173,7 @@ CFG = {
             "<newline>",
         ],
         [
-            "<method>",
+            "<function>",
         ],
     ],
     "<next_group_global>": [
