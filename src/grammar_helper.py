@@ -20,10 +20,9 @@ class GrammarHelper:
                 counter += 1
                 right_prod_first = self._first_set(right_prod[0])
                 if len(seen_first_sets) > 0:
-                    for seen_first in seen_first_sets:
-                        if seen_first == right_prod_first:
-                            ambigous = True
-                            log += f"Ambigous {right_prod[0]} in production no. {counter} ({left})\n"
+                    if right_prod_first in seen_first_sets:
+                        ambigous = True
+                        log += f"Ambigous {right_prod[0]} in production no. {counter} ({left})\n"
                 else:
                     seen_first_sets.append(right_prod_first)
 
