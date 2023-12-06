@@ -5,7 +5,7 @@ from .grammar import CFG
 
 class GrammarHelper:
     def __init__(self):
-        self._cfg = CFG
+        self.cfg = CFG
         self.first_set = self._first_set()
         self.follow_set = self._follow_set()
 
@@ -31,8 +31,8 @@ class GrammarHelper:
 
         all_first_set = {}
 
-        for production in self._cfg.keys():
-            all_first_set[production] = get_first_set(production, self._cfg)
+        for production in self.cfg.keys():
+            all_first_set[production] = get_first_set(production, self.cfg)
 
         return all_first_set
 
@@ -136,9 +136,9 @@ class GrammarHelper:
         all_follow_set = {}
         logs = ""
 
-        for production in self._cfg.keys():
+        for production in self.cfg.keys():
             all_follow_set[production], log = get_follow_set(
-                production, self._cfg, self.first_set
+                production, self.cfg, self.first_set
             )
             logs += log + "\n\n\n"
 
@@ -157,12 +157,12 @@ class GrammarHelper:
     def display_follow_set(self):
         print(self._set_str(self.follow_set, "FOLLOW SET"), end="\n\n")
 
-    def display_cfg(self):
-        print(self._cfg_str(), end="\n\n")
+    def displaycfg(self):
+        print(self.cfg_str(), end="\n\n")
 
-    def export_cfg_first_follow(self, path):
+    def exportcfg_first_follow(self, path):
         with open(path, "w") as f:
-            f.write(self._cfg_str())
+            f.write(self.cfg_str())
             f.write("\n\n")
             f.write(self._set_str(self.first_set, "FIRST SET"))
             f.write("\n\n")
@@ -178,7 +178,7 @@ class GrammarHelper:
         out += "| No. | Production | -> | Right Side |\n"
         out += "| --- | ---------- | -- | ---------- |\n"
         counter = 1
-        for left, right in self._cfg.items():
+        for left, right in self.cfg.items():
             for right_prod in right:
                 out += f"| {counter} | \{left} | -> | "
                 counter += 1
@@ -307,15 +307,15 @@ class GrammarHelper:
 
         return out
 
-    def _cfg_str(self):
+    def cfg_str(self):
         out = ""
         out += "---" + "\n"
         out += "CFG" + "\n"
         out += "---" + "\n"
         counter = 1
-        max_len = len(max(self._cfg.keys(), key=(lambda x: len(x))))
-        max_counter_text = f"{len(self._cfg.keys()) + 1}. "
-        for left, right in self._cfg.items():
+        max_len = len(max(self.cfg.keys(), key=(lambda x: len(x))))
+        max_counter_text = f"{len(self.cfg.keys()) + 1}. "
+        for left, right in self.cfg.items():
             for right_prod in right:
                 counter_text = f"{counter}. "
                 spaces = " " * (
