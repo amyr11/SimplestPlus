@@ -118,7 +118,7 @@ definitions["delim_cpar"] = [
     "#",
 ]
 definitions["delim_obrace"] = [*definitions["all_alpha"], " ", "\n", '"']
-definitions["delim_cbrace"] = [" ", "\n", ",", "}", ")", "']"]
+definitions["delim_cbrace"] = [" ", "\n", ",", "}", ")", "]"]
 definitions["delim_obrack"] = [
     *definitions["alpha_num"],
     " ",
