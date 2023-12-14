@@ -103,10 +103,20 @@ CFG = {
     "<collection_suffix>": [
         [
             TokenType.OBRACK,
+            "<collection_index>",
             TokenType.CBRACK,
         ],
         [
             None,
+        ],
+    ],
+    "<collection_index>": [
+        [TokenType.NUM_LITERAL],
+        [
+            "<variable>",
+        ],
+        [
+            "<function_call>",
         ],
     ],
     "<parameter>": [
@@ -235,67 +245,133 @@ CFG = {
     ],
     "<expression>": [
         [
-            "<operand>",
-            "<next_operand>",
+            "<relational_expression>",
         ],
         [
-            TokenType.NOT,
-            "<expression>",
+            "<logical_expression>",
         ],
     ],
-    "<next_operand>": [
+    "<logical_expression>": [
+        [
+            "<logical_operand1>",
+            "<next_or>",
+        ],
+    ],
+    "<next_or>": [
+        [
+            TokenType.OR,
+            "<logical_operand1>",
+        ],
         [
             None,
         ],
+    ],
+    "<logical_operand1>": [
         [
-            "<operator>",
-            "<expression>",
+            "<logical_operand2>",
+            "<next_and>",
         ],
     ],
-    "<operand>": [
+    "<next_and>": [
+        [TokenType.AND, "<logical_operand2>"],
         [
-            "<function_call>",
+            None,
         ],
-        [
-            TokenType.MINUS,
-            "<numeric>",
-        ],
-        [
-            TokenType.OPAR,
-            "<expression>",
-            TokenType.CPAR,
-        ],
-        [
-            "<variable>",
-        ],
-        [
-            "<numeric>",
-        ],
-        [
-            TokenType.WORD_LITERAL,
-        ],
+    ],
+    "<logical_operand2>": [
+        [TokenType.NOT, "<logical_operand2>"],
         [
             TokenType.YES,
         ],
         [
             TokenType.NO,
         ],
-    ],
-    "<numeric>": [
         [
-            TokenType.NUM_LITERAL,
+            "<relational_expression>",
         ],
         [
-            TokenType.DECI_LITERAL,
+            TokenType.OPAR,
+            "<logical_expression>",
+            TokenType.CPAR,
+        ],
+        [
+            "<variable>",
+        ],
+        [
+            "<function_call>",
         ],
     ],
-    "<operator>": [
+    "<relational_expression>": [
+        [
+            "<arithmetic_expression>",
+            "<relational_operand>",
+        ],
+    ],
+    "<relational_operand>": [
+        ["<relational_operator>", "<arithmetic_expression>"],
+        [
+            None,
+        ],
+    ],
+    "<relational_operator>": [
+        [
+            TokenType.LESS_THAN,
+        ],
+        [
+            TokenType.LESS_THAN_EQUAL,
+        ],
+        [
+            TokenType.GREATER_THAN,
+        ],
+        [
+            TokenType.GREATER_THAN_EQUAL,
+        ],
+        [
+            TokenType.NOT_EQUAL,
+        ],
+        [
+            TokenType.EQUAL_TO,
+        ],
+    ],
+    "<arithmetic_expression>": [
+        [
+            "<term>",
+            "<next_term>",
+        ],
+    ],
+    "<next_term>": [
+        [
+            "<term_operator>",
+            "<term>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<term_operator>": [
         [
             TokenType.PLUS,
         ],
         [
             TokenType.MINUS,
         ],
+    ],
+    "<term>": [
+        [
+            "<factor>",
+            "<next_factor>",
+        ],
+    ],
+    "<next_factor>": [
+        [
+            "<factor_operator>",
+            "<factor>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<factor_operator>": [
         [
             TokenType.MULTIPLY,
         ],
@@ -308,32 +384,48 @@ CFG = {
         [
             TokenType.MODULO,
         ],
+    ],
+    "<factor>": [
+        [
+            "<operand>",
+            "<exponentiation>",
+        ],
+    ],
+    "<exponentiation>": [
         [
             TokenType.POWER,
+            "<factor>",
         ],
         [
-            TokenType.GREATER_THAN,
+            None,
+        ],
+    ],
+    "<operand>": [
+        [
+            "<numeric>",
         ],
         [
-            TokenType.LESS_THAN,
+            TokenType.MINUS,
+            "<numeric>",
         ],
         [
-            TokenType.GREATER_THAN_EQUAL,
+            "<variable>",
         ],
         [
-            TokenType.LESS_THAN_EQUAL,
+            "<function_call>",
         ],
         [
-            TokenType.EQUAL_TO,
+            TokenType.OPAR,
+            "<arithmetic_expression>",
+            TokenType.CPAR,
+        ],
+    ],
+    "<numeric>": [
+        [
+            TokenType.NUM_LITERAL,
         ],
         [
-            TokenType.NOT_EQUAL,
-        ],
-        [
-            TokenType.AND,
-        ],
-        [
-            TokenType.OR,
+            TokenType.DECI_LITERAL,
         ],
     ],
     "<statement>": [
@@ -549,6 +641,7 @@ CFG = {
     "<normal_variable>": [
         [
             TokenType.IDENTIFIER,
+            "<collection_suffix>",
             "<next_variable>",
         ],
     ],
@@ -613,7 +706,7 @@ CFG = {
         [
             TokenType.OBRACE,
             "<opt_newline_tab>",
-            "<key>",
+            TokenType.WORD_LITERAL,
             TokenType.COLON,
             "<value>",
             "<next_pair>",
@@ -621,19 +714,11 @@ CFG = {
             TokenType.CBRACE,
         ],
     ],
-    "<key>": [
-        [
-            TokenType.WORD_LITERAL,
-        ],
-        [
-            "<variable>",
-        ],
-    ],
     "<next_pair>": [
         [
             TokenType.COMMA,
             "<opt_newline_tab>",
-            "<key>",
+            TokenType.WORD_LITERAL,
             TokenType.COLON,
             "<expression>",
             "<next_pair>",

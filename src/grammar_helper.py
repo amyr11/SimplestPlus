@@ -243,7 +243,7 @@ class GrammarHelper:
             ):
                 if i > 0:
                     out += ", "
-                if self._is_terminal(itemgetter):
+                if self._is_terminal(item):
                     if item.value in ["\\n", "\\t"]:
                         out += f"\{item.value}"
                     else:

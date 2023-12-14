@@ -76,7 +76,7 @@ definitions["all_mul_com_wo_t"] = without(definitions["all_mul_com"], ["\t"])
 
 # Delims
 definitions["delim_word"] = [" ", "\n", ",", "]", ")", "}", "+", ":", "#", "!", "="]
-definitions["delim_dtype"] = [" ", "("]
+definitions["delim_dtype"] = [" ", "(", "["]
 definitions["delim_break"] = [" ", "\n"]
 definitions["delim_value"] = [" ", "\n", ")", "]", "}", ",", ":"]
 definitions["delim_indent"] = [

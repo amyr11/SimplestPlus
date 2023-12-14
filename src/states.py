@@ -78,7 +78,7 @@ reserved_words_machine = StateMachine(
         (17, "i"): 18,
         (18, "c"): 19,
         (19, "e"): 20,
-        (20, "delim_reserve"): 21,
+        (20, "delim_dtype"): 21,
         (0, "d"): 22,
         (22, "e"): 23,
         (23, "c"): 24,
