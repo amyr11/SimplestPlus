@@ -1,0 +1,90 @@
+'''
+Sample Simplest+ Program
+'''
+
+
+# Sample parent group definition
+group Person:
+	visible word name
+	visible num age
+
+	initialize(word name, num age):
+		self.name = name
+		self.age = age
+		self.greet()
+
+	visible empty greet():
+		out("Hi! I'm " + self.name + ", nice to meet you!")
+
+	visible empty display_info():
+		out("Name: " + self.name + " Age: " + word(self.age))
+
+
+# Sample child group definition
+group Student inherits Person:
+	hidden num passing = 70
+	hidden num grade
+	visible word remarks
+	
+	initialize(word name, num age, num grade):
+		parent.initialize(name, age)
+		self.grade = grade
+		self.remarks = self.get_remarks()
+
+	visible empty display_info():
+		out("Name: " + self.name + "Age: " + word(self.age) + " Grade: " + word(self.grade))
+
+	hidden word get_remarks():
+		incase self.grade < self.passing:
+			back "Failed"
+		instead:
+			back "Passed"
+
+# Main program
+home():
+	# Variables
+	num x = 5
+	deci y = 2.5
+	choice z = yes
+	frozen choice a = no
+	Student s1 = Student()
+
+	# Arithmetic expressions
+	deci result_add = x + y
+	deci result_sub = x - y
+	deci result_mul = x * y
+	deci result_div = x / y
+	deci combination=(x+1)/((1-2)*3**2**(y+-1))
+
+	# Relational
+	choice relational = 1<=2
+
+	# Incase instead
+	incase result_add > result_sub:
+		out("Addition is greater than subtraction")
+	instead:
+		out("Subtraction is greater than or equal to addition")
+
+	# Every loop
+	every num i in range(5):
+		out("Factorial of " + word(i) + " is " + word(factorial(i)))
+
+	# Collection
+	word fruits[] = ["apple", "banana", "cherry"]
+
+	# Wiki
+	wiki student_data = {"name": "John", "age": 20, "grade": "A"}
+
+	# Group instantiation
+	Student student = new Student(student_data["name"], student_data["age"], student_data["grade"])
+
+	# Printing values using group method
+	student.display_info()
+
+
+# Function to calculate the factorial of a number
+num factorial(num n):
+	incase n == 0 or n == 1:
+		back 1
+	instead:
+		back n * factorial(n - 1)
