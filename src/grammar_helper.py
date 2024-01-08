@@ -1,4 +1,3 @@
-from operator import itemgetter
 from .tokens import TokenType
 from .grammar import CFG
 
