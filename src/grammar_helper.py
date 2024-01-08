@@ -30,7 +30,7 @@ class GrammarHelper:
                 if len(seen_first_sets) > 0:
                     if len(set.intersection(right_prod_first, seen_first_sets)) >= 1:
                         ambigous = True
-                        log += f"Ambigous {right_prod[0]} in production no. {counter} ({left})\n"
+                        log += f"Ambiguity found in production no. {counter} ({left})\n"
                 else:
                     seen_first_sets.update(right_prod_first)
 
