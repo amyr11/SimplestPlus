@@ -17,8 +17,16 @@ class GrammarHelper:
             seen_first_sets = set()
             for right_prod in right:
                 counter += 1
-                right_prod_first = self._first_set(right_prod[0])
-                right_prod_first = {x for x in right_prod_first if x is not None}
+                right_prod_first = set()
+                i = 0
+                while i < len(right_prod):
+                    temp_first = self._first_set(right_prod[i])
+                    right_prod_first.update(temp_first)
+                    right_prod_first = {x for x in right_prod_first if x is not None}
+                    if None in temp_first:
+                        i += 1
+                    else:
+                        break
                 if len(seen_first_sets) > 0:
                     if len(set.intersection(right_prod_first, seen_first_sets)) >= 1:
                         ambigous = True
