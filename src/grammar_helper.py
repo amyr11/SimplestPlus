@@ -15,16 +15,17 @@ class GrammarHelper:
         log = ""
         counter = 0
         for left, right in self.cfg.items():
-            seen_first_sets = []
+            seen_first_sets = set()
             for right_prod in right:
                 counter += 1
                 right_prod_first = self._first_set(right_prod[0])
+                right_prod_first = {x for x in right_prod_first if x is not None}
                 if len(seen_first_sets) > 0:
-                    if right_prod_first in seen_first_sets:
+                    if len(set.intersection(right_prod_first, seen_first_sets)) >= 1:
                         ambigous = True
                         log += f"Ambigous {right_prod[0]} in production no. {counter} ({left})\n"
                 else:
-                    seen_first_sets.append(right_prod_first)
+                    seen_first_sets.update(right_prod_first)
 
         if ambigous:
             print(log)
