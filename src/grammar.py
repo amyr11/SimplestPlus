@@ -728,7 +728,10 @@ CFG = {
             "<func_suffix>",
             "<splice_suffix>",
             "<func_or_var_tail>",
-        ]
+        ],
+        [
+            "<collection_func>",
+        ],
     ],
     "<func_or_var_tail>": [
         [
@@ -786,6 +789,8 @@ CFG = {
             "<argument>",
             TokenType.CPAR,
         ],
+    ],
+    "<collection_func>": [
         [
             TokenType.COL_ADD,
             TokenType.OPAR,
