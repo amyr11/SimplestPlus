@@ -1,0 +1,5 @@
+id.my_var[0]
+my_var[1:2]
+
+my_func()[0]
+id.my_func()[1:2]
