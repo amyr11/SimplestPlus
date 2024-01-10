@@ -13,26 +13,35 @@ class GrammarHelper:
         ambigous = False
         log = ""
         counter = 0
+
         for left, right in self.cfg.items():
             seen_first_sets = set()
+
             for right_prod in right:
                 counter += 1
                 right_prod_first = set()
                 i = 0
+
                 while i < len(right_prod):
-                    temp_first = self._first_set(right_prod[i])
-                    right_prod_first.update(temp_first)
+                    current_item = right_prod[i]
+                    current_item_first = self._first_set(current_item)
+                    right_prod_first.update(current_item_first)
                     right_prod_first = {x for x in right_prod_first if x is not None}
-                    if None in temp_first:
+
+                    if len(seen_first_sets) > 0:
+                        if (
+                            len(set.intersection(current_item_first, seen_first_sets))
+                            > 0
+                        ):
+                            ambigous = True
+                            log += f"Ambiguity found in production no. {counter} ({left})\n"
+
+                    if None in current_item_first:
                         i += 1
                     else:
                         break
-                if len(seen_first_sets) > 0:
-                    if len(set.intersection(right_prod_first, seen_first_sets)) >= 1:
-                        ambigous = True
-                        log += f"Ambiguity found in production no. {counter} ({left})\n"
-                else:
-                    seen_first_sets.update(right_prod_first)
+
+                seen_first_sets.update(right_prod_first)
 
         if ambigous:
             print(log)
@@ -151,6 +160,7 @@ class GrammarHelper:
             # Find the follow set of the pending productions
             if len(pending_follow_sets) > 0:
                 log += f"Resolving pending follow sets from {production}: {pending_follow_sets}\n"
+
             for pending_production in pending_follow_sets:
                 pending_follow_set, pending_log = _follow_set(
                     pending_production, cfg, all_first_set, production
