@@ -14,6 +14,9 @@ class TokenType(Enum):
     BACK = "back"
     BLANK = "blank"
     CHOICE = "choice"
+    COL_ADD = "add"
+    COL_DELETE = "delete"
+    COL_DELETE_AT = "deleteAt"
     DECI = "deci"
     DEFAULT = "default"
     DURING = "during"
@@ -99,6 +102,9 @@ class TokenType(Enum):
         BACK,
         BLANK,
         CHOICE,
+        COL_ADD,
+        COL_DELETE,
+        COL_DELETE_AT,
         DECI,
         DEFAULT,
         DURING,
