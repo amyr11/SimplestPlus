@@ -15,37 +15,29 @@ CFG = {
     ],
     "<global>": [
         [
-            "<frozen_var>",
+            "<global1>",
+            "<next_global>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<global1>": [
+        [
+            TokenType.FROZEN,
             "<data_type>",
             TokenType.IDENTIFIER,
             TokenType.ASSIGN,
             "<value>",
             "<newline>",
-            "<next_global>",
         ],
         [
-            "<function>",
-            "<next_global>",
+            "<data_type>",
+            TokenType.IDENTIFIER,
+            "<func_or_var_init>",
         ],
         [
-            "<group>",
-            "<next_global>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<next_global>": [
-        [
-            "<global>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<function>": [
-        [
-            "<return_type>",
+            TokenType.EMPTY,
             TokenType.IDENTIFIER,
             TokenType.OPAR,
             "<parameter>",
@@ -53,6 +45,29 @@ CFG = {
             TokenType.COLON,
             "<newline>",
             "<code_block>",
+        ],
+        [
+            "<group>",
+        ],
+    ],
+    "<func_or_var_init>": [
+        [
+            TokenType.ASSIGN,
+            "<value>",
+            "<newline>",
+        ],
+        [
+            TokenType.OPAR,
+            "<parameter>",
+            TokenType.CPAR,
+            TokenType.COLON,
+            "<newline>",
+            "<code_block>",
+        ],
+    ],
+    "<next_global>": [
+        [
+            "<global>",
         ],
     ],
     "<code_block>": [
@@ -113,10 +128,7 @@ CFG = {
     "<collection_index>": [
         [TokenType.NUM_LITERAL],
         [
-            "<variable>",
-        ],
-        [
-            "<function_call>",
+            "<func_or_var>",
         ],
     ],
     "<parameter>": [
@@ -159,19 +171,31 @@ CFG = {
     ],
     "<group_body>": [
         [
+            "<tab>",
+            "<group_body1>",
+        ],
+    ],
+    "<group_body1>": [
+        [
             "<group_global>",
+            "<optional_initializer>",
+        ],
+        [
+            "<initializer>",
+            "<next_group_global>",
+        ],
+    ],
+    "<optional_initializer>": [
+        [
             "<initializer>",
             "<next_group_global>",
         ],
         [
-            "<next_group_global>",
-            "<initializer>",
-            "<group_global>",
+            None,
         ],
     ],
     "<group_global>": [
         [
-            "<tab>",
             "<access_specifier>",
             "<group_global1>",
             "<next_group_global>",
@@ -179,11 +203,30 @@ CFG = {
     ],
     "<group_global1>": [
         [
-            "<field>",
-            "<newline>",
+            "<data_type>",
+            TokenType.IDENTIFIER,
+            "<func_or_field_init>",
         ],
         [
-            "<function>",
+            TokenType.FROZEN,
+            "<data_type>",
+            TokenType.IDENTIFIER,
+            TokenType.ASSIGN,
+            "<value>",
+            "<newline>",
+        ],
+    ],
+    "<func_or_field_init>": [
+        [
+            "<field_value>",
+        ],
+        [
+            TokenType.OPAR,
+            "<parameter>",
+            TokenType.CPAR,
+            TokenType.COLON,
+            "<newline>",
+            "<code_block>",
         ],
     ],
     "<next_group_global>": [
@@ -196,7 +239,6 @@ CFG = {
     ],
     "<initializer>": [
         [
-            "<tab>",
             TokenType.INITIALIZE,
             TokenType.OPAR,
             "<parameter>",
@@ -205,28 +247,12 @@ CFG = {
             "<newline>",
             "<code_block>",
         ],
-        [
-            None,
-        ],
-    ],
-    "<field>": [
-        [
-            "<data_type>",
-            TokenType.IDENTIFIER,
-            "<field_value>",
-        ],
-        [
-            TokenType.FROZEN,
-            "<data_type>",
-            TokenType.IDENTIFIER,
-            TokenType.ASSIGN,
-            "<value>",
-        ],
     ],
     "<field_value>": [
         [
             TokenType.ASSIGN,
             "<value>",
+            "<newline>",
         ],
         [
             None,
@@ -245,41 +271,35 @@ CFG = {
     ],
     "<expression>": [
         [
-            "<relational_expression>",
-        ],
-        [
-            "<logical_expression>",
+            "<condition>",
         ],
     ],
-    "<logical_expression>": [
-        [
-            "<logical_operand1>",
-            "<next_or>",
-        ],
+    "<condition>": [
+        ["<condition1>", "<next_or>"],
     ],
     "<next_or>": [
         [
             TokenType.OR,
-            "<logical_operand1>",
+            "<condition>",
         ],
         [
             None,
         ],
     ],
-    "<logical_operand1>": [
+    "<condition1>": [
         [
-            "<logical_operand2>",
+            "<condition_operand>",
             "<next_and>",
         ],
     ],
     "<next_and>": [
-        [TokenType.AND, "<logical_operand2>"],
+        [TokenType.AND, "<condition1>"],
         [
             None,
         ],
     ],
-    "<logical_operand2>": [
-        [TokenType.NOT, "<logical_operand2>"],
+    "<condition_operand>": [
+        [TokenType.NOT, "<condition_operand>"],
         [
             TokenType.YES,
         ],
@@ -287,33 +307,30 @@ CFG = {
             TokenType.NO,
         ],
         [
-            "<relational_expression>",
+            "<comparison>",
         ],
         [
             TokenType.OPAR,
-            "<logical_expression>",
+            "<condition>",
             TokenType.CPAR,
         ],
+    ],
+    "<comparison>": [
         [
-            "<variable>",
-        ],
-        [
-            "<function_call>",
+            "<sum>",
+            "<comparison_operand>",
         ],
     ],
-    "<relational_expression>": [
+    "<comparison_operand>": [
         [
-            "<arithmetic_expression>",
-            "<relational_operand>",
+            "<comparison_operator>",
+            "<sum>",
         ],
-    ],
-    "<relational_operand>": [
-        ["<relational_operator>", "<arithmetic_expression>"],
         [
             None,
         ],
     ],
-    "<relational_operator>": [
+    "<comparison_operator>": [
         [
             TokenType.LESS_THAN,
         ],
@@ -333,17 +350,22 @@ CFG = {
             TokenType.EQUAL_TO,
         ],
     ],
-    "<arithmetic_expression>": [
+    "<sum>": [
         [
-            "<term>",
+            "<sum_operand>",
             "<next_term>",
         ],
     ],
-    "<next_term>": [
+    "<sum_operand>": [
         [
-            "<term_operator>",
             "<term>",
         ],
+        [
+            TokenType.WORD_LITERAL,
+        ],
+    ],
+    "<next_term>": [
+        ["<term_operator>", "<sum>"],
         [
             None,
         ],
@@ -363,10 +385,7 @@ CFG = {
         ],
     ],
     "<next_factor>": [
-        [
-            "<factor_operator>",
-            "<factor>",
-        ],
+        ["<factor_operator>", "<term>"],
         [
             None,
         ],
@@ -392,10 +411,7 @@ CFG = {
         ],
     ],
     "<exponentiation>": [
-        [
-            TokenType.POWER,
-            "<factor>",
-        ],
+        [TokenType.POWER, "<factor>"],
         [
             None,
         ],
@@ -409,10 +425,7 @@ CFG = {
             "<numeric>",
         ],
         [
-            "<variable>",
-        ],
-        [
-            "<function_call>",
+            "<func_or_var>",
         ],
         [
             TokenType.OPAR,
@@ -430,11 +443,10 @@ CFG = {
     ],
     "<statement>": [
         [
-            "<function_call>",
-            "<newline>",
+            "<assign_stmt>",
         ],
         [
-            "<frozen_var>",
+            TokenType.FROZEN,
             "<data_type>",
             TokenType.IDENTIFIER,
             TokenType.ASSIGN,
@@ -442,8 +454,9 @@ CFG = {
             "<newline>",
         ],
         [
-            "<variable>",
-            "<assign_operator>",
+            "<data_type>",
+            TokenType.IDENTIFIER,
+            TokenType.ASSIGN,
             "<value>",
             "<newline>",
         ],
@@ -458,7 +471,7 @@ CFG = {
         ],
         [
             TokenType.GIVEN,
-            "<variable>",
+            "<func_or_var>",
             TokenType.COLON,
             "<newline>",
             "<event>",
@@ -510,12 +523,83 @@ CFG = {
             "<newline>",
         ],
     ],
-    "<frozen_var>": [
+    "<assign_stmt>": [
         [
-            TokenType.FROZEN,
+            "<object>",
+            "<assign_stmt1>",
+        ],
+        [
+            "<assign_stmt2>",
+        ],
+    ],
+    "<assign_stmt1>": [
+        [
+            TokenType.PERIOD,
+            "<assign_stmt2>",
+        ],
+        [
+            "<assign_stmt3>",
+        ],
+    ],
+    "<assign_stmt2>": [
+        [
+            TokenType.IDENTIFIER,
+            "<assign_stmt1>",
+        ],
+    ],
+    "<assign_stmt3>": [
+        [
+            TokenType.OBRACK,
+            TokenType.NUM_LITERAL,
+            "<assign_stmt4>",
+            TokenType.CBRACK,
+            "<assign_stmt5>",
+        ],
+        [
+            "<assign_stmt6>",
+        ],
+    ],
+    "<assign_stmt4>": [
+        [
+            TokenType.COLON,
+            TokenType.NUM_LITERAL,
         ],
         [
             None,
+        ],
+    ],
+    "<assign_stmt5>": [
+        [TokenType.PERIOD, TokenType.IDENTIFIER, "<assign_stmt8>"],
+        [
+            "<assign_operator>",
+            "<value>",
+            "<newline>",
+        ],
+    ],
+    "<assign_stmt6>": [
+        [
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+            "<assign_stmt7>",
+        ],
+    ],
+    "<assign_stmt7>": [
+        [
+            TokenType.PERIOD,
+            TokenType.IDENTIFIER,
+            "<assign_stmt6>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<assign_stmt8>": [
+        [
+            "<assign_stmt5>",
+        ],
+        [
+            "<assign_stmt6>",
         ],
     ],
     "<assign_operator>": [
@@ -623,33 +707,119 @@ CFG = {
             "<collection_value>",
         ],
         [
-            "<variable>",
-        ],
-        [
-            "<function_call>",
+            "<func_or_var>",
         ],
     ],
-    "<variable>": [
+    "<func_or_var>": [
         [
-            "<normal_variable>",
+            "<normal_func_or_var>",
+        ],
+        [
+            "<predefined_func>",
         ],
         [
             "<object>",
-            "<next_variable>",
+            "<func_or_var_tail>",
         ],
     ],
-    "<normal_variable>": [
+    "<normal_func_or_var>": [
         [
             TokenType.IDENTIFIER,
-            "<collection_suffix>",
-            "<next_variable>",
-        ],
+            "<func_suffix>",
+            "<splice_suffix>",
+            "<func_or_var_tail>",
+        ]
     ],
-    "<next_variable>": [
+    "<func_or_var_tail>": [
         [
             TokenType.PERIOD,
-            "<normal_variable>",
-            "<next_variable>",
+            "<normal_func_or_var>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<func_suffix>": [
+        [
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            None,
+        ],
+    ],
+    "<predefined_func>": [
+        [
+            TokenType.RANGE,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            TokenType.INP,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            TokenType.OUT,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            TokenType.WORD,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            TokenType.NUM,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            TokenType.DECI,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            TokenType.COL_ADD,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            TokenType.COL_DELETE,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            TokenType.COL_DELETE_AT,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+    ],
+    "<splice_suffix>": [
+        [
+            TokenType.OBRACK,
+            TokenType.NUM_LITERAL,
+            "<splice>",
+            TokenType.CBRACK,
+        ],
+        [
+            None,
+        ],
+    ],
+    "<splice>": [
+        [
+            TokenType.COLON,
+            TokenType.NUM_LITERAL,
         ],
         [
             None,
@@ -725,63 +895,6 @@ CFG = {
         ],
         [
             None,
-        ],
-    ],
-    "<function_call>": [
-        [
-            TokenType.IDENTIFIER,
-            TokenType.OPAR,
-            "<argument>",
-            TokenType.CPAR,
-        ],
-        [
-            "<variable>",
-            TokenType.PERIOD,
-            "<function_call>",
-        ],
-        [
-            "<object>",
-            TokenType.PERIOD,
-            TokenType.INITIALIZE,
-            TokenType.OPAR,
-            "<argument>",
-            TokenType.CPAR,
-        ],
-        [
-            TokenType.RANGE,
-            TokenType.OPAR,
-            "<argument>",
-            TokenType.CPAR,
-        ],
-        [
-            TokenType.INP,
-            TokenType.OPAR,
-            "<argument>",
-            TokenType.CPAR,
-        ],
-        [
-            TokenType.OUT,
-            TokenType.OPAR,
-            "<argument>",
-            TokenType.CPAR,
-        ],
-        [
-            TokenType.WORD,
-            TokenType.OPAR,
-            "<argument>",
-            TokenType.CPAR,
-        ],
-        [
-            TokenType.NUM,
-            TokenType.OPAR,
-            "<argument>",
-            TokenType.CPAR,
-        ],
-        [
-            TokenType.DECI,
-            TokenType.OPAR,
-            "<argument>",
-            TokenType.CPAR,
         ],
     ],
     "<argument>": [
