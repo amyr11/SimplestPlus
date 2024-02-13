@@ -80,8 +80,10 @@ class GrammarHelper:
 
     def _get_all_follow_set(self):
         all_follow_set_cache = {}
+        processing_follow_set_cache = []
 
         def _follow_set(production, cfg, all_first_set, from_production=None):
+            processing_follow_set_cache.append(production)
             if from_production is not None:
                 tmp_log = f"Resolving pending {production} from {from_production}:\n"
             else:
@@ -162,6 +164,10 @@ class GrammarHelper:
                 log += f"Resolving pending follow sets from {production}: {pending_follow_sets}\n"
 
             for pending_production in pending_follow_sets:
+                # If the pending production is the one currently being processed, skip it
+                if pending_production in processing_follow_set_cache:
+                    continue
+
                 pending_follow_set, pending_log = _follow_set(
                     pending_production, cfg, all_first_set, production
                 )
@@ -171,6 +177,7 @@ class GrammarHelper:
 
             # Add the follow set of the current production to cache
             all_follow_set_cache[production] = follow_set
+            processing_follow_set_cache.remove(production)
             log += f"Added {production}'s follow set {follow_set} to cache.\n"
 
             return follow_set, log
