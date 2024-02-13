@@ -212,6 +212,7 @@ CFG = {
         [
             TokenType.BACK,
             "<expression>",
+            "<newline>",
         ],
     ],
     "<statements>": [
@@ -496,7 +497,6 @@ CFG = {
     ],
     "<next_event>": [
         [
-            "<newline>",
             "<event>",
         ],
         [
