@@ -15,25 +15,22 @@ CFG = {
     ],
     "<global>": [
         [
-            "<global1>",
-            "<next_global>",
-        ],
-    ],
-    "<global1>": [
-        [
             TokenType.FROZEN,
             "<fr_primitive_or_object>",
             "<newline>",
+            "<next_global>",
         ],
         [
             "<data_type>",
             TokenType.IDENTIFIER,
             "<init_or_func>",
+            "<next_global>",
         ],
         [
             TokenType.IDENTIFIER,
             TokenType.IDENTIFIER,
             "<init_or_func>",
+            "<next_global>",
         ],
         [
             TokenType.EMPTY,
@@ -44,6 +41,7 @@ CFG = {
             TokenType.COLON,
             "<newline>",
             "<code_block>",
+            "<next_global>",
         ],
         [
             TokenType.GROUP,
@@ -52,6 +50,7 @@ CFG = {
             TokenType.COLON,
             "<newline>",
             "<group_body>",
+            "<next_global>",
         ],
         [
             None,
@@ -59,7 +58,7 @@ CFG = {
     ],
     "<next_global>": [
         [
-            TokenType.GLOBAL,
+            "<global>",
         ],
         [
             None,
@@ -383,8 +382,7 @@ CFG = {
             TokenType.COLON,
             "<newline>",
             "<code_block>",
-            "<unless>",
-            "<instead>",
+            "<unless_instead>",
         ],
         [
             TokenType.GIVEN,
@@ -423,38 +421,39 @@ CFG = {
             "<code_block>",
         ],
     ],
-    "<unless>": [
+    "<unless_instead>": [
         [
             "<tab>",
+            "<block_stmt_or_unless_instead>",
+        ],
+    ],
+    "<block_stmt_or_unless_instead>": [
+        [
+            "<unless>",
+            "<block_stmt_or_unless_instead>",
+        ],
+        [
+            "<instead>",
+        ],
+        [
+            "<block_definition>",
+        ],
+    ],
+    "<unless>": [
+        [
             TokenType.UNLESS,
             "<expression>",
             TokenType.COLON,
             "<newline>",
             "<code_block>",
-            "<next_unless>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<next_unless>": [
-        [
-            "<unless>",
-        ],
-        [
-            None,
         ],
     ],
     "<instead>": [
         [
-            "<tab>",
             TokenType.INSTEAD,
             TokenType.COLON,
             "<newline>",
             "<code_block>",
-        ],
-        [
-            None,
         ],
     ],
     "<given_value>": [
@@ -506,13 +505,18 @@ CFG = {
     "<default>": [
         [
             "<tab>",
+            "<block_stmt_or_default>",
+        ],
+    ],
+    "<block_stmt_or_default>": [
+        [
             TokenType.DEFAULT,
             TokenType.COLON,
             "<newline>",
             "<code_block>",
         ],
         [
-            None,
+            "<block_definition>",
         ],
     ],
     "<opt_pair>": [
