@@ -92,7 +92,7 @@ CFG = {
     "<group_body>": [
         [
             "<tab>",
-            "<initialier_or_group_global>",
+            "<initializer_or_group_global>",
         ],
     ],
     "<initializer_or_group_global>": [
@@ -313,7 +313,7 @@ CFG = {
         ],
     ],
     "<init_assign_call>": [
-        [TokenType.IDENTIFIER, "<assign_operator>", "<value>,"],
+        [TokenType.IDENTIFIER, "<assign_operator>", "<value>"],
         [
             "<assign_call>",
         ],
