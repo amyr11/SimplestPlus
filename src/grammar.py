@@ -18,23 +18,22 @@ CFG = {
             "<global1>",
             "<next_global>",
         ],
-        [
-            None,
-        ],
     ],
     "<global1>": [
         [
             TokenType.FROZEN,
-            "<data_type>",
-            TokenType.IDENTIFIER,
-            TokenType.ASSIGN,
-            "<value>",
+            "<fr_primitive_or_object>",
             "<newline>",
         ],
         [
-            "<data_type>",
+            "<datatype>",
             TokenType.IDENTIFIER,
-            "<func_or_var_init>",
+            "<init_or_func>",
+        ],
+        [
+            TokenType.IDENTIFIER,
+            TokenType.IDENTIFIER,
+            "<init_or_func>",
         ],
         [
             TokenType.EMPTY,
@@ -46,111 +45,6 @@ CFG = {
             "<newline>",
             "<code_block>",
         ],
-        [
-            "<group>",
-        ],
-    ],
-    "<func_or_var_init>": [
-        [
-            TokenType.ASSIGN,
-            "<value>",
-            "<newline>",
-        ],
-        [
-            TokenType.OPAR,
-            "<parameter>",
-            TokenType.CPAR,
-            TokenType.COLON,
-            "<newline>",
-            "<code_block>",
-        ],
-    ],
-    "<next_global>": [
-        [
-            "<global>",
-        ],
-    ],
-    "<code_block>": [
-        [
-            "<tab>",
-            "<statement>",
-            "<next_code_block>",
-        ],
-    ],
-    "<next_code_block>": [
-        [
-            "<code_block>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<return_type>": [
-        [
-            "<data_type>",
-        ],
-        [
-            TokenType.EMPTY,
-        ],
-    ],
-    "<data_type>": [
-        [
-            TokenType.WORD,
-            "<collection_suffix>",
-        ],
-        [
-            TokenType.NUM,
-            "<collection_suffix>",
-        ],
-        [
-            TokenType.DECI,
-            "<collection_suffix>",
-        ],
-        [
-            TokenType.CHOICE,
-            "<collection_suffix>",
-        ],
-        [
-            TokenType.IDENTIFIER,
-            "<collection_suffix>",
-        ],
-    ],
-    "<collection_suffix>": [
-        [
-            TokenType.OBRACK,
-            "<collection_index>",
-            TokenType.CBRACK,
-        ],
-        [
-            None,
-        ],
-    ],
-    "<collection_index>": [
-        [TokenType.NUM_LITERAL],
-        [
-            "<func_or_var>",
-        ],
-    ],
-    "<parameter>": [
-        [
-            "<data_type>",
-            TokenType.IDENTIFIER,
-            "<next_parameter>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<next_parameter>": [
-        [
-            TokenType.COMMA,
-            "<parameter>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<group>": [
         [
             TokenType.GROUP,
             TokenType.IDENTIFIER,
@@ -158,7 +52,33 @@ CFG = {
             TokenType.COLON,
             "<newline>",
             "<group_body>",
-        ]
+        ],
+        [
+            None,
+        ],
+    ],
+    "<next_global>": [
+        [
+            TokenType.GLOBAL,
+        ],
+        [
+            None,
+        ],
+    ],
+    "<init_or_func>": [
+        [
+            TokenType.ASSIGN,
+            "<value>",
+            "<newline>",
+        ],
+        [
+            TokenType.OPAR,
+            "<parameter>",
+            TokenType.CPAR,
+            TokenType.COLON,
+            "<newline>",
+            "<code_block>",
+        ],
     ],
     "<inheritance>": [
         [
@@ -172,53 +92,60 @@ CFG = {
     "<group_body>": [
         [
             "<tab>",
-            "<group_body1>",
+            "<initialier_or_group_global>",
         ],
     ],
-    "<group_body1>": [
+    "<initializer_or_group_global>": [
         [
-            "<group_global>",
+            "<required_initializer>",
+            "<optional_initiliazer>",
+            "<optional_group_global>",
+        ],
+        [
+            "<required_group_global>",
             "<optional_initializer>",
-        ],
-        [
-            "<initializer>",
-            "<next_group_global>",
+            "<optional_group_global>",
         ],
     ],
-    "<optional_initializer>": [
+    "<required_group_global>": [
         [
-            "<initializer>",
-            "<next_group_global>",
-        ],
-        [
-            None,
+            "<access_specifier>",
+            "<group_global>",
+            "<optional_group_global>",
         ],
     ],
     "<group_global>": [
         [
-            "<access_specifier>",
-            "<group_global1>",
-            "<next_group_global>",
+            TokenType.FROZEN,
+            "<fr_primitive_or_object>",
+            "<newline>",
+        ],
+        [
+            "<data_type>",
+            TokenType.IDENTIFIER,
+            "<group_init_or_func>",
+        ],
+        [
+            TokenType.IDENTIFIER,
+            TokenType.IDENTIFIER,
+            "<group_init_or_func>",
+        ],
+        [
+            TokenType.EMPTY,
+            TokenType.IDENTIFIER,
+            TokenType.OPAR,
+            "<parameter>",
+            TokenType.CPAR,
+            TokenType.COLON,
+            "<newline>",
+            "<code_block>",
         ],
     ],
-    "<group_global1>": [
+    "<group_init_or_func>": [
         [
-            "<data_type>",
-            TokenType.IDENTIFIER,
-            "<func_or_field_init>",
-        ],
-        [
-            TokenType.FROZEN,
-            "<data_type>",
-            TokenType.IDENTIFIER,
             TokenType.ASSIGN,
             "<value>",
             "<newline>",
-        ],
-    ],
-    "<func_or_field_init>": [
-        [
-            "<field_value>",
         ],
         [
             TokenType.OPAR,
@@ -228,16 +155,21 @@ CFG = {
             "<newline>",
             "<code_block>",
         ],
-    ],
-    "<next_group_global>": [
         [
-            "<group_global>",
+            None,
+        ],
+    ],
+    "<optional_group_global>": [
+        [
+            "<tab>",
+            "<-7>"
+            "<required_group_global>",
         ],
         [
             None,
         ],
     ],
-    "<initializer>": [
+    "<required_initializer>": [
         [
             TokenType.INITIALIZE,
             TokenType.OPAR,
@@ -248,11 +180,9 @@ CFG = {
             "<code_block>",
         ],
     ],
-    "<field_value>": [
+    "<optional_initializer>": [
         [
-            TokenType.ASSIGN,
-            "<value>",
-            "<newline>",
+            "<required_initializer>",
         ],
         [
             None,
@@ -269,200 +199,185 @@ CFG = {
             TokenType.RESTRICTED,
         ],
     ],
-    "<expression>": [
+    "<code_block>": [
         [
-            "<condition>",
+            "<tab>",
+            "<block_definition>",
         ],
     ],
-    "<condition>": [
-        ["<condition1>", "<next_or>"],
-    ],
-    "<next_or>": [
+    "<block_definition>": [
         [
-            TokenType.OR,
-            "<condition>",
+            "<statement>",
+            "<next_code_block>",
+        ],
+        [
+            TokenType.BACK,
+            "<expression>",
+        ],
+    ],
+    "<statements>": [
+        [
+            "<single_block_statements>",
+            "<newline>",
+        ],
+        [
+            "<single_block_statements>",
+        ],
+    ],
+    "<next_code_block>": [
+        [
+            "<code_block>",
         ],
         [
             None,
         ],
     ],
-    "<condition1>": [
+    "<single_block_statements>": [
         [
-            "<condition_operand>",
-            "<next_and>",
-        ],
-    ],
-    "<next_and>": [
-        [TokenType.AND, "<condition1>"],
-        [
-            None,
-        ],
-    ],
-    "<condition_operand>": [
-        [TokenType.NOT, "<condition_operand>"],
-        [
-            TokenType.YES,
+            TokenType.GLOBAL,
+            TokenType.IDENTIFIER,
         ],
         [
-            TokenType.NO,
-        ],
-        [
-            "<comparison>",
-        ],
-        [
+            TokenType.INP,
             TokenType.OPAR,
-            "<condition>",
+            "<argument>",
             TokenType.CPAR,
         ],
-    ],
-    "<comparison>": [
         [
-            "<sum>",
-            "<comparison_operand>",
-        ],
-    ],
-    "<comparison_operand>": [
-        [
-            "<comparison_operator>",
-            "<sum>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<comparison_operator>": [
-        [
-            TokenType.LESS_THAN,
-        ],
-        [
-            TokenType.LESS_THAN_EQUAL,
-        ],
-        [
-            TokenType.GREATER_THAN,
-        ],
-        [
-            TokenType.GREATER_THAN_EQUAL,
-        ],
-        [
-            TokenType.NOT_EQUAL,
-        ],
-        [
-            TokenType.EQUAL_TO,
-        ],
-    ],
-    "<sum>": [
-        [
-            "<sum_operand>",
-            "<next_term>",
-        ],
-    ],
-    "<sum_operand>": [
-        [
-            "<term>",
-        ],
-        [
-            TokenType.WORD_LITERAL,
-        ],
-    ],
-    "<next_term>": [
-        ["<term_operator>", "<sum>"],
-        [
-            None,
-        ],
-    ],
-    "<term_operator>": [
-        [
-            TokenType.PLUS,
-        ],
-        [
-            TokenType.MINUS,
-        ],
-    ],
-    "<term>": [
-        [
-            "<factor>",
-            "<next_factor>",
-        ],
-    ],
-    "<next_factor>": [
-        ["<factor_operator>", "<term>"],
-        [
-            None,
-        ],
-    ],
-    "<factor_operator>": [
-        [
-            TokenType.MULTIPLY,
-        ],
-        [
-            TokenType.DIVIDE,
-        ],
-        [
-            TokenType.FLOOR,
-        ],
-        [
-            TokenType.MODULO,
-        ],
-    ],
-    "<factor>": [
-        [
-            "<operand>",
-            "<exponentiation>",
-        ],
-    ],
-    "<exponentiation>": [
-        [TokenType.POWER, "<factor>"],
-        [
-            None,
-        ],
-    ],
-    "<operand>": [
-        [
-            "<numeric>",
-        ],
-        [
-            TokenType.MINUS,
-            "<numeric>",
-        ],
-        [
-            "<func_or_var>",
-        ],
-        [
+            TokenType.OUT,
             TokenType.OPAR,
-            "<arithmetic_expression>",
+            "<argument>",
             TokenType.CPAR,
         ],
-    ],
-    "<numeric>": [
         [
-            TokenType.NUM_LITERAL,
+            TokenType.STOP,
         ],
         [
-            TokenType.DECI_LITERAL,
-        ],
-    ],
-    "<statement>": [
-        [
-            "<assign_stmt>",
+            TokenType.SKIP,
         ],
         [
             TokenType.FROZEN,
-            "<data_type>",
+            "<fr_primitive_or_object>",
+        ],
+        [
+            TokenType.IDENTIFIER,
+            "<init_assign_call>",
+        ],
+        [
+            "<object>",
+            "<dot_or_assign>",
+        ],
+        [
+            "<castable_type>",
+            "<typecast_or_init>",
+        ],
+        [
+            TokenType.WIKI,
+            "<collectin_suffix>",
             TokenType.IDENTIFIER,
             TokenType.ASSIGN,
             "<value>",
-            "<newline>",
         ],
+        [
+            TokenType.CHOICE,
+            "<collectin_suffix>",
+            TokenType.IDENTIFIER,
+            TokenType.ASSIGN,
+            "<value>",
+        ],
+    ],
+    "<fr_primitive_or_object>": [
         [
             "<data_type>",
             TokenType.IDENTIFIER,
             TokenType.ASSIGN,
             "<value>",
-            "<newline>",
         ],
+        [
+            TokenType.IDENTIFIER,
+            TokenType.IDENTIFIER,
+            TokenType.ASSIGN,
+            "<value>",
+        ],
+    ],
+    "<typecast_or_init>": [
+        [
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            "<collection_suffix>",
+            TokenType.IDENTIFIER,
+            TokenType.ASSIGN,
+            "<value>",
+        ],
+    ],
+    "<init_assign_call>": [
+        [
+            TokenType.IDENTIFIER,
+            "<assign_operator>",
+            "<value>,"
+        ],
+        [
+            "<assign_call>",
+        ],
+    ],
+    "<assign_call>": [
+        [
+            "<dot_tail>",
+        ],
+        [
+            "<assign_operator>",
+            "<value>",
+        ],
+        [
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+            "<dot_tail>",
+        ],
+        [
+            "<slice_suffix>",
+            "<dot_or_assign>",
+        ],
+    ],
+    "<dot_tail>": [
+        [
+            TokenType.PERIOD,
+            "<id_or_coll_func>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<id_or_coll_func>": [
+        [
+            TokenType.IDENTIFIER,
+            "<assign_call>",
+        ],
+        [
+            "<object>",
+            "<dot_or_assign>",
+        ],
+        [
+            "<collection_func>",
+        ],
+    ],
+    "<dot_or_assign>": [
+        [
+            TokenType.PERIOD,
+            "<id_or_coll_func>",
+        ],
+        [
+            "<assign_operator>",
+            "<value>",
+        ],
+    ],
+    "<multi_block_statements>": [
         [
             TokenType.INCASE,
-            "<expression>",
+            "<multi_block_expression>",
             TokenType.COLON,
             "<newline>",
             "<code_block>",
@@ -471,7 +386,7 @@ CFG = {
         ],
         [
             TokenType.GIVEN,
-            "<func_or_var>",
+            "<given_value>",
             TokenType.COLON,
             "<newline>",
             "<event>",
@@ -481,15 +396,9 @@ CFG = {
             TokenType.EVERY,
             "<data_type>",
             TokenType.IDENTIFIER,
+            "<opt_pair>",
             TokenType.IN,
             "<iterable>",
-            TokenType.COLON,
-            "<newline>",
-            "<code_block>",
-        ],
-        [
-            TokenType.DURING,
-            "<expression>",
             TokenType.COLON,
             "<newline>",
             "<code_block>",
@@ -501,138 +410,30 @@ CFG = {
             "<code_block>",
             "<tab>",
             TokenType.DURING,
-            "<expression>",
+            "<multi_block_expression>",
             "<newline>",
         ],
         [
-            TokenType.BACK,
-            "<expression>",
-            "<newline>",
-        ],
-        [
-            TokenType.GLOBAL,
-            TokenType.IDENTIFIER,
-            "<newline>",
-        ],
-        [
-            TokenType.STOP,
-            "<newline>",
-        ],
-        [
-            TokenType.SKIP,
-            "<newline>",
-        ],
-    ],
-    "<assign_stmt>": [
-        [
-            "<object>",
-            "<assign_stmt1>",
-        ],
-        [
-            "<assign_stmt2>",
-        ],
-    ],
-    "<assign_stmt1>": [
-        [
-            TokenType.PERIOD,
-            "<assign_stmt2>",
-        ],
-        [
-            "<assign_stmt3>",
-        ],
-    ],
-    "<assign_stmt2>": [
-        [
-            TokenType.IDENTIFIER,
-            "<assign_stmt1>",
-        ],
-    ],
-    "<assign_stmt3>": [
-        [
-            TokenType.OBRACK,
-            TokenType.NUM_LITERAL,
-            "<assign_stmt4>",
-            TokenType.CBRACK,
-            "<assign_stmt5>",
-        ],
-        [
-            "<assign_stmt6>",
-        ],
-    ],
-    "<assign_stmt4>": [
-        [
+            TokenType.DURING,
+            "<multi_block_expression>",
             TokenType.COLON,
-            TokenType.NUM_LITERAL,
-        ],
-        [
-            None,
-        ],
-    ],
-    "<assign_stmt5>": [
-        [TokenType.PERIOD, TokenType.IDENTIFIER, "<assign_stmt8>"],
-        [
-            "<assign_operator>",
-            "<value>",
             "<newline>",
+            "<code_block>",
         ],
-    ],
-    "<assign_stmt6>": [
+        [
+            "<expression>",
+        ],
         [
             TokenType.OPAR,
-            "<argument>",
+            "<expression>",
             TokenType.CPAR,
-            "<assign_stmt7>",
-        ],
-    ],
-    "<assign_stmt7>": [
-        [
-            TokenType.PERIOD,
-            TokenType.IDENTIFIER,
-            "<assign_stmt6>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<assign_stmt8>": [
-        [
-            "<assign_stmt5>",
-        ],
-        [
-            "<assign_stmt6>",
-        ],
-    ],
-    "<assign_operator>": [
-        [
-            TokenType.ASSIGN,
-        ],
-        [
-            TokenType.PLUS_ASSIGN,
-        ],
-        [
-            TokenType.MINUS_ASSIGN,
-        ],
-        [
-            TokenType.MULTIPLY_ASSIGN,
-        ],
-        [
-            TokenType.DIVIDE_ASSIGN,
-        ],
-        [
-            TokenType.FLOOR_ASSIGN,
-        ],
-        [
-            TokenType.POWER_ASSIGN,
-        ],
-        [
-            TokenType.MODULO_ASSIGN,
         ],
     ],
     "<unless>": [
         [
             "<tab>",
             TokenType.UNLESS,
-            "<expression>",
+            "<multi_block_expression>",
             TokenType.COLON,
             "<newline>",
             "<code_block>",
@@ -662,16 +463,16 @@ CFG = {
             None,
         ],
     ],
-    "<default>": [
+    "<given_value>": [
         [
-            "<tab>",
-            TokenType.DEFAULT,
-            TokenType.COLON,
-            "<newline>",
-            "<code_block>",
+            TokenType.IDENTIFIER,
+            "<variable_tail>",
         ],
         [
-            None,
+            TokenType.OPAR,
+            TokenType.IDENTIFIER,
+            "<variable_tail>",
+            TokenType.CPAR,
         ],
     ],
     "<event>": [
@@ -689,14 +490,45 @@ CFG = {
         [
             TokenType.WORD_LITERAL,
         ],
-        [TokenType.NUM_LITERAL],
+        [
+            TokenType.NUM_LITERAL
+        ],
         [
             TokenType.DECI_LITERAL,
+        ],
+        [
+            TokenType.YES,
+        ],
+        [
+            TokenType.NO,
         ],
     ],
     "<next_event>": [
         [
+            "<newline>",
             "<event>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<default>": [
+        [
+            "<tab>",
+            TokenType.DEFAULT,
+            TokenType.COLON,
+            "<newline>",
+            "<code_block>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<opt_pair>": [
+        [
+            TokenType.COMMA,
+            "<data_type>",
+            TokenType.IDENTIFIER,
         ],
         [
             None,
@@ -707,46 +539,100 @@ CFG = {
             "<collection_value>",
         ],
         [
+            "<wiki_value>",
+        ],
+        [
             "<func_or_var>",
         ],
-    ],
-    "<func_or_var>": [
         [
-            "<normal_func_or_var>",
+            TokenType.RANGE,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
         ],
         [
-            "<predefined_func>",
-        ],
-        [
-            "<object>",
-            "<func_or_var_tail>",
+            TokenType.WORD_LITERAL,
         ],
     ],
-    "<normal_func_or_var>": [
+    "<data_type>": [
+        [
+            TokenType.NUM,
+            "<collection_suffix>",
+        ],
+        [
+            TokenType.WORD,
+            "<collection_suffix>",
+        ],
+        [
+            TokenType.DECI,
+            "<collection_suffix>",
+        ],
+        [
+            TokenType.CHOICE,
+            "<collection_suffix>",
+        ],
         [
             TokenType.IDENTIFIER,
-            "<func_suffix>",
-            "<splice_suffix>",
-            "<func_or_var_tail>",
-        ],
-        [
-            "<collection_func>",
+            "<collection_suffix>",
         ],
     ],
-    "<func_or_var_tail>": [
+    "<castable_type>": [
         [
-            TokenType.PERIOD,
-            "<normal_func_or_var>",
+            TokenType.NUM,
+        ],
+        [
+            TokenType.WORD,
+        ],
+        [
+            TokenType.DECI,
+        ],
+    ],
+    "<return_type>": [
+        [
+            TokenType.EMPTY,
+        ],
+        [
+            "<data_type>",
+        ],
+    ],
+    "<collection_suffix>": [
+        [
+            TokenType.OBRACK,
+            "<collection_index>",
+            TokenType.CBRACK,
+            "<next_collection_suffix>",
         ],
         [
             None,
         ],
     ],
-    "<func_suffix>": [
+    "<next_collection_suffix>": [
         [
-            TokenType.OPAR,
-            "<argument>",
-            TokenType.CPAR,
+            "<collection_suffix>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<collection_index>": [
+        [
+            TokenType.NUM_LITERAL,
+        ],
+        [
+            "<func_or_var>",
+        ],
+        [
+            TokenType.OBRACK,
+            "<value>",
+            "<next_item>",
+            TokenType.CBRACK,
+        ],
+    ],
+    "<next_item>": [
+        [
+            TokenType.COMMA,
+            "<value>",
+            "<next_item>",
         ],
         [
             None,
@@ -809,25 +695,33 @@ CFG = {
             "<argument>",
             TokenType.CPAR,
         ],
+        [
+            None,
+        ],
     ],
-    "<splice_suffix>": [
+    "<slice_suffix>": [
         [
             TokenType.OBRACK,
-            TokenType.NUM_LITERAL,
-            "<splice>",
+            "<slice_operand>",
+            "<slice>",
             TokenType.CBRACK,
+        ],
+    ],
+    "<slice>": [
+        [
+            TokenType.COLON,
+            "<slice_operand>",
         ],
         [
             None,
         ],
     ],
-    "<splice>": [
+    "<slice_operand>": [
         [
-            TokenType.COLON,
             TokenType.NUM_LITERAL,
         ],
         [
-            None,
+            "<func_or_var>",
         ],
     ],
     "<object>": [
@@ -838,65 +732,66 @@ CFG = {
             TokenType.SELF,
         ],
     ],
-    "<value>": [
+    "<func_or_var>": [
         [
-            "<expression>",
-        ],
-        [
-            "<collection_value>",
-        ],
-        [
-            "<wiki_value>",
-        ],
-        [
-            TokenType.NEW,
             TokenType.IDENTIFIER,
+            "<func_or_var_tail>",
+        ],
+        [
+            "<object>",
+            "<variable_tail>",
+        ],
+    ],
+    "<func_or_var_tail>": [
+        [
+            "<variable_tail>",
+        ],
+        [
             TokenType.OPAR,
             "<argument>",
             TokenType.CPAR,
-        ],
-    ],
-    "<collection_value>": [
-        [
-            TokenType.OBRACK,
-            "<opt_newline_tab>",
-            "<value>",
-            "<next_item>",
-            "<opt_newline_tab>",
-            TokenType.CBRACK,
-        ],
-    ],
-    "<next_item>": [
-        [
-            TokenType.COMMA,
-            "<opt_newline_tab>",
-            "<expression>",
-            "<next_item>",
+            "<func_or_var_tail>"
         ],
         [
             None,
         ],
     ],
-    "<wiki_value>": [
+    "<variable_tail>": [
         [
-            TokenType.OBRACE,
-            "<opt_newline_tab>",
-            TokenType.WORD_LITERAL,
-            TokenType.COLON,
-            "<value>",
-            "<next_pair>",
-            "<opt_newline_tab>",
-            TokenType.CBRACE,
+            TokenType.PERIOD,
+            "<next_dot_operand>",
+            "<variable_tail>",
+        ],
+        [
+            "<splice_suffix>",
+            "<variable_tail>",
+        ],
+        [
+            None,
         ],
     ],
-    "<next_pair>": [
+    "<next_dot_operand>": [
+        [
+            TokenType.IDENTIFIER,
+        ],
+        [
+            "<object>",
+        ],
+    ],
+    "<parameter>": [
+        [
+            "<data_type>",
+            TokenType.IDENTIFIER,
+            "<next_parameter>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<next_parameter>": [
         [
             TokenType.COMMA,
-            "<opt_newline_tab>",
-            TokenType.WORD_LITERAL,
-            TokenType.COLON,
-            "<expression>",
-            "<next_pair>",
+            "<parameter>",
         ],
         [
             None,
@@ -952,13 +847,263 @@ CFG = {
             None,
         ],
     ],
-    "<opt_newline_tab>": [
+    "<value>": [
         [
-            TokenType.NEWLINE,
-            "<tab>",
+            "<expression>",
+        ],
+        [
+            "<collection_value>",
+        ],
+        [
+            "<wiki_value>",
+        ],
+    ],
+    "<expression>": [
+        [
+            "<disjunction>",
+        ],
+    ],
+    "<disjunction>": [
+        [
+            "<conjunction>",
+            "<next_disjunction>",
+        ],
+    ],
+    "<next_disjunction>": [
+        [
+            TokenType.OR,
+            "<disjunction>",
         ],
         [
             None,
+        ],
+    ],
+    "<conjunction>": [
+        [
+            "<inversion>",
+            "<next_conjunction>",
+        ],
+    ],
+    "<next_conjunction>": [
+        [
+            TokenType.AND,
+            "<conjunction>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<inversion>": [
+        [
+            TokenType.NOT,
+            "<inversion>",
+        ],
+        [
+            "<comparison>",
+        ],
+    ],
+    "<comparison>": [
+        [
+            "<sum>",
+            "<comparison_operand>",
+        ],
+    ],
+    "<comparison_operand>": [
+        [
+            "<comparison_operator>",
+            "<sum>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<comparison_operator>": [
+        [
+            TokenType.LESS_THAN,
+        ],
+        [
+            TokenType.LESS_THAN_EQUAL,
+        ],
+        [
+            TokenType.GREATER_THAN,
+        ],
+        [
+            TokenType.GREATER_THAN_EQUAL,
+        ],
+        [
+            TokenType.NOT_EQUAL,
+        ],
+        [
+            TokenType.EQUAL_TO,
+        ],
+    ],
+    "<sum>": [
+        [
+            "<term>",
+            "<next_term>",
+        ],
+    ],
+    "<term>": [
+        [
+            "<factor>",
+            "<next_factor>",
+        ],
+    ],
+    "<next_term>": [
+        [
+            "<term_operator>",
+            "<sum>"
+        ],
+        [
+            None,
+        ],
+    ],
+    "<term_operator>": [
+        [
+            TokenType.PLUS,
+        ],
+        [
+            TokenType.MINUS,
+        ],
+    ],
+    "<factor>": [
+        [
+            "<atom>",
+            "<exponentiation>",
+        ],
+    ],
+    "<next_factor>": [
+        [
+            "<factor_operator>",
+            "<term>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<factor_operator>": [
+        [
+            TokenType.MULTIPLY,
+        ],
+        [
+            TokenType.DIVIDE,
+        ],
+        [
+            TokenType.FLOOR,
+        ],
+        [
+            TokenType.MODULO,
+        ],
+    ],
+    "<exponentiation>": [
+        [
+            TokenType.POWER,
+            "<factor>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<atom>": [
+        [
+            TokenType.WORD_LITERAL,
+            "<type_cast_tail>",
+        ],
+        [
+            "<numeric>",
+            "<type_cast_tail>",
+        ],
+        [
+            TokenType.MINUS,
+            "<numeric>",
+        ],
+        [
+            TokenType.YES,
+        ],
+        [
+            TokenType.NO,
+        ],
+        [
+            TokenType.NEW,
+            TokenType.IDENTIFIER,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+        [
+            TokenType.OPAR,
+            "<expresson>",
+            TokenType.CPAR,
+        ],
+        [
+            TokenType.BLANK,
+        ],
+        [
+            "<func_or_var>",
+        ],
+    ],
+    "<numeric>": [
+        [
+            TokenType.NUM_LITERAL,
+        ],
+        [
+            TokenType.DECI_LITERAL,
+
+        ],
+    ],
+    "<type_cast_tail>": [
+        [
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
+    ],
+    "<wiki_value>": [
+        [
+            TokenType.OBRACE,
+            TokenType.WORD_LITERAL,
+            TokenType.COLON,
+            "<value>",
+            "<next_pair>",
+            TokenType.CBRACE,
+        ],
+    ],
+    "<next_pair>": [
+        [
+            TokenType.COMMA,
+            TokenType.WORD_LITERAL,
+            TokenType.COLON,
+            "<expression>",
+            "<next_pair>",
+        ],
+        [
+            None,
+        ],
+    ],
+    "<assign_operator>": [
+        [
+            TokenType.ASSIGN,
+        ],
+        [
+            TokenType.PLUS_ASSIGN,
+        ],
+        [
+            TokenType.MINUS_ASSIGN,
+        ],
+        [
+            TokenType.MULTIPLY_ASSIGN,
+        ],
+        [
+            TokenType.DIVIDE_ASSIGN,
+        ],
+        [
+            TokenType.FLOOR_ASSIGN,
+        ],
+        [
+            TokenType.POWER_ASSIGN,
+        ],
+        [
+            TokenType.MODULO_ASSIGN,
         ],
     ],
 }
