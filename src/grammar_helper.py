@@ -10,8 +10,9 @@ class GrammarHelper:
     def __init__(self):
         self.cfg = CFG
         self.check_cfg_ambiguity()
-        self.first_set = self._get_all_first_set()
-        self.follow_set = self._get_all_follow_set()
+        self._first_set = self._generate_all_first_set()
+        self._follow_set = self._generate_all_follow_set()
+        self._predict_set = self._generate_all_predict_set()
 
     def check_cfg_ambiguity(self):
         ambigous = False
@@ -28,7 +29,7 @@ class GrammarHelper:
 
                 while i < len(right_prod):
                     current_item = right_prod[i]
-                    current_item_first = self._first_set(current_item)
+                    current_item_first = self._generate_single_first_set(current_item)
                     right_prod_first.update(current_item_first)
                     right_prod_first = {x for x in right_prod_first if x is not None}
 
@@ -51,7 +52,16 @@ class GrammarHelper:
             print(log)
             # raise Exception("Ambigous productions in CFG.")
 
-    def _first_set(self, production):
+    def get_first_set(self, item):
+        if item is None or is_terminal(item):
+            return [item]
+        else:
+            return self._first_set[item]
+
+    def get_follow_set(self, item):
+        return self._follow_set[item]
+
+    def _generate_single_first_set(self, production):
         first_set = set()
 
         if production is None or is_terminal(production):
@@ -70,23 +80,23 @@ class GrammarHelper:
                 first_set.add(first)
             else:
                 # Non-terminal
-                first_set.update(self._first_set(first))
+                first_set.update(self._generate_single_first_set(first))
 
         return first_set
 
-    def _get_all_first_set(self):
+    def _generate_all_first_set(self):
         all_first_set = {}
 
         for production in self.cfg.keys():
-            all_first_set[production] = self._first_set(production)
+            all_first_set[production] = self._generate_single_first_set(production)
 
         return all_first_set
 
-    def _get_all_follow_set(self):
+    def _generate_all_follow_set(self):
         all_follow_set_cache = {}
         processing_follow_set_cache = []
 
-        def _follow_set(production, cfg, all_first_set, from_production=None):
+        def _generate_single_follow_set(production, cfg, all_first_set, from_production=None):
             processing_follow_set_cache.append(production)
             if from_production is not None:
                 tmp_log = f"Resolving pending {production} from {from_production}:\n"
@@ -172,7 +182,7 @@ class GrammarHelper:
                 if pending_production in processing_follow_set_cache:
                     continue
 
-                pending_follow_set, pending_log = _follow_set(
+                pending_follow_set, pending_log = _generate_single_follow_set(
                     pending_production, cfg, all_first_set, production
                 )
                 follow_set.update(pending_follow_set)
@@ -190,8 +200,8 @@ class GrammarHelper:
         logs = ""
 
         for production in self.cfg.keys():
-            all_follow_set[production], log = _follow_set(
-                production, self.cfg, self.first_set
+            all_follow_set[production], log = _generate_single_follow_set(
+                production, self.cfg, self._first_set
             )
             logs += log + "\n\n\n"
 
@@ -201,22 +211,51 @@ class GrammarHelper:
 
         return all_follow_set
 
+    def generate_single_predict_set(self, left, first_item):
+        if first_item is None:
+            return self.get_follow_set(left)
+
+        predict_set = set()
+        first_set = self.get_first_set(first_item)
+        predict_set.update(first_set)
+
+        if None in predict_set:
+            predict_set.remove(None)
+            follow_set = self.get_follow_set(first_item)
+            predict_set = predict_set.union(follow_set)
+
+        return predict_set
+
+    def _generate_all_predict_set(self):
+        predict_set = {}
+        for left, right in self.cfg.items():
+            left_predict_sets = []
+            for right_prod in right:
+                first_item = right_prod[0]
+                right_prod_predict_set = self.generate_single_predict_set(left, first_item)
+                left_predict_sets.append(right_prod_predict_set)
+            predict_set[left] = left_predict_sets
+
+        return predict_set
+
     def display_first_set(self):
-        print(self._set_str(self.first_set, "FIRST SET"), end="\n\n")
+        print(self._set_str(self._first_set, "FIRST SET"), end="\n\n")
 
     def display_follow_set(self):
-        print(self._set_str(self.follow_set, "FOLLOW SET"), end="\n\n")
+        print(self._set_str(self._follow_set, "FOLLOW SET"), end="\n\n")
 
     def displaycfg(self):
         print(self.cfg_str(), end="\n\n")
 
-    def export_cfg_first_follow(self, path):
+    def export_cfg_first_follow_predict(self, path):
         with open(path, "w") as f:
             f.write(self.cfg_str())
             f.write("\n\n")
-            f.write(self._set_str(self.first_set, "FIRST SET"))
+            f.write(self._set_str(self._first_set, "FIRST SET"))
             f.write("\n\n")
-            f.write(self._set_str(self.follow_set, "FOLLOW SET"))
+            f.write(self._set_str(self._follow_set, "FOLLOW SET"))
+            f.write("\n\n")
+            f.write(self.predict_str())
 
     def export_all_md(self, path):
         with open(path, "w") as f:
@@ -251,7 +290,7 @@ class GrammarHelper:
         out += "| No. | Production | First Set |\n"
         out += "| --- | ---------- | --------- |\n"
         counter = 1
-        for left, right in self.first_set.items():
+        for left, right in self._first_set.items():
             out += f"| {counter} | \{left} | "
             counter += 1
             out += "{"
@@ -285,7 +324,7 @@ class GrammarHelper:
         out += "| No. | Production | Follow Set |\n"
         out += "| --- | ---------- | ---------- |\n"
         counter = 1
-        for left, right in self.follow_set.items():
+        for left, right in self._follow_set.items():
             out += f"| {counter} | \{left} | "
             counter += 1
             out += "{"
@@ -366,6 +405,37 @@ class GrammarHelper:
         max_len = len(max(self.cfg.keys(), key=(lambda x: len(x))))
         max_counter_text = f"{len(self.cfg.keys()) + 1}. "
         for left, right in self.cfg.items():
+            for right_prod in right:
+                counter_text = f"{counter}. "
+                spaces = " " * (
+                    (len(max_counter_text) + max_len)
+                    - (len(counter_text) + len(left))
+                    + 2
+                )
+                out += f"{counter_text}{left}{spaces}->  "
+                counter += 1
+                for i, right_prod_item in enumerate(right_prod):
+                    if i > 0:
+                        out += " "
+                    if is_terminal(right_prod_item):
+                        out += f"{right_prod_item.value}"
+                    else:
+                        if right_prod_item is None:
+                            right_prod_item = "λ"
+                        out += f"{right_prod_item}"
+                out += "\n"
+
+        return out
+
+    def predict_str(self):
+        out = ""
+        out += "-----------" + "\n"
+        out += "PREDICT SET" + "\n"
+        out += "-----------" + "\n"
+        counter = 1
+        max_len = len(max(self._predict_set.keys(), key=(lambda x: len(x))))
+        max_counter_text = f"{len(self._predict_set.keys()) + 1}. "
+        for left, right in self._predict_set.items():
             for right_prod in right:
                 counter_text = f"{counter}. "
                 spaces = " " * (
