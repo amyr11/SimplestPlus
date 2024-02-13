@@ -2,6 +2,10 @@ from .tokens import TokenType
 from .grammar import CFG
 
 
+def is_terminal(item):
+    return isinstance(item, TokenType)
+
+
 class GrammarHelper:
     def __init__(self):
         self.cfg = CFG
@@ -50,7 +54,7 @@ class GrammarHelper:
     def _first_set(self, production):
         first_set = set()
 
-        if production is None or self._is_terminal(production):
+        if production is None or is_terminal(production):
             first_set.add(production)
             return first_set
 
@@ -61,7 +65,7 @@ class GrammarHelper:
         for right_prod in self.cfg[production]:
             first = right_prod[0]
 
-            if first is None or self._is_terminal(first):
+            if first is None or is_terminal(first):
                 # Terminal
                 first_set.add(first)
             else:
@@ -117,7 +121,7 @@ class GrammarHelper:
                             # Set the next item to the immediate item after the current non-terminal
                             next_item = right_prod[next_item_index]
 
-                            if self._is_terminal(next_item):
+                            if is_terminal(next_item):
                                 follow_set.add(next_item)
                                 log += f"From production {production_row_no}, added terminal `{next_item.value}` to {production}'s follow set ({production} -> {next_item.value}).\n"
                                 resolved = True
@@ -197,9 +201,6 @@ class GrammarHelper:
 
         return all_follow_set
 
-    def _is_terminal(self, item):
-        return isinstance(item, TokenType)
-
     def display_first_set(self):
         print(self._set_str(self.first_set, "FIRST SET"), end="\n\n")
 
@@ -234,7 +235,7 @@ class GrammarHelper:
                 for i, right_prod_item in enumerate(right_prod):
                     if i > 0:
                         out += " "
-                    if self._is_terminal(right_prod_item):
+                    if is_terminal(right_prod_item):
                         if right_prod_item.value in ["\\n", "\\t"]:
                             out += f"\{right_prod_item.value}"
                         else:
@@ -261,14 +262,14 @@ class GrammarHelper:
                         lambda x: x
                         if isinstance(x, str)
                         else x.value
-                        if self._is_terminal(x)
+                        if is_terminal(x)
                         else "λ"
                     ),
                 )
             ):
                 if i > 0:
                     out += ", "
-                if self._is_terminal(item):
+                if is_terminal(item):
                     if item.value in ["\\n", "\\t"]:
                         out += f"\{item.value}"
                     else:
@@ -295,14 +296,14 @@ class GrammarHelper:
                         lambda x: x
                         if isinstance(x, str)
                         else x.value
-                        if self._is_terminal(x)
+                        if is_terminal(x)
                         else "λ"
                     ),
                 )
             ):
                 if i > 0:
                     out += ", "
-                if self._is_terminal(item):
+                if is_terminal(item):
                     if item.value in ["\\n", "\\t"]:
                         out += f"\{item.value}"
                     else:
@@ -338,14 +339,14 @@ class GrammarHelper:
                         lambda x: x
                         if isinstance(x, str)
                         else x.value
-                        if self._is_terminal(x)
+                        if is_terminal(x)
                         else "λ"
                     ),
                 )
             ):
                 if i > 0:
                     out += ", "
-                if self._is_terminal(item):
+                if is_terminal(item):
                     out += f"{item.value}"
                 else:
                     if item is None:
@@ -377,7 +378,7 @@ class GrammarHelper:
                 for i, right_prod_item in enumerate(right_prod):
                     if i > 0:
                         out += " "
-                    if self._is_terminal(right_prod_item):
+                    if is_terminal(right_prod_item):
                         out += f"{right_prod_item.value}"
                     else:
                         if right_prod_item is None:
