@@ -26,7 +26,7 @@ CFG = {
             "<newline>",
         ],
         [
-            "<datatype>",
+            "<data_type>",
             TokenType.IDENTIFIER,
             "<init_or_func>",
         ],
@@ -98,13 +98,11 @@ CFG = {
     "<initializer_or_group_global>": [
         [
             "<required_initializer>",
-            "<optional_initiliazer>",
             "<optional_group_global>",
         ],
         [
             "<required_group_global>",
             "<optional_initializer>",
-            "<optional_group_global>",
         ],
     ],
     "<required_group_global>": [
@@ -162,8 +160,8 @@ CFG = {
     "<optional_group_global>": [
         [
             "<tab>",
-            "<-7>"
             "<required_group_global>",
+            "<optional_group_global>",
         ],
         [
             None,
@@ -182,7 +180,8 @@ CFG = {
     ],
     "<optional_initializer>": [
         [
-            "<required_initializer>",
+            "<tab>",
+            "<initializer_or_group_global>",
         ],
         [
             None,
@@ -207,7 +206,7 @@ CFG = {
     ],
     "<block_definition>": [
         [
-            "<statement>",
+            "<statements>",
             "<next_code_block>",
         ],
         [
@@ -221,7 +220,7 @@ CFG = {
             "<newline>",
         ],
         [
-            "<single_block_statements>",
+            "<multi_block_statements>",
         ],
     ],
     "<next_code_block>": [
@@ -314,11 +313,7 @@ CFG = {
         ],
     ],
     "<init_assign_call>": [
-        [
-            TokenType.IDENTIFIER,
-            "<assign_operator>",
-            "<value>,"
-        ],
+        [TokenType.IDENTIFIER, "<assign_operator>", "<value>,"],
         [
             "<assign_call>",
         ],
@@ -363,6 +358,12 @@ CFG = {
         [
             "<collection_func>",
         ],
+        [
+            TokenType.INITIALIZE,
+            TokenType.OPAR,
+            "<argument>",
+            TokenType.CPAR,
+        ],
     ],
     "<dot_or_assign>": [
         [
@@ -377,7 +378,7 @@ CFG = {
     "<multi_block_statements>": [
         [
             TokenType.INCASE,
-            "<multi_block_expression>",
+            "<expression>",
             TokenType.COLON,
             "<newline>",
             "<code_block>",
@@ -410,30 +411,22 @@ CFG = {
             "<code_block>",
             "<tab>",
             TokenType.DURING,
-            "<multi_block_expression>",
+            "<expression>",
             "<newline>",
         ],
         [
             TokenType.DURING,
-            "<multi_block_expression>",
+            "<expression>",
             TokenType.COLON,
             "<newline>",
             "<code_block>",
-        ],
-        [
-            "<expression>",
-        ],
-        [
-            TokenType.OPAR,
-            "<expression>",
-            TokenType.CPAR,
         ],
     ],
     "<unless>": [
         [
             "<tab>",
             TokenType.UNLESS,
-            "<multi_block_expression>",
+            "<expression>",
             TokenType.COLON,
             "<newline>",
             "<code_block>",
@@ -490,9 +483,7 @@ CFG = {
         [
             TokenType.WORD_LITERAL,
         ],
-        [
-            TokenType.NUM_LITERAL
-        ],
+        [TokenType.NUM_LITERAL],
         [
             TokenType.DECI_LITERAL,
         ],
@@ -572,7 +563,7 @@ CFG = {
             "<collection_suffix>",
         ],
         [
-            TokenType.IDENTIFIER,
+            TokenType.WIKI,
             "<collection_suffix>",
         ],
     ],
@@ -621,6 +612,14 @@ CFG = {
         [
             "<func_or_var>",
         ],
+        [
+            TokenType.OBRACK,
+            "<value>",
+            "<next_item>",
+            TokenType.CBRACK,
+        ],
+    ],
+    "<collection_value>": [
         [
             TokenType.OBRACK,
             "<value>",
@@ -746,12 +745,7 @@ CFG = {
         [
             "<variable_tail>",
         ],
-        [
-            TokenType.OPAR,
-            "<argument>",
-            TokenType.CPAR,
-            "<func_or_var_tail>"
-        ],
+        [TokenType.OPAR, "<argument>", TokenType.CPAR, "<func_or_var_tail>"],
         [
             None,
         ],
@@ -763,7 +757,7 @@ CFG = {
             "<variable_tail>",
         ],
         [
-            "<splice_suffix>",
+            "<slice_suffix>",
             "<variable_tail>",
         ],
         [
@@ -950,10 +944,7 @@ CFG = {
         ],
     ],
     "<next_term>": [
-        [
-            "<term_operator>",
-            "<sum>"
-        ],
+        ["<term_operator>", "<sum>"],
         [
             None,
         ],
@@ -1048,7 +1039,6 @@ CFG = {
         ],
         [
             TokenType.DECI_LITERAL,
-
         ],
     ],
     "<type_cast_tail>": [
