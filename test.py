@@ -1,5 +1,5 @@
 from prettytable import PrettyTable
-from compiler.lexical_analyzer import Lexer
+from pysimplestplus.lexical_analyzer import Lexer
 import os
 import sys
 
