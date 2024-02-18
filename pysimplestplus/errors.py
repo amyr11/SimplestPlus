@@ -42,7 +42,7 @@ class Error:
                 out += line + "\n"
         return out
 
-    def as_string(self) -> str:
+    def as_string(self, code) -> str:
         out = self._code_error_string()
         out += "-" * len(self.message) + "\n" + self.message + "\n"
         return out

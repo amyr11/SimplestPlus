@@ -22,7 +22,7 @@ def test_compile():
 
     if compiler.errors:
         for error in compiler.errors:
-            print(error.as_string())
+            print(error.as_string(code))
     else:
         print(f"{file_path} Compiled successfully.")
 
