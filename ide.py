@@ -2,7 +2,7 @@ import tkinter.font as tkfont
 import customtkinter as ctk
 from tkinter import ttk, filedialog, messagebox
 
-from src.lexer import Lexer
+from src.lexical.lexical_analyzer import Lexer
 
 file_is_modified = False
 saved_as_file = False

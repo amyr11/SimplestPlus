@@ -1,4 +1,4 @@
-from .tokens import Token
+from .lexical.tokens import Token
 
 """
 ------
