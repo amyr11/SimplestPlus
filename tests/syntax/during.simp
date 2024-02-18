@@ -1,3 +1,0 @@
-during x > 1:
-    during y > 1:
-        out()
