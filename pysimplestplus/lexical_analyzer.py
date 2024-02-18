@@ -15,9 +15,9 @@ class Lexer:
     def __init__(self, code: str):
         self._machines = machines
         self._code = code
-        self._tokens = []
-        self._identifiers = {}
-        self._errors = []
+        self.tokens = []
+        self.identifiers = {}
+        self.errors = []
 
     def tokenize(self, verbose=True) -> tuple[list[Token], list[Error]]:
         def advance(val, tmp_row, tmp_col, tmp_cursor):
@@ -31,8 +31,8 @@ class Lexer:
 
             return tmp_row, tmp_col, tmp_cursor
 
-        self._tokens = []
-        self._errors = []
+        self.tokens = []
+        self.errors = []
 
         # Preprocess
         preprocessed_code = self._preprocessed_code()
@@ -52,7 +52,7 @@ class Lexer:
             machine = self._machines.get_machine(cur_char)
 
             if machine is None:
-                self._errors.append(LexicalError(self._code, row, col, cur_char))
+                self.errors.append(LexicalError(self._code, row, col, cur_char))
                 row, col, cursor = advance(cur_char, row, col, cursor)
                 continue
 
@@ -67,7 +67,7 @@ class Lexer:
                     print("Going to fallback machine")
 
             if token is None:
-                self._errors.append(LexicalError(self._code, row, col, val))
+                self.errors.append(LexicalError(self._code, row, col, val))
                 row, col, cursor = advance(val, row, col, cursor)
                 continue
 
@@ -82,7 +82,7 @@ class Lexer:
             if token_error:
                 if verbose:
                     print("Invalid token")
-                self._errors.append(token_error)
+                self.errors.append(token_error)
                 continue
 
             if verbose:
@@ -90,7 +90,7 @@ class Lexer:
 
             self._append_token(token)
 
-        return self._tokens, self._errors
+        return self.tokens, self.errors
 
     def _preprocessed_code(self) -> str:
         # Remove the excess spaces after each line before the newline
@@ -134,10 +134,10 @@ class Lexer:
 
     def _append_token(self, token: Token) -> None:
         if token.type == TokenType.IDENTIFIER:
-            if token.val in self._identifiers:
-                token.id = self._identifiers[token.val]
+            if token.val in self.identifiers:
+                token.id = self.identifiers[token.val]
             else:
-                token.id = len(self._identifiers) + 1
-                self._identifiers[token.val] = token.id
+                token.id = len(self.identifiers) + 1
+                self.identifiers[token.val] = token.id
 
-        self._tokens.append(token)
+        self.tokens.append(token)

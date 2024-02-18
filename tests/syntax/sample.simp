@@ -1,3 +1,0 @@
-frozen num x = 1
-home():
-	out()

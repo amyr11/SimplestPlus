@@ -26,6 +26,7 @@ class Error:
             out += " " * 3 + "...\n"
         for i in range(start, self.row):
             line = split[i]
+            line = line.replace("\t", " "*4)
             cur_row = i + 1
             len_cur_row_no = len(str(cur_row))
             len_space = len_last_row_no - len_cur_row_no

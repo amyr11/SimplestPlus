@@ -2,7 +2,8 @@ import tkinter.font as tkfont
 import customtkinter as ctk
 from tkinter import ttk, filedialog, messagebox
 
-from src.lexical.lexical_analyzer import Lexer
+from pysimplestplus.lexical_analyzer import Lexer
+from pysimplestplus.compiler import SimplestPlusCompiler
 
 file_is_modified = False
 saved_as_file = False
@@ -13,13 +14,12 @@ def analyze_lexical():
 
     lexer = Lexer(code)
     tokens, errors = lexer.tokenize()
+
     clear()
-    for token in tokens:
-        token_table.insert("", "end", values=(token.val_string(), token.token_string()))
-    for error in errors:
-        print_to_console(error.as_string(), message_type="error")
-        print_to_console(" ")
-    if len(errors) == 0:
+    populate_tokens_table(tokens)
+    if errors:
+        print_errors(errors)
+    else:
         print_to_console("Lexical analysis completed successfully")
 
 
@@ -40,12 +40,28 @@ def clear():
     clear_token_table()
     pass
 
+def populate_tokens_table(tokens):
+    for token in tokens:
+        token_table.insert("", "end", values=(token.val_string(), token.token_string()))
+
+def print_errors(errors):
+    for error in errors:
+        print_to_console(error.as_string(), message_type="error")
+        print_to_console(" ")
+
 
 def run_analysis():
+    code = text_editor.get("1.0", "end-1c")
+
+    compiler = SimplestPlusCompiler(code)
+    compiler.run()
+
     clear()
-    analyze_lexical()
-    analyze_syntax()
-    analyze_semantic()
+    populate_tokens_table(compiler.tokens)
+    if compiler.errors:
+        print_errors(compiler.errors)
+    else:
+        print_to_console("Program compiled successfully")
 
 
 def print_to_console(message, message_type="normal"):
@@ -64,10 +80,6 @@ def clear_console():
     console.configure(state="normal")  # Temporarily make the console editable
     console.delete("1.0", "end")  # Delete all the text in the console
     console.configure(state="disabled")  # Make the console read-only again
-
-
-def update_line_numbers():
-    pass
 
 
 def open_file_dialog():
