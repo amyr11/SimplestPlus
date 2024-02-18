@@ -1,4 +1,4 @@
-from src.grammar_helper import GrammarHelper
+from grammar_helper import GrammarHelper
 
 grammar_helper = GrammarHelper()
 # grammar_helper.display_cfg()

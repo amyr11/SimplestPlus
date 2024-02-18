@@ -1,6 +1,6 @@
 from typing import Optional
 
-from ..errors import Error, InvalidIdentifier, LexicalError, TokenError, InvalidComment
+from .errors import Error, InvalidIdentifier, LexicalError, TokenError, InvalidComment
 from .tokens import Token, TokenType
 from .states import machines
 

@@ -1,5 +1,8 @@
-from .tokens import TokenType
-from .grammar import CFG
+import sys
+
+sys.path.append("./")
+from pysimplestplus.tokens import TokenType
+from grammar import CFG
 
 
 def is_terminal(item):

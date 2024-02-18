@@ -1,4 +1,4 @@
-from .tokens import TokenType
+from pysimplestplus.tokens import TokenType
 
 CFG = {
     "<program>": [

@@ -1,5 +1,5 @@
 from prettytable import PrettyTable
-from src.lexical.lexical_analyzer import Lexer
+from compiler.lexical_analyzer import Lexer
 import os
 import sys
 
