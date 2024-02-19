@@ -543,8 +543,8 @@ class LexicalError(Error):
 
 
 class SyntaxError(Error):
-    def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, "SyntaxError", details)
+    def __init__(self, pos_start, pos_end, details=None):
+        super().__init__(pos_start, pos_end, "SyntaxError", details or "Invalid syntax")
 
 
 #######################################
@@ -977,10 +977,12 @@ class Parser:
         return self.current_tok
 
     def parse(self):
-        res = self.expression()
+        res = self.statement()
 
         if not res.error and self.current_tok.type != TT_EOF:
-            return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected +, -, *, /, //, or %"))
+            return res.failure(
+                SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end)
+            )
 
         return res
 
@@ -990,12 +992,24 @@ class Parser:
         res = ParseResult()
         tok = self.current_tok
 
-        if tok.type in (TT_NUM_LITERAL, TT_DECI_LITERAL, TT_WORD_LITERAL, TT_LETTER_LITERAL, TT_YES, TT_NO, TT_BLANK):
+        if tok.type in (TT_NUM_LITERAL, TT_DECI_LITERAL):
             res.register(self.advance())
             return res.success(NumberNode(tok))
+        elif tok.type == TT_WORD_LITERAL:
+            res.register(self.advance())
+            return res.success(WordNode(tok))
+        elif tok.type == TT_LETTER_LITERAL:
+            res.register(self.advance())
+            return res.success(LetterNode(tok))
+        elif tok.type in (TT_YES, TT_NO):
+            res.register(self.advance())
+            return res.success(ChoiceNode(tok))
+        elif tok.type == TT_BLANK:
+            res.register(self.advance())
+            return res.success(BlankNode(tok))
         elif tok.type == TT_IDENTIFIER:
             res.register(self.advance())
-            
+
             if self.current_tok.type == TT_OPAR:
                 res.register(self.advance())
                 arg_nodes = []
@@ -1009,8 +1023,7 @@ class Parser:
                         return res.failure(
                             SyntaxError(
                                 self.current_tok.pos_start,
-                                self.current_tok.pos_end,
-                                "Expected ), num, deci, -, or (",
+                                self.current_tok.pos_end
                             )
                         )
 
@@ -1024,8 +1037,7 @@ class Parser:
                         return res.failure(
                             SyntaxError(
                                 self.current_tok.pos_start,
-                                self.current_tok.pos_end,
-                                "Expected , or )",
+                                self.current_tok.pos_end
                             )
                         )
 
@@ -1043,8 +1055,7 @@ class Parser:
                 return res.failure(
                     SyntaxError(
                         self.current_tok.pos_start,
-                        self.current_tok.pos_end,
-                        "Unary '-' is only compatible with num_lit and deci_lit",
+                        self.current_tok.pos_end
                     )
                 )
         elif tok.type == TT_OPAR:
@@ -1056,9 +1067,9 @@ class Parser:
                 res.register(self.advance())
                 return res.success(expr)
             else:
-                return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected )"))
+                return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
         else:
-            return res.failure(SyntaxError(tok.pos_start, tok.pos_end, "Expected num_lit, deci_lit, word_lit, letter_lit, yes, no, blank, id, -, or ("))
+            return res.failure(SyntaxError(tok.pos_start, tok.pos_end))
 
     def term(self):
         return self._binary_op(
@@ -1069,6 +1080,51 @@ class Parser:
         return self._binary_op(
             self.term, (TT_PLUS, TT_MINUS)
         )
+
+    def statement(self):
+        return self.initialization()
+
+    def initialization(self):
+        res = ParseResult()
+        is_frozen = False
+        is_collection = False
+
+        if self.current_tok.type == TT_FROZEN:
+            is_frozen = True
+            res.register(self.advance())
+
+        if self.current_tok.type not in (TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER):
+            return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
+
+        data_type = self.current_tok
+        res.register(self.advance())
+
+        if self.current_tok.type == TT_OBRACK:
+            res.register(self.advance())
+            if self.current_tok.type != TT_CBRACK:
+                return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
+            res.register(self.advance())
+            is_collection = True
+
+        if self.current_tok.type != TT_IDENTIFIER:
+            return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
+
+        var_name_tok = self.current_tok
+        res.register(self.advance())
+
+        if self.current_tok.type != TT_ASSIGN:
+            return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
+
+        res.register(self.advance())
+
+        value_node = res.register(self.value())
+        if res.error:
+            return res
+
+        return res.success(VarAssignNode(is_frozen, data_type, is_collection, var_name_tok, value_node))
+
+    def value(self):
+        return self.expression()
 
     def _binary_op(self, func, ops):
         res = ParseResult()
@@ -1125,6 +1181,34 @@ class NumberNode:
     def __repr__(self):
         return f"{self.tok}"
 
+class WordNode:
+    def __init__(self, tok):
+        self.tok = tok
+    
+    def __repr__(self):
+        return f"{self.tok}"
+
+class LetterNode:
+    def __init__(self, tok):
+        self.tok = tok
+    
+    def __repr__(self):
+        return f"{self.tok}"
+
+class ChoiceNode:
+    def __init__(self, tok):
+        self.tok = tok
+    
+    def __repr__(self):
+        return f"{self.tok}"
+
+class BlankNode:
+    def __init__(self, tok):
+        self.tok = tok
+    
+    def __repr__(self):
+        return f"{self.tok}"
+
 class UnaryOpNode:
     def __init__(self, op_tok, right_node):
         self.op_tok = op_tok
@@ -1148,6 +1232,17 @@ class VarAccessNode:
     
     def __repr__(self):
         return f"{self.var_name_tok}"
+
+class VarAssignNode:
+    def __init__(self, is_frozen, data_type, is_collection, var_name_tok, value_node):
+        self.is_frozen = is_frozen
+        self.data_type = data_type
+        self.is_collection = is_collection
+        self.var_name_tok = var_name_tok
+        self.value_node = value_node
+
+    def __repr__(self):
+        return f"{self.var_name_tok} = {self.value_node}"
 
 class FuncCallNode:
     def __init__(self, node_to_call, args):
