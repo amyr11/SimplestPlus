@@ -1,0 +1,14 @@
+'a'
+
+['a', 'a']
+['a']
+my_func('a')
+'a' == string_var
+'a'== string_var
+'a'!= string_var
+'a'+'a'
+string_var == 'a':
+{ 'a': 'a' }
+{'a':'a'}
+'a'# baz
+'a','a'

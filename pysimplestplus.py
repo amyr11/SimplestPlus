@@ -8,6 +8,18 @@ S_COMMENT_LIMIT = 79
 ID_LIMIT = 20
 NUM_LIMIT = 999999999
 DECI_LIMIT = 999999999.999999
+WORD_ESCAPE_CHARS = {
+            'n': '\n',
+            't': '\t',
+            '"': '\"',
+            '\\': '\\',
+        }
+LETTER_ESCAPE_CHARS = {
+            'n': '\n',
+            't': '\t',
+            "'": '\'',
+            '\\': '\\',
+        }
 
 def without(list, chars):
     return [char for char in list if char not in chars]
@@ -63,6 +75,11 @@ DEFINITIONS["all_word"] = [
     *DEFINITIONS["special_char_wo_dq"],
     " ",
 ]
+DEFINITIONS["all_letter"] = [
+    *DEFINITIONS["alpha_num"],
+    *without(DEFINITIONS["special_char_wo_bs"], ["'"]),
+    " ",
+]
 DEFINITIONS["all_s_com"] = [
     *DEFINITIONS["all_word"],
     '"',
@@ -93,14 +110,15 @@ DEFINITIONS["delim_indent"] = [
     ")",
 ]
 DEFINITIONS["delim_arith"] = [*DEFINITIONS["alpha_num"], " ", "(", "-"]
-DEFINITIONS["delim_plus"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"']
-DEFINITIONS["delim_assign"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"', "{", "["]
+DEFINITIONS["delim_plus"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"', "'"]
+DEFINITIONS["delim_assign"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"', "{", "[", "'"]
 DEFINITIONS["delim_opar"] = [
     *DEFINITIONS["alpha_num"],
     " ",
     "(",
     "-",
     '"',
+    "'",
     "[",
     "{",
     "(",
@@ -120,7 +138,7 @@ DEFINITIONS["delim_cpar"] = [
     "}",
     "#",
 ]
-DEFINITIONS["delim_obrace"] = [*DEFINITIONS["all_alpha"], " ", "\n", '"', "}"]
+DEFINITIONS["delim_obrace"] = [*DEFINITIONS["all_alpha"], " ", "\n", '"', "'", "}"]
 DEFINITIONS["delim_cbrace"] = [" ", "\n", ",", "}", ")", "]"]
 DEFINITIONS["delim_obrack"] = [
     *DEFINITIONS["alpha_num"],
@@ -132,6 +150,7 @@ DEFINITIONS["delim_obrack"] = [
     "[",
     "]",
     '"',
+    "'",
 ]
 DEFINITIONS["delim_cbrack"] = [" ", "\n", ",", "[", "]", ")", "}"]
 DEFINITIONS["delim_comma"] = [
@@ -140,6 +159,7 @@ DEFINITIONS["delim_comma"] = [
     "(",
     "-",
     '"',
+    "'",
     "[",
     "{",
     "(",
@@ -196,7 +216,7 @@ DEFINITIONS["delim_space"] = [
     *DEFINITIONS["alpha_num"],
     *DEFINITIONS["arith_op"],
     *DEFINITIONS["rel_op"],
-    *DEFINITIONS["special_char_wo_t_sq"],
+    *DEFINITIONS["special_char_wo_t"],
 ]
 
 
@@ -296,6 +316,7 @@ TT_GREATER_THAN = ">"
 TT_GREATER_THAN_EQUAL = ">="
 TT_LESS_THAN = "<"
 TT_LESS_THAN_EQUAL = "<="
+TT_LETTER = "letter"
 TT_OPAR = "("
 TT_CPAR = ")"
 TT_OBRACE = "{"
@@ -306,6 +327,7 @@ TT_COMMA = ","
 TT_PERIOD = "."
 TT_COLON = ":"
 TT_WORD_LITERAL = "word_lit"
+TT_LETTER_LITERAL = "letter_lit"
 TT_NUM_LITERAL = "num_lit"
 TT_DECI_LITERAL = "deci_lit"
 TT_S_COMMENT = "s_comment"
@@ -334,6 +356,7 @@ KEYWORDS = [
     TT_INHERITS,
     TT_INITIALIZE,
     TT_INSTEAD,
+    TT_LETTER,
     TT_NEW,
     TT_NO,
     TT_NOT,
@@ -375,6 +398,8 @@ DELIM_MAP = {
     TT_GREATER_THAN_EQUAL: DEFINITIONS["delim_arith"],
     TT_LESS_THAN: DEFINITIONS["delim_arith"],
     TT_LESS_THAN_EQUAL: DEFINITIONS["delim_arith"],
+    TT_LETTER: DEFINITIONS["delim_dtype"],
+    TT_LETTER_LITERAL: DEFINITIONS["delim_word"],
     TT_OPAR: DEFINITIONS["delim_opar"],
     TT_CPAR: DEFINITIONS["delim_cpar"],
     TT_OBRACE: DEFINITIONS["delim_obrace"],
@@ -792,8 +817,8 @@ class Lexer:
             s_quote_count += 1
             self.advance()
 
-        # Multi-line comment
         if s_quote_count == 3:
+            # Multi-line comment
             while True:
                 while self.current_char is not None and self.current_char in DEFINITIONS["all_mul_com"]:
                     value += self.current_char
@@ -815,18 +840,46 @@ class Lexer:
                         self.pos.copy(),
                         "Unterminated comment",
                     )
-        elif s_quote_count < 3:
+
+            if len(value) == 0:
+                return None, LexicalError(pos_start, self.pos.copy(), "Comments must have at least 1 character")
+
+            return (
+                Token(
+                    TT_M_COMMENT, value=value, pos_start=pos_start, pos_end=self.pos.copy()
+                ),
+                None,
+            )
+        elif s_quote_count == 2:
             return None, LexicalError(pos_start, self.pos.copy(), f"Unexpected character {repr(self.current_char)}")
+        else:
+            # Letter literal
+            if self.current_char is not None and self.current_char in DEFINITIONS["all_letter"]:
+                value += self.current_char
+                self.advance()
 
-        if len(value) == 0:
-            return None, LexicalError(pos_start, self.pos.copy(), "Comments must have at least 1 character")
+            if self.current_char == "\\":
+                self.advance()
+                if self.current_char in LETTER_ESCAPE_CHARS:
+                    value += LETTER_ESCAPE_CHARS[self.current_char]
+                    self.advance()
 
-        return (
-            Token(
-                TT_M_COMMENT, value=value, pos_start=pos_start, pos_end=self.pos.copy()
-            ),
-            None,
-        )
+            if self.current_char == "'":
+                self.advance()
+
+                return (
+                    Token(
+                        TT_LETTER_LITERAL,
+                        value=value,
+                        pos_start=pos_start,
+                        pos_end=self.pos.copy(),
+                    ),
+                    None,
+                )
+            else:
+                return None, LexicalError(
+                    pos_start, self.pos.copy(), "Unterminated letter literal"
+                )
 
     def make_keyword_or_id(self):
         tok_type = TT_IDENTIFIER
@@ -853,13 +906,6 @@ class Lexer:
         value = ''
         self.advance()
 
-        escape_chars = {
-            'n': '\n',
-            't': '\t',
-            '"': '\"',
-            '\\': '\\',
-        }
-
         while True:
             while self.current_char is not None and self.current_char in DEFINITIONS["all_word_wo_bs"]:
                 value += self.current_char
@@ -867,8 +913,8 @@ class Lexer:
 
             if self.current_char == "\\":
                 self.advance()
-                if self.current_char in escape_chars:
-                    value += escape_chars[self.current_char]
+                if self.current_char in WORD_ESCAPE_CHARS:
+                    value += WORD_ESCAPE_CHARS[self.current_char]
                     self.advance()
                     continue
 
