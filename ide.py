@@ -2,7 +2,7 @@ import tkinter.font as tkfont
 import customtkinter as ctk
 from tkinter import ttk, filedialog, messagebox
 
-from pysimplestplus.lexical_analyzer import Lexer
+import pysimplestplus
 
 file_is_modified = False
 saved_as_file = False
@@ -11,13 +11,14 @@ saved_as_file = False
 def analyze_lexical():
     code = text_editor.get("1.0", "end-1c")
 
-    lexer = Lexer(code)
-    tokens, errors = lexer.tokenize()
+    global current_file_name
+    lexer = pysimplestplus.Lexer(current_file_name, code)
+    tokens, errors = lexer.make_tokens()
     clear()
     for token in tokens:
-        token_table.insert("", "end", values=(token.val_string(), token.token_string()))
+        token_table.insert("", "end", values=(token.lexeme_str(), token.token_type_str()))
     for error in errors:
-        print_to_console(error.as_string(code), message_type="error")
+        print_to_console(error.as_string(), message_type="error")
         print_to_console(" ")
     if len(errors) == 0:
         print_to_console("Lexical analysis completed successfully")
@@ -69,6 +70,7 @@ def clear_console():
 def update_line_numbers():
     pass
 
+current_file_name = None
 
 def open_file_dialog():
     global file_is_modified, saved_as_file
@@ -89,6 +91,9 @@ def open_file_dialog():
     # open the file and load the content to the text editor
     if not file:
         return
+    
+    global current_file_name
+    current_file_name = file.name
     
     with open(file.name, "r") as file:
         text_editor.delete("1.0", "end")
@@ -129,6 +134,9 @@ def save_file_dialog():
         file_is_modified = False
         saved_as_file = True
         return
+    
+    global current_file_name
+    current_file_name = file.name
 
     print(f"The selected file is {file.name}")
 
@@ -153,6 +161,8 @@ def new_file_dialog():
     clear()
     if text_editor_label.winfo_exists():
         text_editor_label.destroy()
+    global current_file_name
+    current_file_name = "Untitled.simp"
     root.title("Simplest+ IDE | New File")
 
 
