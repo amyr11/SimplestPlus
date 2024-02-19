@@ -111,6 +111,7 @@ DEFINITIONS["delim_indent"] = [
 ]
 DEFINITIONS["delim_arith"] = [*DEFINITIONS["alpha_num"], " ", "(", "-"]
 DEFINITIONS["delim_plus"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"', "'"]
+DEFINITIONS["delim_minus"] = without(DEFINITIONS["delim_arith"], "-")
 DEFINITIONS["delim_assign"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"', "{", "[", "'"]
 DEFINITIONS["delim_opar"] = [
     *DEFINITIONS["alpha_num"],
@@ -383,7 +384,7 @@ DELIM_MAP = {
     TT_POWER_ASSIGN: DEFINITIONS["delim_arith"],
     TT_PLUS: DEFINITIONS["delim_plus"],
     TT_PLUS_ASSIGN: DEFINITIONS["delim_plus"],
-    TT_MINUS: DEFINITIONS["delim_arith"],
+    TT_MINUS: DEFINITIONS["delim_minus"],
     TT_MINUS_ASSIGN: DEFINITIONS["delim_arith"],
     TT_DIVIDE: DEFINITIONS["delim_arith"],
     TT_DIVIDE_ASSIGN: DEFINITIONS["delim_arith"],
@@ -541,6 +542,11 @@ class LexicalError(Error):
         super().__init__(pos_start, pos_end, "LexicalError", details)
 
 
+class SyntaxError(Error):
+    def __init__(self, pos_start, pos_end, details):
+        super().__init__(pos_start, pos_end, "SyntaxError", details)
+
+
 #######################################
 # LEXER
 #######################################
@@ -696,7 +702,7 @@ class Lexer:
                 tok_type = TT_POWER_ASSIGN
                 self.advance()
 
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos.copy())
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
     def make_plus(self):
         tok_type = TT_PLUS
@@ -707,7 +713,7 @@ class Lexer:
             tok_type = TT_PLUS_ASSIGN
             self.advance()
 
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos.copy())
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
     def make_minus(self):
         tok_type = TT_MINUS
@@ -718,7 +724,7 @@ class Lexer:
             tok_type = TT_MINUS_ASSIGN
             self.advance()
 
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos.copy())
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
     def make_slash(self):
         tok_type = TT_DIVIDE
@@ -735,7 +741,7 @@ class Lexer:
                 tok_type = TT_FLOOR_ASSIGN
                 self.advance()
 
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos.copy())
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
     def make_modulo(self):
         tok_type = TT_MODULO
@@ -746,7 +752,7 @@ class Lexer:
             tok_type = TT_MODULO_ASSIGN
             self.advance()
 
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos.copy())
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
     def make_equal(self):
         tok_type = TT_ASSIGN
@@ -757,7 +763,7 @@ class Lexer:
             tok_type = TT_EQUAL_TO
             self.advance()
 
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos.copy())
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
     def make_not_equal(self):
         pos_start = self.pos.copy()
@@ -765,7 +771,7 @@ class Lexer:
 
         if self.current_char == '=':
             self.advance()
-            return Token(TT_NOT_EQUAL, pos_start=pos_start, pos_end=self.pos.copy()), None
+            return Token(TT_NOT_EQUAL, pos_start=pos_start, pos_end=self.pos), None
 
         return None, LexicalError(pos_start, self.pos.copy(), "Expected '=' after '!'")
 
@@ -778,7 +784,7 @@ class Lexer:
             tok_type = TT_GREATER_THAN_EQUAL
             self.advance()
 
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos.copy())
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
     def make_less_than(self):
         tok_type = TT_LESS_THAN
@@ -789,7 +795,7 @@ class Lexer:
             tok_type = TT_LESS_THAN_EQUAL
             self.advance()
 
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos.copy())
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
     def make_s_comment(self):
         pos_start = self.pos.copy()
@@ -805,7 +811,7 @@ class Lexer:
         elif len(value) > S_COMMENT_LIMIT:
             return None, LexicalError(pos_start, self.pos.copy(), f"Single-line comments can only have {S_COMMENT_LIMIT} characters")
 
-        return Token(TT_S_COMMENT, value=value, pos_start=pos_start, pos_end=self.pos.copy()), None
+        return Token(TT_S_COMMENT, value=value, pos_start=pos_start, pos_end=self.pos), None
 
     def make_single_quote(self):
         pos_start = self.pos.copy()
@@ -846,7 +852,7 @@ class Lexer:
 
             return (
                 Token(
-                    TT_M_COMMENT, value=value, pos_start=pos_start, pos_end=self.pos.copy()
+                    TT_M_COMMENT, value=value, pos_start=pos_start, pos_end=self.pos
                 ),
                 None,
             )
@@ -872,7 +878,7 @@ class Lexer:
                         TT_LETTER_LITERAL,
                         value=value,
                         pos_start=pos_start,
-                        pos_end=self.pos.copy(),
+                        pos_end=self.pos,
                     ),
                     None,
                 )
@@ -894,12 +900,12 @@ class Lexer:
         for keyword in DELIM_MAP.keys():
             if value == keyword:
                 tok_type = keyword
-                return Token(tok_type, pos_start=pos_start, pos_end=self.pos.copy()), None
+                return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
 
         if len(value) > ID_LIMIT:
             return None, LexicalError(pos_start, self.pos.copy(), f"Identifiers can only have {ID_LIMIT} characters")
 
-        return Token(tok_type, value=value, pos_start=pos_start, pos_end=self.pos.copy()), None
+        return Token(tok_type, value=value, pos_start=pos_start, pos_end=self.pos), None
 
     def make_word(self):
         pos_start = self.pos.copy()
@@ -926,7 +932,7 @@ class Lexer:
                     pos_start, self.pos.copy(), "Unterminated word literal"
                 )
 
-        return Token(TT_WORD_LITERAL, value=value, pos_start=pos_start, pos_end=self.pos.copy()), None
+        return Token(TT_WORD_LITERAL, value=value, pos_start=pos_start, pos_end=self.pos), None
 
     def make_num_deci(self):
         num_str = ''
@@ -954,9 +960,223 @@ class Lexer:
 
 
 #######################################
+# PARSER
+#######################################
+
+
+class Parser:
+    def __init__(self, tokens):
+        self.tokens = [token for token in tokens if token.type != TT_SPACE]
+        self.tok_idx = -1
+        self.advance()
+
+    def advance(self):
+        self.tok_idx += 1
+        if self.tok_idx < len(self.tokens):
+            self.current_tok = self.tokens[self.tok_idx]
+        return self.current_tok
+
+    def parse(self):
+        res = self.expression()
+
+        if not res.error and self.current_tok.type != TT_EOF:
+            return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected +, -, *, /, //, or %"))
+
+        return res
+
+    #######################################
+
+    def factor(self):
+        res = ParseResult()
+        tok = self.current_tok
+
+        if tok.type in (TT_NUM_LITERAL, TT_DECI_LITERAL):
+            res.register(self.advance())
+            return res.success(NumberNode(tok))
+        elif tok.type == TT_IDENTIFIER:
+            res.register(self.advance())
+            
+            if self.current_tok.type == TT_OPAR:
+                res.register(self.advance())
+                arg_nodes = []
+
+                if self.current_tok.type == TT_CPAR:
+                    res.register(self.advance())
+                else:
+                    arg_nodes.append(res.register(self.expression()))
+
+                    if res.error:
+                        return res.failure(
+                            SyntaxError(
+                                self.current_tok.pos_start,
+                                self.current_tok.pos_end,
+                                "Expected ), num, deci, -, or (",
+                            )
+                        )
+
+                    while self.current_tok.type == TT_COMMA:
+                        res.register(self.advance())
+                        arg_nodes.append(res.register(self.expression()))
+                        if res.error:
+                            return res
+
+                    if self.current_tok.type != TT_CPAR:
+                        return res.failure(
+                            SyntaxError(
+                                self.current_tok.pos_start,
+                                self.current_tok.pos_end,
+                                "Expected , or )",
+                            )
+                        )
+
+                    res.register(self.advance())
+                return res.success(FuncCallNode(tok, arg_nodes))
+            else:
+                return res.success(VarAccessNode(tok))
+        elif tok.type in (TT_MINUS):
+            res.register(self.advance())
+            if self.current_tok.type in (TT_NUM_LITERAL, TT_DECI_LITERAL):
+                unary_operand = NumberNode(self.current_tok)
+                res.register(self.advance())
+                return res.success(UnaryOpNode(tok, unary_operand))
+            else:
+                return res.failure(
+                    SyntaxError(
+                        self.current_tok.pos_start,
+                        self.current_tok.pos_end,
+                        "Unary '-' is only compatible with num and deci",
+                    )
+                )
+        elif tok.type == TT_OPAR:
+            res.register(self.advance())
+            expr = res.register(self.expression())
+            if res.error:
+                return res
+            if self.current_tok.type == TT_CPAR:
+                res.register(self.advance())
+                return res.success(expr)
+            else:
+                return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected )"))
+        else:
+            return res.failure(SyntaxError(tok.pos_start, tok.pos_end, "Expected num, deci, id, -, or ("))
+
+    def term(self):
+        return self._binary_op(
+            self.factor, (TT_MULTIPLY, TT_DIVIDE, TT_FLOOR, TT_MODULO)
+        )
+
+    def expression(self):
+        return self._binary_op(
+            self.term, (TT_PLUS, TT_MINUS)
+        )
+
+    def _binary_op(self, func, ops):
+        res = ParseResult()
+        left = res.register(func())
+        if res.error:
+            return res
+
+        while self.current_tok.type in ops:
+            op_tok = self.current_tok
+            self.advance()
+            right = res.register(func())
+            if res.error:
+                return res
+            left = BinaryOpNode(left, op_tok, right)
+
+        return res.success(left)
+
+
+#######################################
+# PARSE RESULT
+#######################################
+
+
+class ParseResult:
+    def __init__(self):
+        self.error = None
+        self.node = None
+
+    def register(self, res):
+        if isinstance(res, ParseResult):
+            if res.error:
+                self.error = res.error
+            return res.node
+    
+        return res
+
+    def success(self, node):
+        self.node = node
+        return self
+
+    def failure(self, error):
+        self.error = error
+        return self
+
+#######################################
+# NODES
+#######################################
+
+
+class NumberNode:
+    def __init__(self, tok):
+        self.tok = tok
+    
+    def __repr__(self):
+        return f"{self.tok}"
+
+class UnaryOpNode:
+    def __init__(self, op_tok, right_node):
+        self.op_tok = op_tok
+        self.right_node = right_node
+
+    def __repr__(self):
+        return f"({self.op_tok}, {self.right_node})"
+
+class BinaryOpNode:
+    def __init__(self, left_node, op_tok, right_node):
+        self.left_node = left_node
+        self.op_tok = op_tok
+        self.right_node = right_node
+
+    def __repr__(self):
+        return f"({self.left_node}, {self.op_tok}, {self.right_node})"
+
+class VarAccessNode:
+    def __init__(self, var_name_tok):
+        self.var_name_tok = var_name_tok
+    
+    def __repr__(self):
+        return f"{self.var_name_tok}"
+
+class FuncCallNode:
+    def __init__(self, node_to_call, args):
+        self.node_to_call = node_to_call
+        self.args = args
+
+    def __repr__(self):
+        return f"call({self.node_to_call}, args:{self.args})"
+
+#######################################
 # RUN
 #######################################
-def run(fn, text):
+
+
+def run_syntax(fn, text):
+    # Generate tokens
+    lexer = Lexer(fn, text)
+    tokens, errors = lexer.make_tokens()
+    if errors:
+        return None, errors
+
+    # Generate Abstract Syntax Tree
+    parser = Parser(tokens)
+    res = parser.parse()
+
+    return res.node, [res.error] if res.error else None
+
+
+def run_lexical(fn, text):
     # Generate tokens
     lexer = Lexer(fn, text)
     tokens, errors = lexer.make_tokens()

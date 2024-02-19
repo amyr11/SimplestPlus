@@ -2,12 +2,23 @@ import pysimplestplus
 import os
 import sys
 
+MODES = ['lexical', 'syntax', 'compile']
+
 def print_no_file_found(path):
     print(f"{path} doesn't exist.")
     print()
 
+def print_invalid_mode():
+    print(f"Invalid mode. ({MODES})")
+    print()
+
 def test_compile():
-    file_path = sys.argv[1]
+    mode = sys.argv[1]
+    file_path = sys.argv[2]
+
+    if mode not in MODES:
+        print_invalid_mode()
+        return
 
     if not os.path.exists(file_path):
         print_no_file_found(file_path)
@@ -16,7 +27,15 @@ def test_compile():
     with open(file_path, "r") as file:
         code = file.read()
 
-    tokens, errors = pysimplestplus.run(file_path, code)
+    if mode == MODES[0]:
+        run_lexical(file_path, code)
+    elif mode == MODES[1]:
+        run_syntax(file_path, code)
+    else:
+        pass
+
+def run_lexical(file_path, code):
+    tokens, errors = pysimplestplus.run_lexical(file_path, code)
 
     if errors:
         print("Tokens:", tokens)
@@ -25,6 +44,18 @@ def test_compile():
             print(error.as_string())
     else:
         print("Tokens:", tokens)
+        print()
+        print(f"{file_path} compiled successfully.")
+
+
+def run_syntax(file_path, code):
+    ast, errors = pysimplestplus.run_syntax(file_path, code)
+
+    if errors:
+        for error in errors:
+            print(error.as_string())
+    else:
+        print("AST:", ast)
         print()
         print(f"{file_path} compiled successfully.")
 
