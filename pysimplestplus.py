@@ -966,7 +966,7 @@ class Lexer:
 
 class Parser:
     def __init__(self, tokens):
-        self.tokens = [token for token in tokens if token.type != TT_SPACE]
+        self.tokens = [token for token in tokens if token.type not in (TT_SPACE, TT_S_COMMENT, TT_M_COMMENT)]
         self.tok_idx = -1
         self.advance()
 
