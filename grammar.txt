@@ -2,7 +2,7 @@ expression          : term ((PLUS|MINUS) term)*
 
 term                : factor ((MUL|DIV|FLOOR|MOD) factor)*
 
-factor              : NUM_LIT|DECI_LIT
+factor              : NUM_LIT|DECI_LIT|WORD_LIT|LETTER_LIT|YES|NO|BLANK
                     : ID (OPAR (expression (COMMA expression)*)? CPAR)?
                     : MINUS (NUM_LIT|DECI_LIT)
                     : OPAR expression CPAR

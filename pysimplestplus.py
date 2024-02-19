@@ -990,7 +990,7 @@ class Parser:
         res = ParseResult()
         tok = self.current_tok
 
-        if tok.type in (TT_NUM_LITERAL, TT_DECI_LITERAL):
+        if tok.type in (TT_NUM_LITERAL, TT_DECI_LITERAL, TT_WORD_LITERAL, TT_LETTER_LITERAL, TT_YES, TT_NO, TT_BLANK):
             res.register(self.advance())
             return res.success(NumberNode(tok))
         elif tok.type == TT_IDENTIFIER:
@@ -1044,7 +1044,7 @@ class Parser:
                     SyntaxError(
                         self.current_tok.pos_start,
                         self.current_tok.pos_end,
-                        "Unary '-' is only compatible with num and deci",
+                        "Unary '-' is only compatible with num_lit and deci_lit",
                     )
                 )
         elif tok.type == TT_OPAR:
@@ -1058,7 +1058,7 @@ class Parser:
             else:
                 return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected )"))
         else:
-            return res.failure(SyntaxError(tok.pos_start, tok.pos_end, "Expected num, deci, id, -, or ("))
+            return res.failure(SyntaxError(tok.pos_start, tok.pos_end, "Expected num_lit, deci_lit, word_lit, letter_lit, yes, no, blank, id, -, or ("))
 
     def term(self):
         return self._binary_op(
