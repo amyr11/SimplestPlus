@@ -3,6 +3,6 @@ expression          : term ((PLUS|MINUS) term)*
 term                : factor ((MUL|DIV|FLOOR|MOD) factor)*
 
 factor              : NUM|DECI
-                    : ID (OPAR (expression (, expression)*)? CPAR)?
+                    : ID (OPAR (expression (COMMA expression)*)? CPAR)?
                     : MINUS (NUM|DECI)
                     : OPAR expression CPAR
