@@ -1,8 +1,20 @@
-frozen wiki[][] x = [[{1:2}, {'a':'b'}, {"c": "d"}, {yes: e, no: 1.5}], [{}], []]
+# Hey
+
+frozen wiki[][] x = [[{1:2}, {'a':'b'}, {"c": "d"}, {yes: e, no: 1.5}], [{}], []] # Hello
 num x = 1
 deci y = 2.5
+
+'''
+Nice
+Nice
+Nice
+'''
+
 word z = "Hello, world!"
 letter a = 'a'
 choice b = yes
 choice c = no
-d = 1 > 2 or (x != y or n > 10 and y == 0)
+choice d = 1 > 2 or (x != y or n > 10 and y == 0)
+
+
+# Sheezh

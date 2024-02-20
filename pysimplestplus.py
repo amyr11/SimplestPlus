@@ -1195,12 +1195,19 @@ class Parser:
 
         statements = []
 
+        while self.current_tok.type == TT_NEWLINE:
+            res.register(self.advance())
+
         statements.append(res.register(self.initialization()))
         if res.error:
             return res
 
         while self.current_tok.type == TT_NEWLINE:
             res.register(self.advance())
+            if self.current_tok.type == TT_NEWLINE:
+                continue
+            elif self.current_tok.type == TT_EOF:
+                break
             statements.append(res.register(self.initialization()))
             if res.error:
                 return res
