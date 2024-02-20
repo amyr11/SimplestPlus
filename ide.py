@@ -12,8 +12,7 @@ def analyze_lexical():
     code = text_editor.get("1.0", "end-1c")
 
     global current_file_name
-    lexer = pysimplestplus.Lexer(current_file_name, code)
-    tokens, errors = lexer.make_tokens()
+    tokens, errors = pysimplestplus.run_lexical(current_file_name, code)
     clear()
     for token in tokens:
         token_table.insert("", "end", values=(token.lexeme_str(), token.token_type_str()))
@@ -25,7 +24,23 @@ def analyze_lexical():
 
 
 def analyze_syntax():
-    pass
+    code = text_editor.get("1.0", "end-1c")
+
+    global current_file_name
+    tokens, ast, errors = pysimplestplus.run_syntax(current_file_name, code)
+    clear()
+    for token in tokens:
+        token_table.insert(
+            "", "end", values=(token.lexeme_str(), token.token_type_str())
+        )
+    if errors:
+        for error in errors:
+            print_to_console(error.as_string(), message_type="error")
+            print_to_console(" ")
+    elif ast:
+        print_to_console(f"AST: {ast}")
+        print_to_console(" ")
+        print_to_console("Syntax analysis completed successfully")
 
 
 def analyze_semantic():
@@ -44,9 +59,9 @@ def clear():
 
 def run_analysis():
     clear()
-    analyze_lexical()
+    # analyze_lexical()
     analyze_syntax()
-    analyze_semantic()
+    # analyze_semantic()
 
 
 def print_to_console(message, message_type="normal"):

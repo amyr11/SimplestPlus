@@ -1,10 +1,19 @@
-statement           : initialization
+single_stmt         : initialization
 
-initialization      : FROZEN? NUM|DECI|WORD|LETTER|CHOICE|WIKI|ID ([])? ID ASSIGN value
+initialization      : FROZEN? NUM|DECI|WORD|LETTER|CHOICE|WIKI|ID ([])* ID ASSIGN expression
 
-value               : expression
+expression          : and-expr (OR and-expr)*
+                    : OBRACK (expression (COMMA expression)*)? CBRACK
+                    : OBRACE (key COLON expression (COMMA key COLON expression)*)? CBRACE
 
-expression          : term ((PLUS|MINUS) term)*
+key                 : NUM_LIT|DECI_LIT|WORD_LIT|LETTER_LIT|YES|NO
+
+and-expr            : comp-expr (AND comp-expr)*
+
+comp-expr           : NOT comp-expr
+                    : arith-expr ((EE|NE|LT|GT|LTE|GTE) arith-expr)*
+
+arith-expr          : term ((PLUS|MINUS) term)*
 
 term                : factor ((MUL|DIV|FLOOR|MOD) factor)*
 

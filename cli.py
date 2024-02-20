@@ -46,7 +46,7 @@ def run_lexical():
 def run_syntax():
     while True:
         text = input("simplest+ > ")
-        ast, errors = simp.run_syntax("<stdin>", text)
+        tokens, ast, errors = simp.run_syntax("<stdin>", text)
 
         if errors:
             for error in errors:

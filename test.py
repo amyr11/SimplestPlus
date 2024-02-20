@@ -49,7 +49,7 @@ def run_lexical(file_path, code):
 
 
 def run_syntax(file_path, code):
-    ast, errors = pysimplestplus.run_syntax(file_path, code)
+    tokens, ast, errors = pysimplestplus.run_syntax(file_path, code)
 
     if errors:
         for error in errors:
