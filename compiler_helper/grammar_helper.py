@@ -1,12 +1,12 @@
 import sys
 
 sys.path.append("./")
-from pysimplestplus.tokens import TokenType
+import pysimplestplus
 from grammar import CFG
 
 
 def is_terminal(item):
-    return isinstance(item, TokenType)
+    return item in pysimplestplus.DELIM_MAP.keys()
 
 
 class GrammarHelper:
@@ -136,7 +136,7 @@ class GrammarHelper:
 
                             if is_terminal(next_item):
                                 follow_set.add(next_item)
-                                log += f"From production {production_row_no}, added terminal `{next_item.value}` to {production}'s follow set ({production} -> {next_item.value}).\n"
+                                log += f"From production {production_row_no}, added terminal `{next_item}` to {production}'s follow set ({production} -> {next_item}).\n"
                                 resolved = True
                             else:
                                 # Add the first set of the next non-terminal without the null
@@ -278,10 +278,10 @@ class GrammarHelper:
                     if i > 0:
                         out += " "
                     if is_terminal(right_prod_item):
-                        if right_prod_item.value in ["\\n", "\\t"]:
-                            out += f"\{right_prod_item.value}"
+                        if right_prod_item in ["\\n", "\\t"]:
+                            out += f"\{right_prod_item}"
                         else:
-                            out += f"{right_prod_item.value}"
+                            out += f"{right_prod_item}"
                     else:
                         if right_prod_item is None:
                             out += "λ"
@@ -303,7 +303,7 @@ class GrammarHelper:
                     key=(
                         lambda x: x
                         if isinstance(x, str)
-                        else x.value
+                        else x
                         if is_terminal(x)
                         else "λ"
                     ),
@@ -312,10 +312,10 @@ class GrammarHelper:
                 if i > 0:
                     out += ", "
                 if is_terminal(item):
-                    if item.value in ["\\n", "\\t"]:
-                        out += f"\{item.value}"
+                    if item in ["\\n", "\\t"]:
+                        out += f"\{item}"
                     else:
-                        out += f"{item.value}"
+                        out += f"{item}"
                 else:
                     if item is None:
                         item = "λ"
@@ -337,7 +337,7 @@ class GrammarHelper:
                     key=(
                         lambda x: x
                         if isinstance(x, str)
-                        else x.value
+                        else x
                         if is_terminal(x)
                         else "λ"
                     ),
@@ -346,16 +346,42 @@ class GrammarHelper:
                 if i > 0:
                     out += ", "
                 if is_terminal(item):
-                    if item.value in ["\\n", "\\t"]:
-                        out += f"\{item.value}"
+                    if item in ["\\n", "\\t"]:
+                        out += f"\{item}"
                     else:
-                        out += f"{item.value}"
+                        out += f"{item}"
                 else:
                     if item is None:
                         item = "λ"
                     out += f"{item}"
             out += "}"
             out += " |\n"
+        out += "\n\n"
+        out += "## PREDICT SET\n\n"
+        out += "| No. | Production | -> | Right Side |\n"
+        out += "| --- | ---------- | -- | ---------- |\n"
+        counter = 1
+        for left, right in self._predict_set.items():
+            for right_prod in right:
+                out += f"| {counter} | \{left} | -> | "
+                counter += 1
+                out += "{"
+                for i, right_prod_item in enumerate(right_prod):
+                    if i > 0:
+                        out += " "
+                    if is_terminal(right_prod_item):
+                        if right_prod_item in ["\\n", "\\t"]:
+                            out += f"\{right_prod_item}"
+                        else:
+                            out += f"{right_prod_item}"
+                    else:
+                        if right_prod_item is None:
+                            out += "λ"
+                        else:
+                            out += f"\{right_prod_item}"
+                out += "}"
+                out += " |\n"
+        out += "\n\n"
         return out
 
     def _set_str(self, s, name):
@@ -380,7 +406,7 @@ class GrammarHelper:
                     key=(
                         lambda x: x
                         if isinstance(x, str)
-                        else x.value
+                        else x
                         if is_terminal(x)
                         else "λ"
                     ),
@@ -389,7 +415,7 @@ class GrammarHelper:
                 if i > 0:
                     out += ", "
                 if is_terminal(item):
-                    out += f"{item.value}"
+                    out += f"{item}"
                 else:
                     if item is None:
                         item = "λ"
@@ -421,7 +447,7 @@ class GrammarHelper:
                     if i > 0:
                         out += " "
                     if is_terminal(right_prod_item):
-                        out += f"{right_prod_item.value}"
+                        out += f"{right_prod_item}"
                     else:
                         if right_prod_item is None:
                             right_prod_item = "λ"
@@ -452,7 +478,7 @@ class GrammarHelper:
                     if i > 0:
                         out += " "
                     if is_terminal(right_prod_item):
-                        out += f"{right_prod_item.value}"
+                        out += f"{right_prod_item}"
                     else:
                         if right_prod_item is None:
                             right_prod_item = "λ"
