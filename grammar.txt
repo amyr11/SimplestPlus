@@ -1,4 +1,4 @@
-single_stmt         : initialization
+single_stmt         : initialization (NEWLINE* single_stmt)* 
 
 initialization      : FROZEN? NUM|DECI|WORD|LETTER|CHOICE|WIKI|ID ([])* ID ASSIGN expression
 

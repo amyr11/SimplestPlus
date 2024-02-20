@@ -1191,7 +1191,21 @@ class Parser:
         return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
 
     def single_stmt(self):
-        return self.initialization()
+        res = ParseResult()
+
+        statements = []
+
+        statements.append(res.register(self.initialization()))
+        if res.error:
+            return res
+
+        while self.current_tok.type == TT_NEWLINE:
+            res.register(self.advance())
+            statements.append(res.register(self.initialization()))
+            if res.error:
+                return res
+
+        return res.success(StatementsNode(statements))
 
     def initialization(self):
         res = ParseResult()
@@ -1351,6 +1365,13 @@ class VarAssignNode:
         frozen_str = 'frozen ' if self.is_frozen else ''
         coll_dim_str = '[]' * self.coll_dimension
         return f"{frozen_str}{self.data_type}{coll_dim_str} {self.var_name_tok} = {self.value_node}"
+
+class StatementsNode:
+    def __init__(self, statements):
+        self.statements = statements
+
+    def __repr__(self):
+        return "".join(["\n" + repr(stmt) for stmt in self.statements])
 
 class CollectionNode:
     def __init__(self, coll_value_nodes):
