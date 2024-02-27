@@ -122,3 +122,4 @@ Legend:
                         : type-cast
                         : MINUS (NUM_LIT|DECI_LIT)
                         : OPAR expression CPAR
+                        : NEW ID func-args

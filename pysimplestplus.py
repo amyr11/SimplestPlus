@@ -1047,6 +1047,8 @@ class Parser:
             else:
                 return res.success(var_node)
         elif tok.type in (TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE):
+            var_node = VarAccessNode(tok)
+            
             res.register_advancement()
             self.advance()
 
@@ -1065,7 +1067,7 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-            return res.success(TypeCastNode(tok, arg))
+            return res.success(FuncCallNode(var_node, arg))
         elif tok.type in (TT_MINUS):
             res.register_advancement()
             self.advance()
@@ -1093,6 +1095,27 @@ class Parser:
                 return res.success(expr)
             else:
                 return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
+        elif tok.type == TT_NEW:
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_IDENTIFIER:
+                return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
+            
+            group_id = VarAccessNode(self.current_tok)
+
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_OPAR:
+                return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
+
+            args = res.register(self.func_args())
+            if res.error:
+                return res
+
+            return res.success(NewObjectNode(group_id, args))
+
         else:
             return res.failure(SyntaxError(tok.pos_start, tok.pos_end))
 
@@ -1129,7 +1152,7 @@ class Parser:
                     )
                 res.register_advancement()
                 self.advance()
-            return res.success(arg_nodes)
+            return arg_nodes
 
     def term(self):
         return self._binary_op(
@@ -1256,10 +1279,6 @@ class Parser:
 
         statements = []
 
-        while self.current_tok.type == TT_NEWLINE:
-            res.register_advancement()
-            self.advance()
-
         statements.append(res.register(self.init_stmt()))
         if res.error:
             return res
@@ -1322,6 +1341,14 @@ class Parser:
 
         return res.success(VarInitNode(is_frozen, data_type, coll_dimension, var_name_tok, value_node))
 
+    def _req_newline(self):
+        # if self.current_tok.type == TT_NEWLINE:
+        pass
+
+    
+    def _opt_newline(self):
+        pass
+
     def _binary_op(self, func, ops):
         res = ParseResult()
         left = res.register(func())
@@ -1357,11 +1384,14 @@ class ParseResult:
         self.advance_count += 1
 
     def register(self, res):
-        self.last_registered_advance_count = res.advance_count
-        self.advance_count += res.advance_count
-        if res.error:
-            self.error = res.error
-        return res.node
+        if isinstance(res, ParseResult):
+            self.last_registered_advance_count = res.advance_count
+            self.advance_count += res.advance_count
+            if res.error:
+                self.error = res.error
+            return res.node
+        else:
+            return res
 
     def try_register(self, res):
         if res.error:
@@ -1438,10 +1468,13 @@ class BinaryOpNode:
 
 class VarAccessNode:
     def __init__(self, ids):
+        if not isinstance(ids, list):
+            ids = [ids]
+
         self.var_name_toks = ids
     
     def __repr__(self):
-        return "var:'" + ".".join([tok.value for tok in self.var_name_toks]) + "'"
+        return "var:'" + ".".join([tok.value or tok.type for tok in self.var_name_toks]) + "'"
 
 class VarInitNode:
     def __init__(self, is_frozen, data_type, coll_dimension, var_name_tok, value_node):
@@ -1485,13 +1518,13 @@ class FuncCallNode:
     def __repr__(self):
         return f"call({self.node_to_call}, args:{self.args})"
 
-class TypeCastNode:
-    def __init__(self, to_type_tok, args):
-        self.to_type_tok = to_type_tok
+class NewObjectNode:
+    def __init__(self, node_to_call, args):
+        self.node_to_call = node_to_call
         self.args = args
 
     def __repr__(self):
-        return f"typecast({self.to_type_tok}, args:{self.args})"
+        return f"new_object({self.node_to_call}, args:{self.args})"
 
 #######################################
 # RUN
