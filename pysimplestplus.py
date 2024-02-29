@@ -3,6 +3,9 @@
 #######################################
 
 
+from ast import FunctionDef
+
+
 TAB_COUNT = 4
 S_COMMENT_LIMIT = 79
 ID_LIMIT = 20
@@ -133,11 +136,13 @@ DEFINITIONS["delim_cpar"] = [
     "\n",
     ":",
     ")",
+    "(",
     ",",
     "]",
     "[",
     "}",
     "#",
+    ".",
 ]
 DEFINITIONS["delim_obrace"] = [*DEFINITIONS["alpha_num"], " ", "\n", '"', "'", "}"]
 DEFINITIONS["delim_cbrace"] = [" ", "\n", ",", "}", ")", "]"]
@@ -153,7 +158,7 @@ DEFINITIONS["delim_obrack"] = [
     '"',
     "'",
 ]
-DEFINITIONS["delim_cbrack"] = [" ", "\n", ",", "[", "]", ")", "}"]
+DEFINITIONS["delim_cbrack"] = [" ", "\n", ",", "[", "]", ")", "}", ".", "("]
 DEFINITIONS["delim_comma"] = [
     *DEFINITIONS["alpha_num"],
     " ",
@@ -496,11 +501,12 @@ class Error:
         self.details = details
 
     def as_string(self):
-        result = f"{self.error_name}: {self.details}\n"
-        result += f'File "{self.pos_start.fn}", near line {self.pos_start.ln + 1}'
-        result += "\n\n" + self.string_with_arrows(
+        lineno = self.pos_start.ln + 1
+        result = f'File "{self.pos_start.fn}", line {lineno}, col {self.pos_start.col + 1}\n'
+        result += "\n" + self.string_with_arrows(
             self.pos_start.ftxt, self.pos_start, self.pos_end
         )
+        result += f"\n\n{self.error_name}: {self.details}"
         return result
 
     def string_with_arrows(self, text, pos_start, pos_end):
@@ -960,6 +966,33 @@ class Lexer:
 
 
 #######################################
+# PARSE RESULT
+#######################################
+
+
+class ParseResult:
+    def __init__(self):
+        self.error = None
+        self.node = None
+
+    def register(self, res):
+        if isinstance(res, ParseResult):
+            if res.error:
+                self.error = res.error
+            return res.node
+        
+        return res
+
+    def success(self, node):
+        self.node = node
+        return self
+
+    def failure(self, error):
+        self.error = error
+        return self
+
+
+#######################################
 # PARSER
 #######################################
 
@@ -972,298 +1005,58 @@ class Parser:
 
     def advance(self):
         self.tok_idx += 1
+
         if self.tok_idx < len(self.tokens):
             self.current_tok = self.tokens[self.tok_idx]
+
         return self.current_tok
 
+    def mark(self):
+        return self.tok_idx
+
+    def reset(self, idx):
+        self.tok_idx = idx
+
+    def expect(self, token_types, advance=True):
+        tok = self.current_tok
+
+        if tok.type in token_types:
+            if advance:
+                self.advance()
+            return tok
+
+        return None
+
+    def throw_error(self, details, pos_start=None, pos_end=None,):
+        pos_start = pos_start or self.current_tok.pos_start
+        pos_end = pos_end or self.current_tok.pos_end
+
+        return SyntaxError(pos_start, pos_end, details)
+
+    def throw_expected_error(self, expected):
+        expected_txt = ""
+        comma_sep = ", ".join([f"'{i}'" for i in expected])
+
+        if len(expected) > 1:
+            expected_txt += f"one of ({comma_sep})"
+        else:
+            expected_txt += f"{comma_sep}"
+
+        message = f"Unexpected end of file, expected {expected_txt}" if self.current_tok.type == TT_EOF else f"Expected {expected_txt}, got '{self.current_tok.type}'"
+
+        return self.throw_error(message)
+
     def parse(self):
-        res = self.statements()
+        res = self.program()
 
         if not res.error and self.current_tok.type != TT_EOF:
-            return res.failure(
-                SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end)
-            )
+            return res.failure(self.throw_error("Unexpected token"))
 
         return res
 
     #######################################
 
-    def dot_exp(self):
-        if self.current_tok.type == TT_IDENTIFIER:
-            res = ParseResult()
-            ids = []
-
-            ids.append(self.current_tok)
-            res.register_advancement()
-            self.advance()
-
-            while self.current_tok.type == TT_PERIOD:
-                res.register_advancement()
-                self.advance()
-
-                if self.current_tok.type != TT_IDENTIFIER:
-                    return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
-
-                ids.append(self.current_tok)
-                res.register_advancement()
-                self.advance()
-
-            return res.success(VarAccessNode(ids))
-
-    def factor(self):
-        res = ParseResult()
-        tok = self.current_tok
-
-        if tok.type in (TT_NUM_LITERAL, TT_DECI_LITERAL):
-            res.register_advancement()
-            self.advance()
-            return res.success(NumberNode(tok))
-        elif tok.type == TT_WORD_LITERAL:
-            res.register_advancement()
-            self.advance()
-            return res.success(WordNode(tok))
-        elif tok.type == TT_LETTER_LITERAL:
-            res.register_advancement()
-            self.advance()
-            return res.success(LetterNode(tok))
-        elif tok.type in (TT_YES, TT_NO):
-            res.register_advancement()
-            self.advance()
-            return res.success(ChoiceNode(tok))
-        elif tok.type == TT_BLANK:
-            res.register_advancement()
-            self.advance()
-            return res.success(BlankNode(tok))
-        elif tok.type == TT_IDENTIFIER:
-            var_node = res.register(self.dot_exp())
-            if res.error:
-                return res
-
-            if self.current_tok.type == TT_OPAR:
-                arg_nodes = res.register(self.func_args())
-                if res.error:
-                    return res
-                return res.success(FuncCallNode(var_node, arg_nodes))
-            else:
-                return res.success(var_node)
-        elif tok.type in (TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE):
-            var_node = VarAccessNode(tok)
-            
-            res.register_advancement()
-            self.advance()
-
-            if self.current_tok.type != TT_OPAR:
-                return res.failure(
-                    SyntaxError(
-                        self.current_tok.pos_start,
-                        self.current_tok.pos_end
-                    )
-                )
-
-            arg = res.register(self.func_args())
-            if res.error:
-                return res
-
-            res.register_advancement()
-            self.advance()
-
-            return res.success(FuncCallNode(var_node, arg))
-        elif tok.type in (TT_MINUS):
-            res.register_advancement()
-            self.advance()
-            if self.current_tok.type in (TT_NUM_LITERAL, TT_DECI_LITERAL):
-                unary_operand = NumberNode(self.current_tok)
-                res.register_advancement()
-                self.advance()
-                return res.success(UnaryOpNode(tok, unary_operand))
-            else:
-                return res.failure(
-                    SyntaxError(
-                        self.current_tok.pos_start,
-                        self.current_tok.pos_end
-                    )
-                )
-        elif tok.type == TT_OPAR:
-            res.register_advancement()
-            self.advance()
-            expr = res.register(self.expression())
-            if res.error:
-                return res
-            if self.current_tok.type == TT_CPAR:
-                res.register_advancement()
-                self.advance()
-                return res.success(expr)
-            else:
-                return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
-        elif tok.type == TT_NEW:
-            res.register_advancement()
-            self.advance()
-
-            if self.current_tok.type != TT_IDENTIFIER:
-                return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
-            
-            group_id = VarAccessNode(self.current_tok)
-
-            res.register_advancement()
-            self.advance()
-
-            if self.current_tok.type != TT_OPAR:
-                return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
-
-            args = res.register(self.func_args())
-            if res.error:
-                return res
-
-            return res.success(NewObjectNode(group_id, args))
-
-        else:
-            return res.failure(SyntaxError(tok.pos_start, tok.pos_end))
-
-    def func_args(self):
-        res = ParseResult()
-        if self.current_tok.type == TT_OPAR:
-            res.register_advancement()
-            self.advance()
-            arg_nodes = []
-            if self.current_tok.type == TT_CPAR:
-                res.register_advancement()
-                self.advance()
-            else:
-                arg_nodes.append(res.register(self.arith_expr()))
-                if res.error:
-                    return res.failure(
-                        SyntaxError(
-                            self.current_tok.pos_start,
-                            self.current_tok.pos_end
-                        )
-                    )
-                while self.current_tok.type == TT_COMMA:
-                    res.register_advancement()
-                    self.advance()
-                    arg_nodes.append(res.register(self.arith_expr()))
-                    if res.error:
-                        return res
-                if self.current_tok.type != TT_CPAR:
-                    return res.failure(
-                        SyntaxError(
-                            self.current_tok.pos_start,
-                            self.current_tok.pos_end
-                        )
-                    )
-                res.register_advancement()
-                self.advance()
-            return arg_nodes
-
-    def term(self):
-        return self._binary_op(
-            self.factor, (TT_MULTIPLY, TT_DIVIDE, TT_FLOOR, TT_MODULO)
-        )
-
-    def arith_expr(self):
-        return self._binary_op(
-            self.term, (TT_PLUS, TT_MINUS)
-        )
-
-    def comp_expr(self):
-        res = ParseResult()
-        tok = self.current_tok
-
-        if tok.type == TT_NOT:
-            res.register_advancement()
-            self.advance()
-            right = res.register(self.comp_expr())
-            if res.error:
-                return res
-            return res.success(UnaryOpNode(tok, right))
-
-        return self._binary_op(
-            self.arith_expr, (TT_EQUAL_TO, TT_NOT_EQUAL, TT_LESS_THAN, TT_LESS_THAN_EQUAL, TT_GREATER_THAN, TT_GREATER_THAN_EQUAL)
-        )
-
-    def and_expr(self):
-        return self._binary_op(
-            self.comp_expr, (TT_AND,)
-        )
-
-    def expression(self):
-        res = ParseResult()
-
-        if self.current_tok.type == TT_OBRACK:
-            res.register_advancement()
-            self.advance()
-            coll_value_nodes = []
-
-            if self.current_tok.type == TT_CBRACK:
-                res.register_advancement()
-                self.advance()
-            else:
-                coll_value_nodes.append(res.register(self.expression()))
-                if res.error:
-                    return res
-
-                while self.current_tok.type == TT_COMMA:
-                    res.register_advancement()
-                    self.advance()
-                    coll_value_nodes.append(res.register(self.expression()))
-                    if res.error:
-                        return res
-
-                if self.current_tok.type != TT_CBRACK:
-                    return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
-
-                res.register_advancement()
-                self.advance()
-
-            return res.success(CollectionNode(coll_value_nodes))
-        elif self.current_tok.type == TT_OBRACE:
-            res.register_advancement()
-            self.advance()
-            key_value_pairs = []
-
-            if self.current_tok.type == TT_CBRACE:
-                res.register_advancement()
-                self.advance()
-            else:
-                while True:
-                    key = res.register(self.key())
-                    if res.error:
-                        return res
-
-                    if self.current_tok.type != TT_COLON:
-                        return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
-
-                    res.register_advancement()
-                    self.advance()
-
-                    value = res.register(self.expression())
-                    if res.error:
-                        return res
-
-                    key_value_pairs.append((key, value))
-
-                    if self.current_tok.type != TT_COMMA:
-                        break
-
-                    res.register_advancement()
-                    self.advance()
-
-                if self.current_tok.type != TT_CBRACE:
-                    return res.failure(
-                        SyntaxError(
-                            self.current_tok.pos_start, self.current_tok.pos_end
-                        )
-                    )
-
-                res.register_advancement()
-                self.advance()
-
-            return res.success(WikiNode(key_value_pairs))
-
-        return self._binary_op(
-            self.and_expr, (TT_OR,)
-        )
-
-    def key(self):
+    def program(self):
         res = ParseResult()
 
         expr = res.register(self.expression())
@@ -1272,141 +1065,247 @@ class Parser:
 
         return res.success(expr)
 
-    def statements(self):
-        # TODO: Refactor
-
+    def func_args(self):
         res = ParseResult()
+        arg_nodes = []
 
-        statements = []
+        if not self.expect({TT_OPAR}):
+            return res.failure(self.throw_expected_error([TT_OPAR]))
 
-        statements.append(res.register(self.init_stmt()))
-        if res.error:
-            return res
+        if not self.expect({TT_CPAR}):
+            while True:
+                arg_nodes.append(res.register(self.expression()))
+                if res.error:
+                    return res
 
-        while self.current_tok.type == TT_NEWLINE:
-            res.register_advancement()
-            self.advance()
-            if self.current_tok.type == TT_NEWLINE:
-                continue
-            elif self.current_tok.type == TT_EOF:
-                break
-            statements.append(res.register(self.init_stmt()))
-            if res.error:
-                return res
+                if not self.expect({TT_COMMA}):
+                    break
 
-        return res.success(StatementsNode(statements))
+            if not self.expect({TT_CPAR}):
+                return res.failure(self.throw_expected_error([TT_CPAR, TT_COMMA]))
 
-    def init_stmt(self):
-        res = ParseResult()
-        is_frozen = False
-        coll_dimension = 0
+        return arg_nodes
 
-        if self.current_tok.type == TT_FROZEN:
-            is_frozen = True
-            res.register_advancement()
-            self.advance()
-
-        if self.current_tok.type not in (TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER):
-            return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
-
-        data_type = self.current_tok
-        res.register_advancement()
-        self.advance()
-
-        while self.current_tok.type == TT_OBRACK:
-            res.register_advancement()
-            self.advance()
-            if self.current_tok.type != TT_CBRACK:
-                return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
-            res.register_advancement()
-            self.advance()
-            coll_dimension += 1
-
-        if self.current_tok.type != TT_IDENTIFIER:
-            return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
-
-        var_name_tok = self.current_tok
-        res.register_advancement()
-        self.advance()
-
-        if self.current_tok.type != TT_ASSIGN:
-            return res.failure(SyntaxError(self.current_tok.pos_start, self.current_tok.pos_end))
-
-        res.register_advancement()
-        self.advance()
-
-        value_node = res.register(self.expression())
-        if res.error:
-            return res
-
-        return res.success(VarInitNode(is_frozen, data_type, coll_dimension, var_name_tok, value_node))
-
-    def _req_newline(self):
-        # if self.current_tok.type == TT_NEWLINE:
-        pass
-
-    
-    def _opt_newline(self):
-        pass
-
-    def _binary_op(self, func, ops):
+    def _binary_op(self, node, func, ops):
         res = ParseResult()
         left = res.register(func())
         if res.error:
             return res
 
-        while self.current_tok.type in ops:
-            op_tok = self.current_tok
-            self.advance()
+        while op_tok := self.expect(ops):
             right = res.register(func())
             if res.error:
                 return res
-            left = BinaryOpNode(left, op_tok, right)
+            left = node(left, op_tok, right)
 
         return res.success(left)
 
+    def variable_left(self):
+        res = ParseResult()
 
-#######################################
-# PARSE RESULT
-#######################################
+        if id := self.expect({TT_IDENTIFIER}):
+            var_node = VarAccessNode(id)
 
+            while self.expect({TT_PERIOD, TT_OBRACK}, False):
+                if self.expect({TT_PERIOD}):
+                    if not (id := self.expect({TT_IDENTIFIER})):
+                        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
 
-class ParseResult:
-    def __init__(self):
-        self.error = None
-        self.node = None
-        self.last_registered_advance_count = 0
-        self.advance_count = 0
-        self.to_reverse_count = 0
+                    right = VarAccessNode(id)
+                    var_node = DotOpNode(var_node, right)
+                elif self.expect({TT_OBRACK}):
+                    left_slice = None
+                    right_slice = None
 
-    def register_advancement(self):
-        self.last_registered_advance_count = 1
-        self.advance_count += 1
+                    left_slice = res.register(self.expression())
+                    if res.error:
+                        return res
 
-    def register(self, res):
-        if isinstance(res, ParseResult):
-            self.last_registered_advance_count = res.advance_count
-            self.advance_count += res.advance_count
+                    if self.expect({TT_COLON}):
+                        right_slice = res.register(self.expression())
+                        if res.error:
+                            return res
+
+                    var_node = BracketAccessNode(var_node, left_slice, right_slice)
+
+                    if not self.expect({TT_CBRACK}):
+                        return res.failure(self.throw_expected_error([TT_CBRACK]))
+
+            return res.success(var_node)
+
+        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+    def variable_right(self):
+        res = ParseResult()
+
+        if id := self.expect({TT_IDENTIFIER}):
+            var_node = VarAccessNode(id)
+
+            while self.expect({TT_PERIOD, TT_OBRACK, TT_OPAR}, False):
+                if self.expect({TT_PERIOD}):
+                    if not (id := self.expect({TT_IDENTIFIER})):
+                        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+                    right = VarAccessNode(id)
+                    var_node = DotOpNode(var_node, right)
+                elif self.expect({TT_OBRACK}):
+                    left_slice = None
+                    right_slice = None
+
+                    left_slice = res.register(self.expression())
+                    if res.error:
+                        return res
+
+                    if self.expect({TT_COLON}):
+                        right_slice = res.register(self.expression())
+                        if res.error:
+                            return res
+
+                    var_node = BracketAccessNode(var_node, left_slice, right_slice)
+
+                    if not self.expect({TT_CBRACK}):
+                        return res.failure(self.throw_expected_error([TT_CBRACK]))
+                elif self.expect({TT_OPAR}, False):
+                    func_args = res.register(self.func_args())
+                    if res.error:
+                        return res
+
+                    var_node = FuncCallNode(var_node, func_args)
+
+            return res.success(var_node)
+
+        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+    def type_cast(self):
+        res = ParseResult()
+
+        if to_type := self.expect({TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE}):
+            var_node = VarAccessNode(to_type)
+
+            func_args = res.register(self.func_args())
             if res.error:
-                self.error = res.error
-            return res.node
-        else:
-            return res
+                return res
 
-    def try_register(self, res):
-        if res.error:
-            self.to_reverse_count = res.advance_count
-            return None
-        return self.register(res)
+            return res.success(FuncCallNode(var_node, func_args))
 
-    def success(self, node):
-        self.node = node
-        return self
+        return res.failure(self.throw_expected_error([TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE]))
 
-    def failure(self, error):
-        if not self.error or self.last_registered_advance_count == 0:
-            self.error = error
-        return self
+    def expression(self):
+        res = ParseResult()
+
+        if self.expect({TT_OBRACK}):
+            collection_items = []
+
+            if not self.expect({TT_CBRACK}):
+                while True:
+                    collection_items.append(res.register(self.expression()))
+                    if res.error:
+                        return res
+
+                    if not self.expect({TT_COMMA}):
+                        break
+
+                if not self.expect({TT_CBRACK}):
+                    return res.failure(self.throw_expected_error([TT_COMMA, TT_CBRACK]))
+
+            return res.success(CollectionNode(collection_items))
+        elif self.expect({TT_OBRACE}):
+            key_value_pairs = []
+
+            if not self.expect({TT_CBRACE}):
+                while True:
+                    key = res.register(self.expression())
+                    if res.error:
+                        return res
+
+                    if not self.expect({TT_COLON}):
+                        return res.failure(self.throw_expected_error([TT_COLON]))
+
+                    value = res.register(self.expression())
+                    if res.error:
+                        return res
+
+                    key_value_pairs.append((key, value))
+
+                    if not self.expect({TT_COMMA}):
+                        break
+
+                if not self.expect({TT_CBRACE}):
+                    return res.failure(self.throw_expected_error([TT_CBRACE, TT_COMMA]))
+
+            return res.success(WikiNode(key_value_pairs))
+
+        return self._binary_op(BinaryOpNode, self.and_expr, (TT_OR,))
+
+    def and_expr(self):
+        return self._binary_op(BinaryOpNode, self.comp_expr, (TT_AND,))
+
+    def comp_expr(self):
+        res = ParseResult()
+
+        if (negate := self.expect({TT_NOT})):
+            comp_expr = res.register(self.comp_expr())
+            if res.error:
+                return res
+            return res.success(UnaryOpNode(negate, comp_expr))
+
+        return self._binary_op(BinaryOpNode, self.arith_expr, (TT_EQUAL_TO, TT_NOT_EQUAL, TT_LESS_THAN, TT_GREATER_THAN, TT_LESS_THAN_EQUAL, TT_GREATER_THAN_EQUAL))
+
+    def arith_expr(self):
+        return self._binary_op(BinaryOpNode, self.term, (TT_PLUS, TT_MINUS))
+
+    def term(self):
+        return self._binary_op(BinaryOpNode, self.factor, (TT_MULTIPLY, TT_DIVIDE, TT_FLOOR, TT_MODULO))
+
+    def factor(self):
+        res = ParseResult()
+
+        if number := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
+            return res.success(NumberNode(number))
+        elif word := self.expect({TT_WORD_LITERAL}):
+            return res.success(WordNode(word))
+        elif letter := self.expect({TT_LETTER_LITERAL}):
+            return res.success(LetterNode(letter))
+        elif choice := self.expect({TT_YES, TT_NO}):
+            return res.success(ChoiceNode(choice))
+        elif blank := self.expect({TT_BLANK}):
+            return res.success(BlankNode(blank))
+        elif neg := self.expect({TT_MINUS}):
+            if right := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
+                return res.success(UnaryOpNode(neg, NumberNode(right)))
+            elif self.expect({TT_IDENTIFIER}, False):
+                var_node = res.register(self.variable_right())
+                if res.error:
+                    return res
+                return res.success(UnaryOpNode(neg, var_node))
+            return res.failure(self.throw_expected_error([TT_NUM_LITERAL, TT_DECI_LITERAL, TT_IDENTIFIER]))
+        elif self.expect({TT_IDENTIFIER}, False):
+            var_node = res.register(self.variable_right())
+            if res.error:
+                return res
+            return res.success(var_node)
+        elif self.expect({TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE}, False):
+            type_cast_node = res.register(self.type_cast())
+            if res.error:
+                return res
+            return res.success(type_cast_node)
+        elif self.expect({TT_NEW}):
+            if not (id := self.expect({TT_IDENTIFIER})):
+                return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+            var_node = VarAccessNode(id)
+            func_args = res.register(self.func_args())
+            if res.error:
+                return res
+            return res.success(NewObjectNode(var_node, func_args))
+        elif self.expect({TT_OPAR}):
+            expr = res.register(self.expression())
+            if res.error:
+                return res
+            if not self.expect({TT_CPAR}):
+                return res.failure(self.throw_expected_error([TT_CPAR]))
+            return res.success(expr)
+
+        return res.failure(self.throw_expected_error([TT_OBRACK, TT_OBRACE, TT_NOT, TT_OPAR, TT_NEW, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_NUM_LITERAL, TT_DECI_LITERAL, TT_WORD_LITERAL, TT_LETTER_LITERAL, TT_YES, TT_NO, TT_BLANK, TT_MINUS]))
 
 
 #######################################
@@ -1466,15 +1365,29 @@ class BinaryOpNode:
     def __repr__(self):
         return f"({self.left_node}, {self.op_tok}, {self.right_node})"
 
-class VarAccessNode:
-    def __init__(self, ids):
-        if not isinstance(ids, list):
-            ids = [ids]
+class DotOpNode:
+    def __init__(self, left_node, right_node):
+        self.left_node = left_node
+        self.right_node = right_node
 
-        self.var_name_toks = ids
+    def __repr__(self):
+        return f"dot_access({self.left_node}, {self.right_node})"
+
+class VarAccessNode:
+    def __init__(self, var_name_tok):
+        self.var_name_tok = var_name_tok
     
     def __repr__(self):
-        return "var:'" + ".".join([tok.value or tok.type for tok in self.var_name_toks]) + "'"
+        return f"var_access:{self.var_name_tok}"
+
+class BracketAccessNode:
+    def __init__(self, var_access_node, left_slice, right_slice):
+        self.var_access_node = var_access_node
+        self.left_slice = left_slice
+        self.right_slice = right_slice
+    
+    def __repr__(self):
+        return f"bracket_access(var_access:{self.var_access_node}, from:{self.left_slice}, to:{self.right_slice})"
 
 class VarInitNode:
     def __init__(self, is_frozen, data_type, coll_dimension, var_name_tok, value_node):
@@ -1489,12 +1402,12 @@ class VarInitNode:
         coll_dim_str = '[]' * self.coll_dimension
         return f"{frozen_str}{self.data_type}{coll_dim_str} {self.var_name_tok} = {self.value_node}"
 
-class StatementsNode:
-    def __init__(self, statements):
-        self.statements = statements
+class BodyNode:
+    def __init__(self, items=None):
+        self.items = items or []
 
     def __repr__(self):
-        return "".join(["\n" + repr(stmt) for stmt in self.statements])
+        return "".join(["\n" + repr(item) for item in self.items])
 
 class CollectionNode:
     def __init__(self, coll_value_nodes):
@@ -1509,6 +1422,16 @@ class WikiNode:
 
     def __repr__(self):
         return f"wiki({self.key_value_pairs})"
+
+class FuncDefNode:
+    def __init__(self, return_type=None, id=None, params=None, body=None):
+        self.return_type = return_type
+        self.id = id
+        self.params = params
+        self.body = body
+    
+    def __repr__(self):
+        return f"<function return_type:{self.return_type} | id:{self.id} | params: {self.params}>"
 
 class FuncCallNode:
     def __init__(self, node_to_call, args):

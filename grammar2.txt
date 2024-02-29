@@ -34,13 +34,9 @@ Legend:
 
 [ ] return-type         : EMPTY|data-type
 
-[x] func-args           : OPAR argument? CPAR
+[ ] func-args           : OPAR (expression (COMMA expression)*)? CPAR
 
-[ ] func-params         : OPAR parameter? CPAR
-
-[ ] parameter           : data-type ID (ASSIGN expression)? (COMMA data-type ID (ASSIGN expression)?)*
-
-[ ] argument            : expression (COMMA expression)*
+[ ] func-params         : OPAR (data-type ID (ASSIGN expression)? (COMMA data-type ID (ASSIGN expression)?)*)? CPAR
 
 [ ] group-body          : group-initializer (group-global)*
                         : group-global+ (group-initializer group-global*)?
@@ -53,24 +49,26 @@ Legend:
 
 [ ] access-specifier    : VISIBLE|HIDDEN|RESTRICTED
 
-[ ] statements          : TAB+ BACK expression NEWLINE+
-                        : TAB+ STOP NEWLINE+ statements*
-                        : TAB+ SKIP NEWLINE+ statements*
-                        : TAB+ init-stmt statements*
-                        : TAB+ assign-stmt statements*
-                        : TAB+ func-call statements*
-                        : TAB+ global-stmt statements*
-                        : TAB+ incase-stmt statements*
-                        : TAB+ given-stmt statements*
-                        : TAB+ every-stmt statements*
-                        : TAB+ during-stmt statements*
-                        : TAB+ go-during-stmt statements*
+[ ] statements          : TAB+ block statements*
+                        
+[ ] block               : init-stmt
+                        : assign-stmt
+                        : func-call
+                        : global-stmt
+                        : incase-stmt
+                        : given-stmt
+                        : every-stmt
+                        : during-stmt
+                        : go-during-stmt
+                        : BACK expression? NEWLINE+
+                        : STOP NEWLINE+
+                        : SKIP NEWLINE+
 
-[x] init-stmt           : data-type ID ASSIGN expression NEWLINE+
+[ ] init-stmt           : data-type ID ASSIGN expression NEWLINE+
 
-[ ] assign-stmt         : dot-exp ASSIGN expression NEWLINE+
+[ ] assign-stmt         : variable-left ASSIGN expression NEWLINE+
 
-[ ] func-call           : dot-exp func-args NEWLINE+
+[ ] func-call           : variable-left func-args NEWLINE+
                         : type-cast NEWLINE+
 
 [ ] type-cast           : (NUM|DECI|WORD|LETTER|CHOICE) func-args
@@ -100,26 +98,26 @@ Legend:
 [ ] go-during-stmt      : GO COLON NEWLINE+ statements
                         | TAB+ DURING expression
 
-[x] dot-exp             : ID (PERIOD ID)*
+[x] variable-left       : ID ((PERIOD ID) | (OBRACK expression (COLON expression)? CBRACK))*
 
-[x] expression          : and-expr (OR and-expr)*
-                        : OBRACK (expression (COMMA expression)*)? CBRACK
-                        : OBRACE (key COLON expression (COMMA key COLON expression)*)? CBRACE
+[x] variable-right      : ID ((PERIOD ID) | (OBRACK expression (COLON expression)? CBRACK) | func-args)*
 
-[x] key                 : NUM_LIT|DECI_LIT|WORD_LIT|LETTER_LIT|YES|NO
+[x] expression          : [x] and-expr (OR and-expr)*
+                        : [x] OBRACK (expression (COMMA expression)*)? CBRACK
+                        : [x] OBRACE (expression COLON expression (COMMA expression COLON expression)*)? CBRACE
 
-[x] and-expr            : comp-expr (AND comp-expr)*
+[x] and-expr            : [x] comp-expr (AND comp-expr)*
 
-[x] comp-expr           : NOT comp-expr
-                        : arith-expr ((EE|NE|LT|GT|LTE|GTE) arith-expr)*
+[x] comp-expr           : [x] NOT comp-expr
+                        : [x] arith-expr ((EE|NE|LT|GT|LTE|GTE) arith-expr)*
 
-[x] arith-expr          : term ((PLUS|MINUS) term)*
+[x] arith-expr          : [x] term ((PLUS|MINUS) term)*
 
-[x] term                : factor ((MUL|DIV|FLOOR|MOD) factor)*
+[x] term                : [x] factor ((MUL|DIV|FLOOR|MOD) factor)*
 
-[x] factor              : NUM_LIT|DECI_LIT|WORD_LIT|LETTER_LIT|YES|NO|BLANK
-                        : dot-exp func-args?
-                        : type-cast
-                        : MINUS (NUM_LIT|DECI_LIT)
-                        : OPAR expression CPAR
-                        : NEW ID func-args
+[x] factor              : [x] NUM_LIT|DECI_LIT|WORD_LIT|LETTER_LIT|YES|NO|BLANK
+                        : [x] variable-right
+                        : [x] type-cast
+                        : [x] MINUS (NUM_LIT|DECI_LIT|variable-right)
+                        : [x] OPAR expression CPAR
+                        : [x] NEW ID func-args
