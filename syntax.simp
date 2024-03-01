@@ -1,1 +1,5 @@
-not x.y.g.g
+num x = 1
+num x = 1
+
+home():
+	0

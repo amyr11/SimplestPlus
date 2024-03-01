@@ -550,7 +550,11 @@ class LexicalError(Error):
 
 class SyntaxError(Error):
     def __init__(self, pos_start, pos_end, details=None):
-        super().__init__(pos_start, pos_end, "SyntaxError", details or "Invalid syntax")
+        super().__init__(pos_start, pos_end, "SyntaxError", details)
+
+class IndentationError(Error):
+    def __init__(self, pos_start, pos_end, details=None):
+        super().__init__(pos_start, pos_end, "IndentationError", details)
 
 
 #######################################
@@ -1001,6 +1005,7 @@ class Parser:
     def __init__(self, tokens):
         self.tokens = [token for token in tokens if token.type not in (TT_SPACE, TT_S_COMMENT, TT_M_COMMENT)]
         self.tok_idx = -1
+        self.force_newline = True
         self.advance()
 
     def advance(self):
@@ -1015,7 +1020,11 @@ class Parser:
         return self.tok_idx
 
     def reset(self, idx):
-        self.tok_idx = idx
+        self.tok_idx = idx - 1
+        self.advance()
+
+    def get_tok_at(self, idx):
+        return self.tokens[idx]
 
     def expect(self, token_types, advance=True):
         tok = self.current_tok
@@ -1027,11 +1036,14 @@ class Parser:
 
         return None
 
-    def throw_error(self, details, pos_start=None, pos_end=None,):
+    def throw_error(self, details, error_type=None, pos_start=None, pos_end=None,):
         pos_start = pos_start or self.current_tok.pos_start
         pos_end = pos_end or self.current_tok.pos_end
 
-        return SyntaxError(pos_start, pos_end, details)
+        if not error_type:
+            error_type = SyntaxError
+
+        return error_type(pos_start, pos_end, details)
 
     def throw_expected_error(self, expected):
         expected_txt = ""
@@ -1057,13 +1069,129 @@ class Parser:
     #######################################
 
     def program(self):
+        # TODO:
+
         res = ParseResult()
+        program_body = []
+
+        while self.expect({TT_FROZEN, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER}, False):
+            program_body.append(res.register(self.global_()))
+            if res.error:
+                return res
+
+        if self.expect({TT_HOME}):
+            if not self.expect({TT_OPAR}):
+                return res.failure(self.throw_expected_error([TT_OPAR]))
+
+            if not self.expect({TT_CPAR}):
+                return res.failure(self.throw_expected_error([TT_CPAR]))
+
+            if not self.expect({TT_COLON}):
+                return res.failure(self.throw_expected_error([TT_COLON]))
+
+            res.register(self.req_newline())
+            if res.error:
+                return res
+
+            self.force_newline = False
+
+            home_body = res.register(self.statements(level=1))
+            if res.error:
+                return res
+
+            home_node = FuncDefNode(DataTypeNode(TT_EMPTY, 0), TT_HOME, [], home_body)
+            program_body.append(home_node)
+
+            while not self.expect({TT_EOF}, False):
+                program_body.append(res.register(self.global_()))
+                if res.error:
+                    return res
+
+            return res.success(BodyNode(program_body))
+        
+        return res.failure(self.throw_expected_error([TT_HOME, TT_FROZEN, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER]))
+
+    def global_(self):
+        return self.init_stmt()
+
+    def data_type(self):
+        res = ParseResult()
+
+        if type := self.expect({TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER}):
+            dimension = 0
+            while self.expect({TT_OBRACK}):
+                if not self.expect({TT_CBRACK}):
+                    res.failure(self.throw_expected_error([TT_CBRACK]))
+                dimension += 1
+
+            return res.success(DataTypeNode(type, dimension))
+
+        return res.failure(self.throw_expected_error([TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER]))
+
+    def statements(self, level):
+        res = ParseResult()
+        nodes = []
+
+        while True:
+            pos = self.mark()
+            tab_count = 0
+            while self.expect({TT_TAB}):
+                tab_count += 1
+
+            if tab_count > level:
+                return res.failure(self.throw_error(f"Required indent is {level}, got {tab_count}", error_type=IndentationError, pos_start=self.get_tok_at(pos).pos_start, pos_end=self.get_tok_at(self.tok_idx).pos_start))
+            elif tab_count < level:
+                if len(nodes) == 0:
+                    return res.failure(self.throw_error(f"Required indent is {level}, got {tab_count}", error_type=IndentationError, pos_start=self.get_tok_at(pos).pos_start, pos_end=self.get_tok_at(self.tok_idx).pos_start))
+                break
+
+            nodes.append(res.register(self.block()))
+            if res.error:
+                return res
+
+        return res.success(BodyNode(nodes))
+
+    def block(self):
+        return self.init_stmt()
+
+    def init_stmt(self):
+        res = ParseResult()
+        is_frozen = False
+
+        if self.expect({TT_FROZEN}):
+            is_frozen = True
+
+        data_type = res.register(self.data_type())
+        if res.error:
+            return res
+
+        if not (id := self.expect({TT_IDENTIFIER})):
+            return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+        if not self.expect({TT_ASSIGN}):
+            return res.failure(self.throw_expected_error([TT_ASSIGN]))
 
         expr = res.register(self.expression())
         if res.error:
             return res
 
-        return res.success(expr)
+        res.register(self.req_newline())
+        if res.error:
+            return res
+
+        return res.success(VarInitNode(is_frozen, data_type, id, expr))
+
+    def req_newline(self):
+        res = ParseResult()
+
+        if self.force_newline or not self.expect({TT_EOF}, False):
+            if not self.expect({TT_NEWLINE}):
+                return res.failure(self.throw_expected_error([TT_NEWLINE]))
+
+        while self.expect({TT_NEWLINE}):
+            pass
+
+        return res
 
     def func_args(self):
         res = ParseResult()
@@ -1181,6 +1309,9 @@ class Parser:
 
         if to_type := self.expect({TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE}):
             var_node = VarAccessNode(to_type)
+
+            if not self.expect({TT_OPAR}, False):
+                return res.failure(self.throw_expected_error([TT_OPAR]))
 
             func_args = res.register(self.func_args())
             if res.error:
@@ -1390,17 +1521,15 @@ class BracketAccessNode:
         return f"bracket_access(var_access:{self.var_access_node}, from:{self.left_slice}, to:{self.right_slice})"
 
 class VarInitNode:
-    def __init__(self, is_frozen, data_type, coll_dimension, var_name_tok, value_node):
+    def __init__(self, is_frozen, data_type_node, var_name_tok, value_node):
         self.is_frozen = is_frozen
-        self.data_type = data_type
-        self.coll_dimension = coll_dimension
+        self.data_type_node = data_type_node
         self.var_name_tok = var_name_tok
         self.value_node = value_node
 
     def __repr__(self):
         frozen_str = 'frozen ' if self.is_frozen else ''
-        coll_dim_str = '[]' * self.coll_dimension
-        return f"{frozen_str}{self.data_type}{coll_dim_str} {self.var_name_tok} = {self.value_node}"
+        return f"{frozen_str}{self.data_type_node} {self.var_name_tok} = {self.value_node}"
 
 class BodyNode:
     def __init__(self, items=None):
@@ -1431,7 +1560,7 @@ class FuncDefNode:
         self.body = body
     
     def __repr__(self):
-        return f"<function return_type:{self.return_type} | id:{self.id} | params: {self.params}>"
+        return f"<function return_type:{self.return_type}, id:{self.id}, params: {self.params}>"
 
 class FuncCallNode:
     def __init__(self, node_to_call, args):
@@ -1448,6 +1577,15 @@ class NewObjectNode:
 
     def __repr__(self):
         return f"new_object({self.node_to_call}, args:{self.args})"
+
+
+class DataTypeNode:
+    def __init__(self, type_tok, coll_dimension=0):
+        self.type_tok = type_tok
+        self.coll_dimension = coll_dimension
+
+    def __repr__(self):
+        return f"<type:{self.type_tok}, dimension:{self.coll_dimension}>"
 
 #######################################
 # RUN
