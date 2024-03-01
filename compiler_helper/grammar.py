@@ -1008,323 +1008,341 @@
 # }
 
 
+# import pysimplestplus
+
+# CFG = {
+#     "<initialization>": [
+#         [
+#             "<optional_frozen>",
+#             "<data_type>",
+#             "<optional_coll_suffix>",
+#             pysimplestplus.TT_IDENTIFIER,
+#             pysimplestplus.TT_ASSIGN,
+#             "<expression>",
+#         ],
+#     ],
+#     "<optional_frozen>": [
+#         [
+#             pysimplestplus.TT_FROZEN,
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<data_type>": [
+#         [
+#             pysimplestplus.TT_NUM,
+#         ],
+#         [
+#             pysimplestplus.TT_DECI,
+#         ],
+#         [
+#             pysimplestplus.TT_WORD,
+#         ],
+#         [
+#             pysimplestplus.TT_LETTER,
+#         ],
+#         [
+#             pysimplestplus.TT_CHOICE,
+#         ],
+#         [
+#             pysimplestplus.TT_WIKI,
+#         ],
+#         [
+#             pysimplestplus.TT_IDENTIFIER,
+#         ],
+#     ],
+#     "<optional_coll_suffix>": [
+#         [
+#             pysimplestplus.TT_OBRACK,
+#             pysimplestplus.TT_CBRACK,
+#             "<optional_coll_suffix>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<expression>": [
+#         [
+#             "<and_expr>",
+#             "<next_and_expr>",
+#         ],
+#         [
+#             pysimplestplus.TT_OBRACK,
+#             "<optional_coll_values>",
+#             pysimplestplus.TT_CBRACK,
+#         ],
+#         [
+#             pysimplestplus.TT_OBRACE,
+#             "<optional_wiki_values>",
+#             pysimplestplus.TT_CBRACE,
+#         ],
+#     ],
+#     "<and_expr>": [
+#         [
+#             "<comp_expr>",
+#             "<next_comp_expr>",
+#         ],
+#     ],
+#     "<next_and_expr>": [
+#         [
+#             pysimplestplus.TT_OR,
+#             "<and_expr>",
+#             "<next_and_expr>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<optional_coll_values>": [
+#         [
+#             "<expression>",
+#             "<next_coll_value>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<next_coll_value>": [
+#         [
+#             pysimplestplus.TT_COMMA,
+#             "<expression>",
+#             "<next_coll_value>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<optional_wiki_values>": [
+#         [
+#             "<key_value_pair>",
+#             "<next_key_value_pair>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<key_value_pair>": [
+#         [
+#             "<key>",
+#             pysimplestplus.TT_COLON,
+#             "<expression>",
+#         ],
+#     ],
+#     "<key>": [
+#         [
+#             pysimplestplus.TT_NUM_LITERAL,
+#         ],
+#         [
+#             pysimplestplus.TT_DECI_LITERAL,
+#         ],
+#         [
+#             pysimplestplus.TT_WORD_LITERAL,
+#         ],
+#         [
+#             pysimplestplus.TT_LETTER_LITERAL,
+#         ],
+#         [
+#             pysimplestplus.TT_YES,
+#         ],
+#         [
+#             pysimplestplus.TT_NO,
+#         ],
+#     ],
+#     "<next_key_value_pair>": [
+#         [
+#             pysimplestplus.TT_COMMA,
+#             "<key_value_pair>",
+#             "<next_key_value_pair>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<comp_expr>": [
+#         [
+#             pysimplestplus.TT_NOT,
+#             "<comp_expr>",
+#         ],
+#         [
+#             "<arith_expr>",
+#             "<next_arith_expr>",
+#         ],
+#     ],
+#     "<next_comp_expr>": [
+#         [pysimplestplus.TT_AND, "<comp_expr>", "<next_comp_expr>"],
+#         [None],
+#     ],
+#     "<next_arith_expr>": [
+#         [
+#             "<comp_operator>",
+#             "<arith_expr>",
+#             "<next_arith_expr>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<comp_operator>": [
+#         [
+#             pysimplestplus.TT_EQUAL_TO,
+#         ],
+#         [
+#             pysimplestplus.TT_NOT_EQUAL,
+#         ],
+#         [
+#             pysimplestplus.TT_LESS_THAN,
+#         ],
+#         [
+#             pysimplestplus.TT_GREATER_THAN,
+#         ],
+#         [
+#             pysimplestplus.TT_LESS_THAN_EQUAL,
+#         ],
+#         [
+#             pysimplestplus.TT_GREATER_THAN_EQUAL,
+#         ],
+#     ],
+#     "<arith_expr>": [
+#         [
+#             "<term>",
+#             "<next_term>",
+#         ]
+#     ],
+#     "<term>": [
+#         [
+#             "<factor>",
+#             "<next_factor>",
+#         ]
+#     ],
+#     "<next_term>": [
+#         [
+#             "<term_operator>",
+#             "<term>",
+#             "<next_term>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<term_operator>": [
+#         [
+#             pysimplestplus.TT_PLUS,
+#         ],
+#         [
+#             pysimplestplus.TT_MINUS,
+#         ],
+#     ],
+#     "<factor>": [
+#         [
+#             pysimplestplus.TT_WORD_LITERAL,
+#         ],
+#         [
+#             pysimplestplus.TT_LETTER_LITERAL,
+#         ],
+#         [
+#             pysimplestplus.TT_YES,
+#         ],
+#         [
+#             pysimplestplus.TT_NO,
+#         ],
+#         [
+#             pysimplestplus.TT_BLANK,
+#         ],
+#         [
+#             pysimplestplus.TT_IDENTIFIER,
+#             "<optional_call_tail>",
+#         ],
+#         [
+#             pysimplestplus.TT_MINUS,
+#             "<numeric_literal>",
+#         ],
+#         [
+#             "<numeric_literal>",
+#         ],
+#         [
+#             pysimplestplus.TT_OPAR,
+#             "<expression>",
+#             pysimplestplus.TT_CPAR,
+#         ],
+#     ],
+#     "<next_factor>": [
+#         [
+#             "<factor_operator>",
+#             "<factor>",
+#             "<next_factor>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<factor_operator>": [
+#         [
+#             pysimplestplus.TT_MULTIPLY,
+#         ],
+#         [
+#             pysimplestplus.TT_DIVIDE,
+#         ],
+#         [
+#             pysimplestplus.TT_FLOOR,
+#         ],
+#         [
+#             pysimplestplus.TT_MODULO,
+#         ],
+#     ],
+#     "<optional_call_tail>": [
+#         [
+#             pysimplestplus.TT_OPAR,
+#             "<optional_argument>",
+#             pysimplestplus.TT_CPAR,
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<optional_argument>": [
+#         [
+#             "<expression>",
+#             "<next_argument>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<next_argument>": [
+#         [
+#             pysimplestplus.TT_COMMA,
+#             "<expression>",
+#             "<next_argument>",
+#         ],
+#         [
+#             None,
+#         ],
+#     ],
+#     "<numeric_literal>": [
+#         [
+#             pysimplestplus.TT_NUM_LITERAL,
+#         ],
+#         [
+#             pysimplestplus.TT_DECI_LITERAL,
+#         ],
+#     ],
+# }
+
+
 import pysimplestplus
 
 CFG = {
-    "<initialization>": [
-        [
-            "<optional_frozen>",
-            "<data_type>",
-            "<optional_coll_suffix>",
-            pysimplestplus.TT_IDENTIFIER,
-            pysimplestplus.TT_ASSIGN,
-            "<expression>",
-        ],
+    "<program>": [
+        [],
     ],
-    "<optional_frozen>": [
-        [
-            pysimplestplus.TT_FROZEN,
-        ],
-        [
-            None,
-        ],
+    "<global>": [
+        [],
     ],
-    "<data_type>": [
-        [
-            pysimplestplus.TT_NUM,
-        ],
-        [
-            pysimplestplus.TT_DECI,
-        ],
-        [
-            pysimplestplus.TT_WORD,
-        ],
-        [
-            pysimplestplus.TT_LETTER,
-        ],
-        [
-            pysimplestplus.TT_CHOICE,
-        ],
-        [
-            pysimplestplus.TT_WIKI,
-        ],
-        [
-            pysimplestplus.TT_IDENTIFIER,
-        ],
+    "<func_def>": [
+        [],
     ],
-    "<optional_coll_suffix>": [
-        [
-            pysimplestplus.TT_OBRACK,
-            pysimplestplus.TT_CBRACK,
-            "<optional_coll_suffix>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<expression>": [
-        [
-            "<and_expr>",
-            "<next_and_expr>",
-        ],
-        [
-            pysimplestplus.TT_OBRACK,
-            "<optional_coll_values>",
-            pysimplestplus.TT_CBRACK,
-        ],
-        [
-            pysimplestplus.TT_OBRACE,
-            "<optional_wiki_values>",
-            pysimplestplus.TT_CBRACE,
-        ],
-    ],
-    "<and_expr>": [
-        [
-            "<comp_expr>",
-            "<next_comp_expr>",
-        ],
-    ],
-    "<next_and_expr>": [
-        [
-            pysimplestplus.TT_OR,
-            "<and_expr>",
-            "<next_and_expr>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<optional_coll_values>": [
-        [
-            "<expression>",
-            "<next_coll_value>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<next_coll_value>": [
-        [
-            pysimplestplus.TT_COMMA,
-            "<expression>",
-            "<next_coll_value>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<optional_wiki_values>": [
-        [
-            "<key_value_pair>",
-            "<next_key_value_pair>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<key_value_pair>": [
-        [
-            "<key>",
-            pysimplestplus.TT_COLON,
-            "<expression>",
-        ],
-    ],
-    "<key>": [
-        [
-            pysimplestplus.TT_NUM_LITERAL,
-        ],
-        [
-            pysimplestplus.TT_DECI_LITERAL,
-        ],
-        [
-            pysimplestplus.TT_WORD_LITERAL,
-        ],
-        [
-            pysimplestplus.TT_LETTER_LITERAL,
-        ],
-        [
-            pysimplestplus.TT_YES,
-        ],
-        [
-            pysimplestplus.TT_NO,
-        ],
-    ],
-    "<next_key_value_pair>": [
-        [
-            pysimplestplus.TT_COMMA,
-            "<key_value_pair>",
-            "<next_key_value_pair>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<comp_expr>": [
-        [
-            pysimplestplus.TT_NOT,
-            "<comp_expr>",
-        ],
-        [
-            "<arith_expr>",
-            "<next_arith_expr>",
-        ],
-    ],
-    "<next_comp_expr>": [
-        [pysimplestplus.TT_AND, "<comp_expr>", "<next_comp_expr>"],
-        [None],
-    ],
-    "<next_arith_expr>": [
-        [
-            "<comp_operator>",
-            "<arith_expr>",
-            "<next_arith_expr>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<comp_operator>": [
-        [
-            pysimplestplus.TT_EQUAL_TO,
-        ],
-        [
-            pysimplestplus.TT_NOT_EQUAL,
-        ],
-        [
-            pysimplestplus.TT_LESS_THAN,
-        ],
-        [
-            pysimplestplus.TT_GREATER_THAN,
-        ],
-        [
-            pysimplestplus.TT_LESS_THAN_EQUAL,
-        ],
-        [
-            pysimplestplus.TT_GREATER_THAN_EQUAL,
-        ],
-    ],
-    "<arith_expr>": [
-        [
-            "<term>",
-            "<next_term>",
-        ]
-    ],
-    "<term>": [
-        [
-            "<factor>",
-            "<next_factor>",
-        ]
-    ],
-    "<next_term>": [
-        [
-            "<term_operator>",
-            "<term>",
-            "<next_term>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<term_operator>": [
-        [
-            pysimplestplus.TT_PLUS,
-        ],
-        [
-            pysimplestplus.TT_MINUS,
-        ],
-    ],
-    "<factor>": [
-        [
-            pysimplestplus.TT_WORD_LITERAL,
-        ],
-        [
-            pysimplestplus.TT_LETTER_LITERAL,
-        ],
-        [
-            pysimplestplus.TT_YES,
-        ],
-        [
-            pysimplestplus.TT_NO,
-        ],
-        [
-            pysimplestplus.TT_BLANK,
-        ],
-        [
-            pysimplestplus.TT_IDENTIFIER,
-            "<optional_call_tail>",
-        ],
-        [
-            pysimplestplus.TT_MINUS,
-            "<numeric_literal>",
-        ],
-        [
-            "<numeric_literal>",
-        ],
-        [
-            pysimplestplus.TT_OPAR,
-            "<expression>",
-            pysimplestplus.TT_CPAR,
-        ],
-    ],
-    "<next_factor>": [
-        [
-            "<factor_operator>",
-            "<factor>",
-            "<next_factor>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<factor_operator>": [
-        [
-            pysimplestplus.TT_MULTIPLY,
-        ],
-        [
-            pysimplestplus.TT_DIVIDE,
-        ],
-        [
-            pysimplestplus.TT_FLOOR,
-        ],
-        [
-            pysimplestplus.TT_MODULO,
-        ],
-    ],
-    "<optional_call_tail>": [
-        [
-            pysimplestplus.TT_OPAR,
-            "<optional_argument>",
-            pysimplestplus.TT_CPAR,
-        ],
-        [
-            None,
-        ],
-    ],
-    "<optional_argument>": [
-        [
-            "<expression>",
-            "<next_argument>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<next_argument>": [
-        [
-            pysimplestplus.TT_COMMA,
-            "<expression>",
-            "<next_argument>",
-        ],
-        [
-            None,
-        ],
-    ],
-    "<numeric_literal>": [
-        [
-            pysimplestplus.TT_NUM_LITERAL,
-        ],
-        [
-            pysimplestplus.TT_DECI_LITERAL,
-        ],
+    "<group_def>": [
+        [],
     ],
 }

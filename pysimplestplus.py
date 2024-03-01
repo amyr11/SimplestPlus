@@ -1072,10 +1072,10 @@ class Parser:
         # TODO:
 
         res = ParseResult()
-        program_body = []
+        global_nodes = []
 
         while self.expect({TT_FROZEN, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER}, False):
-            program_body.append(res.register(self.global_()))
+            global_nodes.append(res.register(self.global_()))
             if res.error:
                 return res
 
@@ -1100,14 +1100,13 @@ class Parser:
                 return res
 
             home_node = FuncDefNode(DataTypeNode(TT_EMPTY, 0), TT_HOME, [], home_body)
-            program_body.append(home_node)
 
             while not self.expect({TT_EOF}, False):
-                program_body.append(res.register(self.global_()))
+                global_nodes.append(res.register(self.global_()))
                 if res.error:
                     return res
 
-            return res.success(BodyNode(program_body))
+            return res.success(ProgramNode(global_nodes, home_node))
         
         return res.failure(self.throw_expected_error([TT_HOME, TT_FROZEN, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER]))
 
@@ -1485,7 +1484,7 @@ class UnaryOpNode:
         self.right_node = right_node
 
     def __repr__(self):
-        return f"({self.op_tok}, {self.right_node})"
+        return f"('{self.op_tok}', {self.right_node})"
 
 class BinaryOpNode:
     def __init__(self, left_node, op_tok, right_node):
@@ -1494,7 +1493,7 @@ class BinaryOpNode:
         self.right_node = right_node
 
     def __repr__(self):
-        return f"({self.left_node}, {self.op_tok}, {self.right_node})"
+        return f"({self.left_node}, '{self.op_tok}', {self.right_node})"
 
 class DotOpNode:
     def __init__(self, left_node, right_node):
@@ -1502,14 +1501,14 @@ class DotOpNode:
         self.right_node = right_node
 
     def __repr__(self):
-        return f"dot_access({self.left_node}, {self.right_node})"
+        return f"({self.left_node}, '.', {self.right_node})"
 
 class VarAccessNode:
     def __init__(self, var_name_tok):
         self.var_name_tok = var_name_tok
     
     def __repr__(self):
-        return f"var_access:{self.var_name_tok}"
+        return f"var_access({self.var_name_tok})"
 
 class BracketAccessNode:
     def __init__(self, var_access_node, left_slice, right_slice):
@@ -1518,7 +1517,7 @@ class BracketAccessNode:
         self.right_slice = right_slice
     
     def __repr__(self):
-        return f"bracket_access(var_access:{self.var_access_node}, from:{self.left_slice}, to:{self.right_slice})"
+        return f"bracket_access({self.var_access_node}, from:{self.left_slice}, to:{self.right_slice})"
 
 class VarInitNode:
     def __init__(self, is_frozen, data_type_node, var_name_tok, value_node):
@@ -1528,22 +1527,29 @@ class VarInitNode:
         self.value_node = value_node
 
     def __repr__(self):
-        frozen_str = 'frozen ' if self.is_frozen else ''
-        return f"{frozen_str}{self.data_type_node} {self.var_name_tok} = {self.value_node}"
+        return f"var_init({self.var_name_tok}, frozen:{self.is_frozen}, type:{self.data_type_node}, val:{self.value_node})"
 
 class BodyNode:
-    def __init__(self, items=None):
+    def __init__(self, items):
         self.items = items or []
 
     def __repr__(self):
-        return "".join(["\n" + repr(item) for item in self.items])
+        return f"body({self.items})"
+
+class ProgramNode:
+    def __init__(self, global_nodes, home_node):
+        self.global_nodes = global_nodes
+        self.home_node = home_node
+
+    def __repr__(self):
+        return f"program({self.global_nodes}, {self.home_node})"
 
 class CollectionNode:
     def __init__(self, coll_value_nodes):
         self.coll_value_nodes = coll_value_nodes
     
     def __repr__(self):
-        return f'collection({self.coll_value_nodes})'
+        return f"collection({self.coll_value_nodes})"
 
 class WikiNode:
     def __init__(self, key_value_pairs):
@@ -1553,14 +1559,14 @@ class WikiNode:
         return f"wiki({self.key_value_pairs})"
 
 class FuncDefNode:
-    def __init__(self, return_type=None, id=None, params=None, body=None):
+    def __init__(self, return_type, id, params, body):
         self.return_type = return_type
         self.id = id
         self.params = params
         self.body = body
     
     def __repr__(self):
-        return f"<function return_type:{self.return_type}, id:{self.id}, params: {self.params}>"
+        return f"func_def({self.id}, type:{self.return_type}, params:{self.params}, body:{self.body})"
 
 class FuncCallNode:
     def __init__(self, node_to_call, args):
@@ -1568,7 +1574,7 @@ class FuncCallNode:
         self.args = args
 
     def __repr__(self):
-        return f"call({self.node_to_call}, args:{self.args})"
+        return f"func_call({self.node_to_call}, args:{self.args})"
 
 class NewObjectNode:
     def __init__(self, node_to_call, args):
@@ -1585,7 +1591,7 @@ class DataTypeNode:
         self.coll_dimension = coll_dimension
 
     def __repr__(self):
-        return f"<type:{self.type_tok}, dimension:{self.coll_dimension}>"
+        return f"{self.type_tok}{'[]' * self.coll_dimension}"
 
 #######################################
 # RUN

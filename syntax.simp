@@ -2,4 +2,4 @@ num x = 1
 num x = 1
 
 home():
-	0
+	num x = 1

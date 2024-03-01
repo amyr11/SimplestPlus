@@ -28,22 +28,19 @@ Legend:
 
 [ ] func-def            : [ ] return-type ID func-params COLON NEWLINE+ statements
 
-[ ] group-def           : [ ] GROUP ID COLON NEWLINE+ group-body
+[ ] func-args           : [ ] OPAR (expression (COMMA expression)*)? CPAR
+
+[ ] func-params         : [ ] OPAR (data-type ID (ASSIGN expression)? (COMMA data-type ID (ASSIGN expression)?)*)? CPAR
 
 [x] data-type           : [ ] (NUM|DECI|WORD|LETTER|CHOICE|WIKI|ID) (OBRACK CBRACK)*
 
 [ ] return-type         : [ ] EMPTY|data-type
 
-[ ] func-args           : [ ] OPAR (expression (COMMA expression)*)? CPAR
+[ ] group-def           : [ ] GROUP ID COLON NEWLINE+ group-body
 
-[ ] func-params         : [ ] OPAR (data-type ID (ASSIGN expression)? (COMMA data-type ID (ASSIGN expression)?)*)? CPAR
-
-[ ] group-body          : [ ] group-initializer (group-global)*
-                        : [ ] group-global+ (group-initializer group-global*)?
+[ ] group-body          : [ ] 
                     
-[ ] group-global        : [ ] TAB access-specifier FROZEN data-type ID ASSIGN expression
-                        : [ ] TAB access-specifier data-type ID (ASSIGN expression)? NEWLINE+
-                        : [ ] TAB access-specifier func-def
+[ ] group-global        : [ ] TAB access-specifier (FROZEN? data-type ID (ASSIGN expression)? | func-def)
 
 [ ] group-initializer   : [ ] TAB INITIALIZE func-params COLON NEWLINE+ statements
 
