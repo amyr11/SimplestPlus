@@ -111,7 +111,7 @@ DEFINITIONS["delim_indent"] = [
 ]
 DEFINITIONS["delim_arith"] = [*DEFINITIONS["alpha_num"], " ", "(", "-"]
 DEFINITIONS["delim_plus"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"', "'"]
-DEFINITIONS["delim_minus"] = without(DEFINITIONS["delim_arith"], "-")
+DEFINITIONS["delim_minus"] = DEFINITIONS["delim_arith"]
 DEFINITIONS["delim_assign"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"', "{", "[", "'"]
 DEFINITIONS["delim_opar"] = [
     *DEFINITIONS["alpha_num"],
@@ -946,11 +946,11 @@ class Lexer:
         dot_count = 0
         pos_start = self.pos.copy()
 
-        # while self.current_char is not None and self.current_char in DEFINITIONS["all_digits"] + ['.']:
-        #     if self.current_char == '.':
-        #         dot_count += 1
-        #     num_str += self.current_char
-        #     self.advance()
+        while self.current_char is not None and self.current_char in DEFINITIONS["all_digits"] + ['.']:
+            if self.current_char == '.':
+                dot_count += 1
+            num_str += self.current_char
+            self.advance()
 
         if dot_count == 0:
             num_val = int(num_str)
