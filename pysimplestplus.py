@@ -263,6 +263,7 @@ TT_AND = "and"
 TT_BACK = "back"
 TT_BLANK = "blank"
 TT_CHOICE = "choice"
+TT_COLLECTION = "collection"
 TT_DECI = "deci"
 TT_DEFAULT = "default"
 TT_DEL = "del"
@@ -342,6 +343,7 @@ KEYWORDS = [
     TT_BACK,
     TT_BLANK,
     TT_CHOICE,
+    TT_COLLECTION,
     TT_DECI,
     TT_DEFAULT,
     TT_DEL,
@@ -423,6 +425,7 @@ DELIM_MAP = {
     TT_BACK: DEFINITIONS["delim_reserve"],
     TT_BLANK: DEFINITIONS["delim_value"],
     TT_CHOICE: DEFINITIONS["delim_dtype"],
+    TT_COLLECTION: DEFINITIONS["delim_dtype"],
     TT_DECI: DEFINITIONS["delim_dtype"],
     TT_DEFAULT: DEFINITIONS["delim_colon"],
     TT_DEL: DEFINITIONS["delim_reserve"],
