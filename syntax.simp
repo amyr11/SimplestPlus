@@ -1,3 +1,0 @@
-collection[num] mycollection = []
-
-wiki[word, num] mywiki = {"a":2, "b":3}

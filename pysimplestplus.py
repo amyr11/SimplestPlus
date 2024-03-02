@@ -265,6 +265,7 @@ TT_BLANK = "blank"
 TT_CHOICE = "choice"
 TT_DECI = "deci"
 TT_DEFAULT = "default"
+TT_DEL = "del"
 TT_DURING = "during"
 TT_EMPTY = "empty"
 TT_EVENT = "event"
@@ -343,6 +344,7 @@ KEYWORDS = [
     TT_CHOICE,
     TT_DECI,
     TT_DEFAULT,
+    TT_DEL,
     TT_DURING,
     TT_EMPTY,
     TT_EVENT,
@@ -423,6 +425,7 @@ DELIM_MAP = {
     TT_CHOICE: DEFINITIONS["delim_dtype"],
     TT_DECI: DEFINITIONS["delim_dtype"],
     TT_DEFAULT: DEFINITIONS["delim_colon"],
+    TT_DEL: DEFINITIONS["delim_reserve"],
     TT_DURING: DEFINITIONS["delim_reserve"],
     TT_EMPTY: DEFINITIONS["delim_reserve"],
     TT_EVENT: DEFINITIONS["delim_reserve"],
