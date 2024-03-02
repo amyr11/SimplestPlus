@@ -60,7 +60,8 @@ Legend:
                         : [ ] STOP NEWLINE+
                         : [ ] SKIP NEWLINE+
 
-[ ] declaration-stmt    : [ ] FROZEN? data-type ID (ASSIGN expression)? (COMMA FROZEN? data-type ID (ASSIGN expression)?)* NEWLINE+
+[ ] declaration-stmt    : [ ] data-type ID (ASSIGN expression)? (COMMA data-type ID (ASSIGN expression)?)* NEWLINE+
+                        : [ ] FROZEN data-type ID ASSIGN expression (COMMA FROZEN data-type ID ASSIGN expression)* NEWLINE+
 
 [ ] assign-stmt         : [ ] variable-left ASSIGN expression NEWLINE+
 

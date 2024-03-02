@@ -3,9 +3,6 @@
 #######################################
 
 
-from ast import FunctionDef
-
-
 TAB_COUNT = 4
 S_COMMENT_LIMIT = 79
 ID_LIMIT = 20
@@ -98,7 +95,7 @@ DEFINITIONS["all_mul_com_wo_t"] = without(DEFINITIONS["all_mul_com"], ["\t"])
 
 # Delims
 DEFINITIONS["delim_word"] = [" ", "\n", ",", "]", ")", "}", "+", ":", "#", "!", "="]
-DEFINITIONS["delim_dtype"] = [" ", "(", "["]
+DEFINITIONS["delim_dtype"] = [" ", "(", "[", "]", ","]
 DEFINITIONS["delim_break"] = [" ", "\n"]
 DEFINITIONS["delim_value"] = [" ", "\n", ")", "]", "}", ",", ":"]
 DEFINITIONS["delim_indent"] = [
@@ -334,7 +331,7 @@ TT_PERIOD = "."
 TT_COLON = ":"
 TT_WORD_LITERAL = "word_lit"
 TT_LETTER_LITERAL = "letter_lit"
-TT_NUM_LITERAL = "num_lit"
+TT_POSITIVE_NUM_LITERAL = "positive_num_lit"
 TT_DECI_LITERAL = "deci_lit"
 TT_S_COMMENT = "s_comment"
 TT_M_COMMENT = "m_comment"
@@ -416,7 +413,7 @@ DELIM_MAP = {
     TT_PERIOD: DEFINITIONS["delim_period"],
     TT_COLON: DEFINITIONS["delim_comma"],
     TT_WORD_LITERAL: DEFINITIONS["delim_word"],
-    TT_NUM_LITERAL: DEFINITIONS["delim_num_deci"],
+    TT_POSITIVE_NUM_LITERAL: DEFINITIONS["delim_num_deci"],
     TT_DECI_LITERAL: DEFINITIONS["delim_num_deci"],
     TT_S_COMMENT: DEFINITIONS["delim_comment"],
     TT_M_COMMENT: DEFINITIONS["delim_comment"],
@@ -949,17 +946,17 @@ class Lexer:
         dot_count = 0
         pos_start = self.pos.copy()
 
-        while self.current_char is not None and self.current_char in DEFINITIONS["all_digits"] + ['.']:
-            if self.current_char == '.':
-                dot_count += 1
-            num_str += self.current_char
-            self.advance()
+        # while self.current_char is not None and self.current_char in DEFINITIONS["all_digits"] + ['.']:
+        #     if self.current_char == '.':
+        #         dot_count += 1
+        #     num_str += self.current_char
+        #     self.advance()
 
         if dot_count == 0:
             num_val = int(num_str)
             if num_val > NUM_LIMIT:
                 return None, LexicalError(pos_start, self.pos.copy(), f"Num value cannot be greater than {NUM_LIMIT}")
-            return Token(TT_NUM_LITERAL, num_val, pos_start, self.pos), None
+            return Token(TT_POSITIVE_NUM_LITERAL, num_val, pos_start, self.pos), None
         elif dot_count > 1:
             return None, LexicalError(pos_start, self.pos.copy(), "Too many decimal points")
         else:
@@ -1390,7 +1387,7 @@ class Parser:
     def factor(self):
         res = ParseResult()
 
-        if number := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
+        if number := self.expect({TT_POSITIVE_NUM_LITERAL, TT_DECI_LITERAL}):
             return res.success(NumberNode(number))
         elif word := self.expect({TT_WORD_LITERAL}):
             return res.success(WordNode(word))
@@ -1401,14 +1398,14 @@ class Parser:
         elif blank := self.expect({TT_BLANK}):
             return res.success(BlankNode(blank))
         elif neg := self.expect({TT_MINUS}):
-            if right := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
+            if right := self.expect({TT_POSITIVE_NUM_LITERAL, TT_DECI_LITERAL}):
                 return res.success(UnaryOpNode(neg, NumberNode(right)))
             elif self.expect({TT_IDENTIFIER}, False):
                 var_node = res.register(self.variable_right())
                 if res.error:
                     return res
                 return res.success(UnaryOpNode(neg, var_node))
-            return res.failure(self.throw_expected_error([TT_NUM_LITERAL, TT_DECI_LITERAL, TT_IDENTIFIER]))
+            return res.failure(self.throw_expected_error([TT_POSITIVE_NUM_LITERAL, TT_DECI_LITERAL, TT_IDENTIFIER]))
         elif self.expect({TT_IDENTIFIER}, False):
             var_node = res.register(self.variable_right())
             if res.error:
@@ -1435,7 +1432,7 @@ class Parser:
                 return res.failure(self.throw_expected_error([TT_CPAR]))
             return res.success(expr)
 
-        return res.failure(self.throw_expected_error([TT_OBRACK, TT_OBRACE, TT_NOT, TT_OPAR, TT_NEW, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_NUM_LITERAL, TT_DECI_LITERAL, TT_WORD_LITERAL, TT_LETTER_LITERAL, TT_YES, TT_NO, TT_BLANK, TT_MINUS]))
+        return res.failure(self.throw_expected_error([TT_OBRACK, TT_OBRACE, TT_NOT, TT_OPAR, TT_NEW, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_POSITIVE_NUM_LITERAL, TT_DECI_LITERAL, TT_WORD_LITERAL, TT_LETTER_LITERAL, TT_YES, TT_NO, TT_BLANK, TT_MINUS]))
 
 
 #######################################
