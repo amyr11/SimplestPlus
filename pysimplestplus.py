@@ -331,7 +331,7 @@ TT_PERIOD = "."
 TT_COLON = ":"
 TT_WORD_LITERAL = "word_lit"
 TT_LETTER_LITERAL = "letter_lit"
-TT_POSITIVE_NUM_LITERAL = "positive_num_lit"
+TT_NUM_LITERAL = "num_lit"
 TT_DECI_LITERAL = "deci_lit"
 TT_S_COMMENT = "s_comment"
 TT_M_COMMENT = "m_comment"
@@ -413,7 +413,7 @@ DELIM_MAP = {
     TT_PERIOD: DEFINITIONS["delim_period"],
     TT_COLON: DEFINITIONS["delim_comma"],
     TT_WORD_LITERAL: DEFINITIONS["delim_word"],
-    TT_POSITIVE_NUM_LITERAL: DEFINITIONS["delim_num_deci"],
+    TT_NUM_LITERAL: DEFINITIONS["delim_num_deci"],
     TT_DECI_LITERAL: DEFINITIONS["delim_num_deci"],
     TT_S_COMMENT: DEFINITIONS["delim_comment"],
     TT_M_COMMENT: DEFINITIONS["delim_comment"],
@@ -565,6 +565,8 @@ class Lexer:
         self.text = text
         self.pos = Position(-1, 0, -1, fn, text)
         self.current_char = None
+        self.tokens = []
+        self.errors = []
         self.advance()
 
     def advance(self):
@@ -591,8 +593,6 @@ class Lexer:
         return None
 
     def make_tokens(self):
-        tokens = []
-        errors = []
 
         while self.current_char is not None:
             token = None
@@ -611,7 +611,9 @@ class Lexer:
             elif self.current_char == "+":
                 token = self.make_plus()
             elif self.current_char == "-":
-                token = self.make_minus()
+                token, error = self.make_minus()
+                if error:
+                    self.errors.append(error)
             elif self.current_char == "/":
                 token = self.make_slash()
             elif self.current_char == "%":
@@ -621,7 +623,7 @@ class Lexer:
             elif self.current_char == "!":
                 token, error = self.make_not_equal()
                 if error:
-                    errors.append(error)
+                    self.errors.append(error)
             elif self.current_char == ">":
                 token = self.make_greater_than()
             elif self.current_char == "<":
@@ -656,28 +658,28 @@ class Lexer:
             elif self.current_char == "#":
                 token, error = self.make_s_comment()
                 if error:
-                    errors.append(error)
+                    self.errors.append(error)
             elif self.current_char == "'":
                 token, error = self.make_single_quote()
                 if error:
-                    errors.append(error)
+                    self.errors.append(error)
             elif self.current_char in DEFINITIONS["all_alpha"]:
                 token, error = self.make_keyword_or_id()
                 if error:
-                    errors.append(error)
+                    self.errors.append(error)
             elif self.current_char == '"':
                 token, error = self.make_word()
                 if error:
-                    errors.append(error)
+                    self.errors.append(error)
             elif self.current_char in DEFINITIONS["all_digits"]:
                 token, error = self.make_num_deci()
                 if error:
-                    errors.append(error)
+                    self.errors.append(error)
             else:
                 pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
-                errors.append(
+                self.errors.append(
                     LexicalError(
                         pos_start, self.pos.copy(), f"Illegal character {repr(char)}"
                     )
@@ -687,12 +689,12 @@ class Lexer:
                 error = self.check_delim(token.type)
 
                 if error:
-                    errors.append(error)
+                    self.errors.append(error)
                 else:
-                    tokens.append(token)
+                    self.tokens.append(token)
 
-        tokens.append(Token(TT_EOF, pos_start=self.pos))
-        return tokens, errors
+        self.tokens.append(Token(TT_EOF, pos_start=self.pos))
+        return self.tokens, self.errors
 
     def make_asterisk(self):
         tok_type = TT_MULTIPLY
@@ -727,11 +729,21 @@ class Lexer:
         pos_start = self.pos.copy()
         self.advance()
 
+        if self.current_char in DEFINITIONS["all_digits"] and not (self.tokens and self.tokens[-1].type in [TT_IDENTIFIER, TT_NUM_LITERAL]):
+            token, error = self.make_num_deci(neg=True)
+            if error:
+                return None, error
+            
+            if token and token.value == 0:
+                return None, LexicalError(pos_start, self.pos.copy(), "Negative zero is not allowed")
+
+            return token, None
+
         if self.current_char == "=":
             tok_type = TT_MINUS_ASSIGN
             self.advance()
 
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
 
     def make_slash(self):
         tok_type = TT_DIVIDE
@@ -941,7 +953,7 @@ class Lexer:
 
         return Token(TT_WORD_LITERAL, value=value, pos_start=pos_start, pos_end=self.pos), None
 
-    def make_num_deci(self):
+    def make_num_deci(self, neg=False):
         num_str = ''
         dot_count = 0
         pos_start = self.pos.copy()
@@ -952,15 +964,17 @@ class Lexer:
             num_str += self.current_char
             self.advance()
 
+        negative_val = -1 if neg else 1
+
         if dot_count == 0:
-            num_val = int(num_str)
+            num_val = int(num_str) * negative_val
             if num_val > NUM_LIMIT:
                 return None, LexicalError(pos_start, self.pos.copy(), f"Num value cannot be greater than {NUM_LIMIT}")
-            return Token(TT_POSITIVE_NUM_LITERAL, num_val, pos_start, self.pos), None
+            return Token(TT_NUM_LITERAL, num_val, pos_start, self.pos), None
         elif dot_count > 1:
             return None, LexicalError(pos_start, self.pos.copy(), "Too many decimal points")
         else:
-            deci_val = float(num_str)
+            deci_val = float(num_str) * negative_val
             if deci_val > DECI_LIMIT:
                 return None, LexicalError(pos_start, self.pos.copy(), f"Deci value cannot be greater than {DECI_LIMIT}")
             return Token(TT_DECI_LITERAL, deci_val, pos_start, self.pos), None
@@ -1387,7 +1401,7 @@ class Parser:
     def factor(self):
         res = ParseResult()
 
-        if number := self.expect({TT_POSITIVE_NUM_LITERAL, TT_DECI_LITERAL}):
+        if number := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
             return res.success(NumberNode(number))
         elif word := self.expect({TT_WORD_LITERAL}):
             return res.success(WordNode(word))
@@ -1398,14 +1412,14 @@ class Parser:
         elif blank := self.expect({TT_BLANK}):
             return res.success(BlankNode(blank))
         elif neg := self.expect({TT_MINUS}):
-            if right := self.expect({TT_POSITIVE_NUM_LITERAL, TT_DECI_LITERAL}):
+            if right := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
                 return res.success(UnaryOpNode(neg, NumberNode(right)))
             elif self.expect({TT_IDENTIFIER}, False):
                 var_node = res.register(self.variable_right())
                 if res.error:
                     return res
                 return res.success(UnaryOpNode(neg, var_node))
-            return res.failure(self.throw_expected_error([TT_POSITIVE_NUM_LITERAL, TT_DECI_LITERAL, TT_IDENTIFIER]))
+            return res.failure(self.throw_expected_error([TT_NUM_LITERAL, TT_DECI_LITERAL, TT_IDENTIFIER]))
         elif self.expect({TT_IDENTIFIER}, False):
             var_node = res.register(self.variable_right())
             if res.error:
@@ -1432,7 +1446,7 @@ class Parser:
                 return res.failure(self.throw_expected_error([TT_CPAR]))
             return res.success(expr)
 
-        return res.failure(self.throw_expected_error([TT_OBRACK, TT_OBRACE, TT_NOT, TT_OPAR, TT_NEW, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_POSITIVE_NUM_LITERAL, TT_DECI_LITERAL, TT_WORD_LITERAL, TT_LETTER_LITERAL, TT_YES, TT_NO, TT_BLANK, TT_MINUS]))
+        return res.failure(self.throw_expected_error([TT_OBRACK, TT_OBRACE, TT_NOT, TT_OPAR, TT_NEW, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_NUM_LITERAL, TT_DECI_LITERAL, TT_WORD_LITERAL, TT_LETTER_LITERAL, TT_YES, TT_NO, TT_BLANK, TT_MINUS]))
 
 
 #######################################
