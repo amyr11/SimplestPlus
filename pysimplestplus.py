@@ -729,7 +729,7 @@ class Lexer:
         pos_start = self.pos.copy()
         self.advance()
 
-        if self.current_char in DEFINITIONS["all_digits"] and not (self.tokens and self.tokens[-1].type in [TT_IDENTIFIER, TT_NUM_LITERAL]):
+        if self.current_char in DEFINITIONS["all_digits"] and not (self.tokens and self.tokens[-1].type in [TT_IDENTIFIER, TT_NUM_LITERAL, TT_DECI_LITERAL]):
             token, error = self.make_num_deci(neg=True)
             if error:
                 return None, error
