@@ -281,7 +281,6 @@ TT_HOME = "home"
 TT_IN = "in"
 TT_INCASE = "incase"
 TT_INHERITS = "inherits"
-TT_INITIALIZE = "initialize"
 TT_INSTEAD = "instead"
 TT_NEW = "new"
 TT_NO = "no"
@@ -361,7 +360,6 @@ KEYWORDS = [
     TT_IN,
     TT_INCASE,
     TT_INHERITS,
-    TT_INITIALIZE,
     TT_INSTEAD,
     TT_LETTER,
     TT_NEW,
@@ -443,7 +441,6 @@ DELIM_MAP = {
     TT_IN: DEFINITIONS["delim_reserve"],
     TT_INCASE: DEFINITIONS["delim_reserve"],
     TT_INHERITS: DEFINITIONS["delim_reserve"],
-    TT_INITIALIZE: DEFINITIONS["delim_func"],
     TT_INSTEAD: DEFINITIONS["delim_colon"],
     TT_NEW: DEFINITIONS["delim_reserve"],
     TT_NO: DEFINITIONS["delim_value"],
@@ -1239,7 +1236,20 @@ class Parser:
         # -> OPAR expr CPAR dot_slice* dot_slice_arg*
         # Predict set -> 
         elif self.expect({TT_OPAR}):
-            pass
+            expr = res.register(self.expr())
+            if res.error:
+                return res
+            if not self.expect({TT_CPAR}):
+                return res.failure(self.throw_error([TT_CPAR]))
+            while self.expect({TT_PERIOD, TT_OBRACK}, False):
+                word_node = res.register(self.dot_slice(word_node))
+                if res.error:
+                    return res
+                while self.expect({TT_OPAR}, False):
+                    word_node = res.register(self.args(word_node))
+                    if res.error:
+                        return res
+            return res.success(expr)
         # -> YES dot* dot_slice_arg*
         # Predict set -> {YES}
         # -> NO dot* dot_slice_arg*
@@ -1269,13 +1279,11 @@ class Parser:
                         return res
             return res.success(letter_node)
         # -> NUM_LIT
-        # Predict set -> 
-        elif num := self.expect({TT_NUM_LITERAL}):
-            pass
+        # Predict set -> {NUM_LIT}
         # -> DECI_LIT
-        # Predict set -> 
-        elif deci := self.expect({TT_DECI_LITERAL}):
-            pass
+        # Predict set -> {DECI_LIT}
+        elif num := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
+            return res.success(NumberNode(num))
 
         return res.failure(self.throw_expected_error([TT_IDENTIFIER, TT_WORD_LITERAL, TT_OBRACK, TT_OBRACE, TT_OPAR, TT_YES, TT_NO, TT_LETTER_LITERAL, TT_NUM_LITERAL, TT_DECI_LITERAL]))
 
