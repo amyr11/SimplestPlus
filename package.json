@@ -1,0 +1,6 @@
+{
+  "packageManager": "yarn@4.1.0",
+  "dependencies": {
+    "tailwindcss": "^3.4.1"
+  }
+}
