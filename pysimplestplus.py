@@ -94,10 +94,10 @@ DEFINITIONS["all_mul_com"] = [
 DEFINITIONS["all_mul_com_wo_t"] = without(DEFINITIONS["all_mul_com"], ["\t"])
 
 # Delims
-DEFINITIONS["delim_word"] = [" ", "\n", ",", "]", ")", "}", "+", ":", "#", "!", "="]
+DEFINITIONS["delim_word"] = [" ", "\n", ",", "]", ")", "}", "+", ":", "#", "!", "=", ".", "["]
 DEFINITIONS["delim_dtype"] = [" ", "(", "[", "]", ","]
 DEFINITIONS["delim_break"] = [" ", "\n"]
-DEFINITIONS["delim_value"] = [" ", "\n", ")", "]", "}", ",", ":"]
+DEFINITIONS["delim_value"] = [" ", "\n", ")", "]", "}", ",", ":", "."]
 DEFINITIONS["delim_indent"] = [
     *DEFINITIONS["all_alpha"],
     " ",
@@ -110,7 +110,7 @@ DEFINITIONS["delim_indent"] = [
     ")",
 ]
 DEFINITIONS["delim_arith"] = [*DEFINITIONS["alpha_num"], " ", "(", "-"]
-DEFINITIONS["delim_plus"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"', "'"]
+DEFINITIONS["delim_plus"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"', "'", "["]
 DEFINITIONS["delim_minus"] = DEFINITIONS["delim_arith"]
 DEFINITIONS["delim_assign"] = [*DEFINITIONS["alpha_num"], " ", "(", "-", '"', "{", "[", "'"]
 DEFINITIONS["delim_opar"] = [
@@ -155,7 +155,7 @@ DEFINITIONS["delim_obrack"] = [
     '"',
     "'",
 ]
-DEFINITIONS["delim_cbrack"] = [" ", "\n", ",", "[", "]", ")", "}", ".", "("]
+DEFINITIONS["delim_cbrack"] = [" ", "\n", ",", "[", "]", ")", "}", ".", "(", "+"]
 DEFINITIONS["delim_comma"] = [
     *DEFINITIONS["alpha_num"],
     " ",
@@ -882,7 +882,15 @@ class Lexer:
                 None,
             )
         elif s_quote_count == 2:
-            return None, LexicalError(pos_start, self.pos.copy(), f"Unexpected character {repr(self.current_char)}")
+            return (
+                    Token(
+                        TT_LETTER_LITERAL,
+                        value=value,
+                        pos_start=pos_start,
+                        pos_end=self.pos,
+                    ),
+                    None,
+                )
         else:
             # Letter literal
             if self.current_char is not None and self.current_char in DEFINITIONS["all_letter"]:
@@ -1086,373 +1094,327 @@ class Parser:
     #######################################
 
     def program(self):
-        # TODO:
+        return self.atom()
 
-        res = ParseResult()
-        global_nodes = []
-
-        while self.expect({TT_FROZEN, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER}, False):
-            global_nodes.append(res.register(self.global_()))
-            if res.error:
-                return res
-
-        if self.expect({TT_HOME}):
-            if not self.expect({TT_OPAR}):
-                return res.failure(self.throw_expected_error([TT_OPAR]))
-
-            if not self.expect({TT_CPAR}):
-                return res.failure(self.throw_expected_error([TT_CPAR]))
-
-            if not self.expect({TT_COLON}):
-                return res.failure(self.throw_expected_error([TT_COLON]))
-
-            res.register(self.req_newline())
-            if res.error:
-                return res
-
-            self.force_newline = False
-
-            home_body = res.register(self.statements(level=1))
-            if res.error:
-                return res
-
-            home_node = FuncDefNode(DataTypeNode(TT_EMPTY, 0), TT_HOME, [], home_body)
-
-            while not self.expect({TT_EOF}, False):
-                global_nodes.append(res.register(self.global_()))
-                if res.error:
-                    return res
-
-            return res.success(ProgramNode(global_nodes, home_node))
-        
-        return res.failure(self.throw_expected_error([TT_HOME, TT_FROZEN, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER]))
+    def extras(self):
+        pass
 
     def global_(self):
-        return self.init_stmt()
+        pass
+
+    def group_def(self):
+        pass
+
+    def group_body(self):
+        pass
+
+    def group_global(self):
+        pass
+
+    def access_spec(self):
+        pass
+
+    def group_constr(self):
+        pass
+
+    def func_def(self):
+        pass
+
+    def ret_type(self):
+        pass
+
+    def type(self):
+        pass
+
+    def data_struct(self):
+        pass
 
     def data_type(self):
+        pass
+
+    def params(self):
+        pass
+
+    def statements(self):
+        pass
+
+    def statement(self):
+        pass
+
+    def dec_stmt(self):
+        pass
+
+    def assign_stmt(self):
+        pass
+
+    def incase_stmt(self):
+        pass
+
+    def unless(self):
+        pass
+
+    def insted(self):
+        pass
+
+    def given_stmt(self):
+        pass
+
+    def event_default(self):
+        pass
+
+    def default(self):
+        pass
+
+    def even(self):
+        pass
+
+    def literals(self):
+        pass
+
+    def every_stmt(self):
+        pass
+
+    def during_stmt(self):
+        pass
+
+    def go_during_stmt(self):
+        pass
+
+    def expr(self):
+        return self.atom()
+
+    def and_expr(self):
+        pass
+
+    def comp_expr(self):
+        pass
+
+    def arith_expr(self):
+        pass
+
+    def term(self):
+        pass
+
+    def factor(self):
+        pass
+
+    def power(self):
+        pass
+
+    def atom(self):
+        """
+        First set: {ID, WORD_LIT, OBRACK, OBRACE, OPAR, YES, NO, LETTER_LIT, NUM_LIT, DECI_LIT}
+        """
+        res = ParseResult()
+        # -> ID dot_slice_arg*
+        # Predict set -> {ID}
+        if id := self.expect({TT_IDENTIFIER}):
+            var_node = VarAccessNode(id)
+            while self.expect({TT_PERIOD, TT_OBRACK, TT_OPAR}, False):
+                var_node = res.register(self.dot_slice_arg(var_node))
+                if res.error:
+                    return res
+            return res.success(var_node)
+        # -> WORD_LIT dot_slice* dot_slice_arg*
+        # Predict set {WORD_LIT}
+        elif word_lit := self.expect({TT_WORD_LITERAL}):
+            word_node = WordNode(word_lit)
+            while self.expect({TT_PERIOD, TT_OBRACK}, False):
+                word_node = res.register(self.dot_slice(word_node))
+                if res.error:
+                    return res
+                while self.expect({TT_OPAR}, False):
+                    word_node = res.register(self.args(word_node))
+                    if res.error:
+                        return res
+            return res.success(word_node)
+        # -> collection-expr dot_slice* dot_slice_arg*
+        # Predict set -> 
+        elif self.expect({TT_OBRACK}, False):
+            pass
+        # -> wiki-expr dot_slice* dot_slice_arg*
+        # Predict set -> 
+        elif self.expect({TT_OBRACE}, False):
+            pass
+        # -> OPAR expr CPAR dot_slice* dot_slice_arg*
+        # Predict set -> 
+        elif self.expect({TT_OPAR}):
+            pass
+        # -> YES dot* dot_slice_arg*
+        # Predict set -> {YES}
+        # -> NO dot* dot_slice_arg*
+        # Predict set -> {NO}
+        elif choice_node := self.expect({TT_YES, TT_NO}):
+            choice_node = ChoiceNode(choice_node)
+            while self.expect({TT_PERIOD}, False):
+                choice_node = res.register(self.dot(choice_node))
+                if res.error:
+                    return res
+                while self.expect({TT_OBRACK, TT_OPAR}, False):
+                    choice_node = res.register(self.slice_arg(choice_node))
+                    if res.error:
+                        return res
+            return res.success(choice_node)
+        # -> LETTER_LIT dot* dot_slice_arg*
+        # Predict set -> 
+        elif letter := self.expect({TT_LETTER_LITERAL}):
+            letter_node = LetterNode(letter)
+            while self.expect({TT_PERIOD}, False):
+                letter_node = res.register(self.dot(letter_node))
+                if res.error:
+                    return res
+                while self.expect({TT_OBRACK, TT_OPAR}, False):
+                    letter_node = res.register(self.slice_arg(letter_node))
+                    if res.error:
+                        return res
+            return res.success(letter_node)
+        # -> NUM_LIT
+        # Predict set -> 
+        elif num := self.expect({TT_NUM_LITERAL}):
+            pass
+        # -> DECI_LIT
+        # Predict set -> 
+        elif deci := self.expect({TT_DECI_LITERAL}):
+            pass
+
+        return res.failure(self.throw_expected_error([TT_IDENTIFIER, TT_WORD_LITERAL, TT_OBRACK, TT_OBRACE, TT_OPAR, TT_YES, TT_NO, TT_LETTER_LITERAL, TT_NUM_LITERAL, TT_DECI_LITERAL]))
+
+    def dot_slice_arg(self, node):
+        """
+        First set: {PERIOD, OBRACK, OPAR}
+        """
         res = ParseResult()
 
-        if type := self.expect({TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER}):
-            dimension = 0
-            while self.expect({TT_OBRACK}):
-                if not self.expect({TT_CBRACK}):
-                    res.failure(self.throw_expected_error([TT_CBRACK]))
-                dimension += 1
+        # -> dot_slice
+        if self.expect({TT_PERIOD, TT_OBRACK}, False):
+            node = res.register(self.dot_slice(node))
+            if res.error:
+                return res
+            return res.success(node)
+        elif self.expect({TT_OPAR}, False):
+            call_node = res.register(self.args(node))
+            if res.error:
+                return res
+            return res.success(call_node)
 
-            return res.success(DataTypeNode(type, dimension))
+        return res.failure(self.throw_expected_error([TT_PERIOD, TT_OBRACK, TT_OPAR]))
 
-        return res.failure(self.throw_expected_error([TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER]))
-
-    def statements(self, level):
+    def dot_slice(self, node):
+        """
+        First set: {PERIOD, OBRACK}
+        """
         res = ParseResult()
-        nodes = []
 
-        while True:
-            pos = self.mark()
-            tab_count = 0
-            while self.expect({TT_TAB}):
-                tab_count += 1
+        # -> dot
+        if self.expect({TT_PERIOD}, False):
+            dot_node = res.register(self.dot(node))
+            if res.error:
+                return res
+            return res.success(dot_node)
+        # -> slice
+        elif self.expect({TT_OBRACK}, False):
+            slice_node = res.register(self.slice(node))
+            if res.error:
+                return res
+            return res.success(slice_node)
 
-            if tab_count > level:
-                return res.failure(self.throw_error(f"Required indent is {level}, got {tab_count}", error_type=IndentationError, pos_start=self.get_tok_at(pos).pos_start, pos_end=self.get_tok_at(self.tok_idx).pos_start))
-            elif tab_count < level:
-                if len(nodes) == 0:
-                    return res.failure(self.throw_error(f"Required indent is {level}, got {tab_count}", error_type=IndentationError, pos_start=self.get_tok_at(pos).pos_start, pos_end=self.get_tok_at(self.tok_idx).pos_start))
-                break
+        return res.failure(self.throw_expected_error([TT_PERIOD, TT_OBRACK]))
+    
+    def slice_arg(self, node):
+        """
+        First set: {OBRACK, OPAR}
+        """
+        res = ParseResult()
 
-            nodes.append(res.register(self.block()))
+        # -> slice
+        if self.expect({TT_OBRACK}, False):
+            slice_node = res.register(self.slice(node))
+            if res.error:
+                return res
+            return res.success(slice_node)
+        # -> args
+        elif self.expect({TT_OPAR}, False):
+            call_node = res.register(self.args(node))
+            if res.error:
+                return res
+            return res.success(call_node)
+
+        return res.failure(self.throw_expected_error([TT_OBRACK, TT_OPAR]))
+
+    def dot(self, node):
+        """
+        First set: {PERIOD}
+        """
+        res = ParseResult()
+
+        # -> PERIOD ID
+        if self.expect({TT_PERIOD}):
+            if id := self.expect({TT_IDENTIFIER}):
+                return res.success(DotOpNode(node, VarAccessNode(id)))
+
+            return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+        return res.failure(self.throw_expected_error([TT_PERIOD]))
+
+    def slice(self, node):
+        """
+        First set: {OBRACK}
+        """
+        res = ParseResult()
+        start = None
+        end = None
+
+        # -> OBRACK expr (COLON expr)? CBRACK
+        if self.expect({TT_OBRACK}):
+            start = res.register(self.expr())
             if res.error:
                 return res
 
-        return res.success(BodyNode(nodes))
+            if not self.expect({TT_CBRACK}):
+                if self.expect({TT_COLON}):
+                    end = res.register(self.expr())
+                    if res.error:
+                        return res
 
-    def block(self):
-        return self.init_stmt()
+                    if self.expect({TT_CBRACK}):
+                        return res.failure(self.throw_expected_error([TT_CBRACK]))
 
-    def init_stmt(self):
-        res = ParseResult()
-        is_frozen = False
+                return res.failure(self.throw_error("Expected an expression"))
 
-        if self.expect({TT_FROZEN}):
-            is_frozen = True
+            return res.success(BracketAccessNode(node, start, end))
 
-        data_type = res.register(self.data_type())
-        if res.error:
-            return res
+        return res.failure(self.throw_expected_error([TT_OBRACK]))
 
-        if not (id := self.expect({TT_IDENTIFIER})):
-            return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
-
-        if not self.expect({TT_ASSIGN}):
-            return res.failure(self.throw_expected_error([TT_ASSIGN]))
-
-        expr = res.register(self.expression())
-        if res.error:
-            return res
-
-        res.register(self.req_newline())
-        if res.error:
-            return res
-
-        return res.success(VarInitNode(is_frozen, data_type, id, expr))
-
-    def req_newline(self):
-        res = ParseResult()
-
-        if self.force_newline or not self.expect({TT_EOF}, False):
-            if not self.expect({TT_NEWLINE}):
-                return res.failure(self.throw_expected_error([TT_NEWLINE]))
-
-        while self.expect({TT_NEWLINE}):
-            pass
-
-        return res
-
-    def func_args(self):
+    def args(self, node):
+        """
+        First set: {OPAR}
+        """
         res = ParseResult()
         arg_nodes = []
 
-        if not self.expect({TT_OPAR}):
-            return res.failure(self.throw_expected_error([TT_OPAR]))
-
-        if not self.expect({TT_CPAR}):
-            while True:
-                arg_nodes.append(res.register(self.expression()))
-                if res.error:
-                    return res
-
-                if not self.expect({TT_COMMA}):
-                    break
-
+        # -> OPAR (expr (COMMA expr)*)? CPAR
+        if self.expect({TT_OPAR}):
             if not self.expect({TT_CPAR}):
-                return res.failure(self.throw_expected_error([TT_CPAR, TT_COMMA]))
-
-        return arg_nodes
-
-    def _binary_op(self, node, func, ops):
-        res = ParseResult()
-        left = res.register(func())
-        if res.error:
-            return res
-
-        while op_tok := self.expect(ops):
-            right = res.register(func())
-            if res.error:
-                return res
-            left = node(left, op_tok, right)
-
-        return res.success(left)
-
-    def variable_left(self):
-        res = ParseResult()
-
-        if id := self.expect({TT_IDENTIFIER}):
-            var_node = VarAccessNode(id)
-
-            while self.expect({TT_PERIOD, TT_OBRACK}, False):
-                if self.expect({TT_PERIOD}):
-                    if not (id := self.expect({TT_IDENTIFIER})):
-                        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
-
-                    right = VarAccessNode(id)
-                    var_node = DotOpNode(var_node, right)
-                elif self.expect({TT_OBRACK}):
-                    left_slice = None
-                    right_slice = None
-
-                    left_slice = res.register(self.expression())
-                    if res.error:
-                        return res
-
-                    if self.expect({TT_COLON}):
-                        right_slice = res.register(self.expression())
-                        if res.error:
-                            return res
-
-                    var_node = BracketAccessNode(var_node, left_slice, right_slice)
-
-                    if not self.expect({TT_CBRACK}):
-                        return res.failure(self.throw_expected_error([TT_CBRACK]))
-
-            return res.success(var_node)
-
-        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
-
-    def variable_right(self):
-        res = ParseResult()
-
-        if id := self.expect({TT_IDENTIFIER}):
-            var_node = VarAccessNode(id)
-
-            while self.expect({TT_PERIOD, TT_OBRACK, TT_OPAR}, False):
-                if self.expect({TT_PERIOD}):
-                    if not (id := self.expect({TT_IDENTIFIER})):
-                        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
-
-                    right = VarAccessNode(id)
-                    var_node = DotOpNode(var_node, right)
-                elif self.expect({TT_OBRACK}):
-                    left_slice = None
-                    right_slice = None
-
-                    left_slice = res.register(self.expression())
-                    if res.error:
-                        return res
-
-                    if self.expect({TT_COLON}):
-                        right_slice = res.register(self.expression())
-                        if res.error:
-                            return res
-
-                    var_node = BracketAccessNode(var_node, left_slice, right_slice)
-
-                    if not self.expect({TT_CBRACK}):
-                        return res.failure(self.throw_expected_error([TT_CBRACK]))
-                elif self.expect({TT_OPAR}, False):
-                    func_args = res.register(self.func_args())
-                    if res.error:
-                        return res
-
-                    var_node = FuncCallNode(var_node, func_args)
-
-            return res.success(var_node)
-
-        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
-
-    def type_cast(self):
-        res = ParseResult()
-
-        if to_type := self.expect({TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE}):
-            var_node = VarAccessNode(to_type)
-
-            if not self.expect({TT_OPAR}, False):
-                return res.failure(self.throw_expected_error([TT_OPAR]))
-
-            func_args = res.register(self.func_args())
-            if res.error:
-                return res
-
-            return res.success(FuncCallNode(var_node, func_args))
-
-        return res.failure(self.throw_expected_error([TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE]))
-
-    def expression(self):
-        res = ParseResult()
-
-        if self.expect({TT_OBRACK}):
-            collection_items = []
-
-            if not self.expect({TT_CBRACK}):
                 while True:
-                    collection_items.append(res.register(self.expression()))
+                    arg_nodes.append(res.register(self.expr()))
                     if res.error:
                         return res
 
-                    if not self.expect({TT_COMMA}):
+                    if not self.expect({TT_NEWLINE}):
                         break
 
-                if not self.expect({TT_CBRACK}):
-                    return res.failure(self.throw_expected_error([TT_COMMA, TT_CBRACK]))
+                if not self.expect({TT_CPAR}):
+                    return res.failure(self.throw_expected_error([TT_CPAR]))
 
-            return res.success(CollectionNode(collection_items))
-        elif self.expect({TT_OBRACE}):
-            key_value_pairs = []
+            return res.success(FuncCallNode(node, arg_nodes))
 
-            if not self.expect({TT_CBRACE}):
-                while True:
-                    key = res.register(self.expression())
-                    if res.error:
-                        return res
+        return res.failure(self.throw_expected_error([TT_OPAR]))
 
-                    if not self.expect({TT_COLON}):
-                        return res.failure(self.throw_expected_error([TT_COLON]))
+    def collection_expr(self):
+        pass
 
-                    value = res.register(self.expression())
-                    if res.error:
-                        return res
-
-                    key_value_pairs.append((key, value))
-
-                    if not self.expect({TT_COMMA}):
-                        break
-
-                if not self.expect({TT_CBRACE}):
-                    return res.failure(self.throw_expected_error([TT_CBRACE, TT_COMMA]))
-
-            return res.success(WikiNode(key_value_pairs))
-
-        return self._binary_op(BinaryOpNode, self.and_expr, (TT_OR,))
-
-    def and_expr(self):
-        return self._binary_op(BinaryOpNode, self.comp_expr, (TT_AND,))
-
-    def comp_expr(self):
-        res = ParseResult()
-
-        if (negate := self.expect({TT_NOT})):
-            comp_expr = res.register(self.comp_expr())
-            if res.error:
-                return res
-            return res.success(UnaryOpNode(negate, comp_expr))
-
-        return self._binary_op(BinaryOpNode, self.arith_expr, (TT_EQUAL_TO, TT_NOT_EQUAL, TT_LESS_THAN, TT_GREATER_THAN, TT_LESS_THAN_EQUAL, TT_GREATER_THAN_EQUAL))
-
-    def arith_expr(self):
-        return self._binary_op(BinaryOpNode, self.term, (TT_PLUS, TT_MINUS))
-
-    def term(self):
-        return self._binary_op(BinaryOpNode, self.factor, (TT_MULTIPLY, TT_DIVIDE, TT_FLOOR, TT_MODULO))
-
-    def factor(self):
-        res = ParseResult()
-
-        if number := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
-            return res.success(NumberNode(number))
-        elif word := self.expect({TT_WORD_LITERAL}):
-            return res.success(WordNode(word))
-        elif letter := self.expect({TT_LETTER_LITERAL}):
-            return res.success(LetterNode(letter))
-        elif choice := self.expect({TT_YES, TT_NO}):
-            return res.success(ChoiceNode(choice))
-        elif blank := self.expect({TT_BLANK}):
-            return res.success(BlankNode(blank))
-        elif neg := self.expect({TT_MINUS}):
-            if right := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
-                return res.success(UnaryOpNode(neg, NumberNode(right)))
-            elif self.expect({TT_IDENTIFIER}, False):
-                var_node = res.register(self.variable_right())
-                if res.error:
-                    return res
-                return res.success(UnaryOpNode(neg, var_node))
-            return res.failure(self.throw_expected_error([TT_NUM_LITERAL, TT_DECI_LITERAL, TT_IDENTIFIER]))
-        elif self.expect({TT_IDENTIFIER}, False):
-            var_node = res.register(self.variable_right())
-            if res.error:
-                return res
-            return res.success(var_node)
-        elif self.expect({TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE}, False):
-            type_cast_node = res.register(self.type_cast())
-            if res.error:
-                return res
-            return res.success(type_cast_node)
-        elif self.expect({TT_NEW}):
-            if not (id := self.expect({TT_IDENTIFIER})):
-                return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
-            var_node = VarAccessNode(id)
-            func_args = res.register(self.func_args())
-            if res.error:
-                return res
-            return res.success(NewObjectNode(var_node, func_args))
-        elif self.expect({TT_OPAR}):
-            expr = res.register(self.expression())
-            if res.error:
-                return res
-            if not self.expect({TT_CPAR}):
-                return res.failure(self.throw_expected_error([TT_CPAR]))
-            return res.success(expr)
-
-        return res.failure(self.throw_expected_error([TT_OBRACK, TT_OBRACE, TT_NOT, TT_OPAR, TT_NEW, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_NUM_LITERAL, TT_DECI_LITERAL, TT_WORD_LITERAL, TT_LETTER_LITERAL, TT_YES, TT_NO, TT_BLANK, TT_MINUS]))
+    def wiki_expr(self):
+        pass
 
 
 #######################################
@@ -1465,28 +1427,28 @@ class NumberNode:
         self.tok = tok
     
     def __repr__(self):
-        return f"{self.tok}"
+        return f"num({self.tok.value})"
 
 class WordNode:
     def __init__(self, tok):
         self.tok = tok
     
     def __repr__(self):
-        return f"{self.tok}"
+        return f"word({repr(self.tok.value)})"
 
 class LetterNode:
     def __init__(self, tok):
         self.tok = tok
     
     def __repr__(self):
-        return f"{self.tok}"
+        return f"letter({repr(self.tok.value)})"
 
 class ChoiceNode:
     def __init__(self, tok):
         self.tok = tok
-    
+
     def __repr__(self):
-        return f"{self.tok}"
+        return f"choice({self.tok})"
 
 class BlankNode:
     def __init__(self, tok):
