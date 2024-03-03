@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link
+            href="{{url_for('static',filename='css/output.css')}}"
+            rel="stylesheet" />
+        <link
+            href="{{url_for('static',filename='css/index.css')}}"
+            rel="stylesheet" />
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+            crossorigin="anonymous" />
+        <title>Simplest+ IDE</title>
+        <style>
+            .line-numbers span {
+                counter-increment: linenumber;
+            }
+
+            .line-numbers span::before {
+                content: counter(linenumber);
+                display: block;
+                color: #508882;
+            }
+
+            p {
+                margin: 0px;
+            }
+        </style>
+    </head>
+    <body class="bg-slate-800">
+        <div class="px-5 pt-2">
+            <div class="flex justify-center items-center">
+                <!-- Title -->
+                <h1 class="text-2xl font-bold text-gray-300">Simplest+ IDE</h1>
+            </div>
+            <form method="post" action="/">
+                <div class="grid grid-cols-3 gap-2 pb-2">
+                    <!-- Top Buttons -->
+                    <div class="col-span-2 flex justify-between">
+                        <div>
+                            <button
+                                class="border-2 p-2 mr-2 rounded-md text-gray-300 hover:bg-green-900 hover:bg-opacity-50 bg-green-800 bg-opacity-50 border-green-800 focus:bg-green-600"
+                                type="button"">
+                                Lexical Analyzer
+                            </button>
+                            <button
+                                class="border-2 p-2 mr-2 rounded-md text-gray-300 hover:bg-green-900 hover:bg-opacity-50 bg-green-800 bg-opacity-50 border-green-800 focus:bg-green-600"
+                                type="button">
+                                Syntax Analyzer
+                            </button>
+                            <button
+                                class="border-2 p-2 mr-2 rounded-md text-gray-300 hover:bg-green-900 hover:bg-opacity-50 bg-green-800 bg-opacity-50 border-green-800 focus:bg-green-600"
+                                type="button">
+                                Semantic Analyzer
+                            </button>
+                        </div>
+
+                        <div>
+                            <button
+                                class="bg-red-600 bg-opacity-50 border-2 border-red-700 p-2 rounded-md hover:bg-red-800 hover:bg-opacity-50"
+                                type="button">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    fill="white"
+                                    class="bi bi-trash3"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+                                </svg>
+                            </button>
+                            <button
+                                class="bg-green-600 bg-opacity-50 border-2 border-green-700 p-2 rounded-md hover:bg-green-800 hover:bg-opacity-50"
+                                type="button">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    fill="white"
+                                    class="bi bi-play"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M10.804 8 5 4.633v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Save/Open Files -->
+                    <div class="flex justify-end">
+                        <button
+                            class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
+                            type="button">
+                            New File
+                        </button>
+                        <button
+                            class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
+                            type="button">
+                            Open File
+                        </button>
+                        <button
+                            class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
+                            type="button">
+                            Save File
+                        </button>
+                    </div>
+                </div>
+
+                <section class="grid grid-cols-3 gap-2">
+                    <!-- Text Area -->
+                    <div
+                        class="col-span-2 flex leading-[21px] bg-slate-900 rounded-md relative h-[30rem] overflow-y-auto"
+                        id="editor">
+                        <div
+                            class="line-numbers text-right px-4 py-4"
+                            id="line-numbers">
+                            <span></span>
+                        </div>
+                        <textarea
+                            class="leading-[21px] w-full h-[9999px] py-4 font-mono overflow-y-hidden text-nowrap overflow-x-scroll resize-none rounded-md bg-slate-900 text-gray-100 focus:outline-none"
+                            id="editor-area"
+                            name="textarea-content"></textarea>
+                    </div>
+
+                    <!-- Lexeme -->
+                    <div class="row-span-2 w-full bg-slate-900 rounded-md">
+                        <table
+                            class="table-fixed text-gray-300 w-full border-separate border-spacing-2">
+                            <thead>
+                                <tr>
+                                    <th>Lexeme</th>
+                                    <th>Token</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>int</td>
+                                    <td>INT</td>
+                                </tr>
+                                <tr>
+                                    <td>main</td>
+                                    <td>MAIN</td>
+                                </tr>
+                                <tr>
+                                    <td>{</td>
+                                    <td>LCURLY</td>
+                                </tr>
+                                <tr>
+                                    <td>}</td>
+                                    <td>RCURLY</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Console -->
+                    <div class="col-span-2">
+                        <p
+                            class="w-full h-36 bg-slate-900 text-gray-300 rounded-md p-2 font-mono">
+                            Console
+                        </p>
+                    </div>
+                </section>
+            </form>
+        </div>
+
+        <script>
+            const editor = document.getElementById("editor");
+            const lineNumbers = document.getElementById("line-numbers");
+
+            editor.addEventListener("keyup", (event) => {
+                const numberOfLines = event.target.value.split("\n").length;
+
+                lineNumbers.innerHTML = Array(numberOfLines)
+                    .fill("<span></span>")
+                    .join("");
+            });
+
+            const textarea = document.getElementById("editor-area");
+            // Handle tab key presses
+            textarea.addEventListener("keydown", function (e) {
+                if (e.key === "Tab") {
+                    e.preventDefault();
+
+                    // Insert a tab character at the current cursor position
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const textBefore = textarea.value.substring(0, start);
+                    const textAfter = textarea.value.substring(end);
+                    textarea.value = textBefore + "\t" + textAfter;
+
+                    // Move the cursor to the position after the inserted tab
+                    textarea.selectionStart = textarea.selectionEnd = start + 1;
+                }
+            });
+
+            const clearButton = document.getElementById("button-clear");
+            clearButton.addEventListener("click", function () {
+                textarea.value = "";
+            });
+        </script>
+    </body>
+</html>
