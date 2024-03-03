@@ -1027,6 +1027,7 @@ class Parser:
     def __init__(self, tokens):
         self.tokens = [token for token in tokens if token.type not in (TT_SPACE, TT_S_COMMENT, TT_M_COMMENT)]
         self.tok_idx = -1
+        self.force_newline = False
         self.advance()
 
     def advance(self):
@@ -1155,7 +1156,7 @@ class Parser:
         # -> EMPTY|type
         if self.expect({TT_EMPTY}):
             return res.success(DataTypeNode(TT_EMPTY))
-        
+
         return res.register(self.type())
 
     def type(self):
@@ -1167,7 +1168,7 @@ class Parser:
         # -> data-struct|data-type
         if self.expect({TT_COLLECTION, TT_WIKI}, False):
             return res.register(self.data_struct())
-        
+
         return res.register(self.data_type())
 
     def data_struct(self):
@@ -1221,7 +1222,7 @@ class Parser:
         # -> NUM|DECI|WORD|LETTER|CHOICE|ID
         if type_ := self.expect({TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}):
             return res.success(DataTypeNode(type_))
-        
+
         return res.failure(self.throw_expected_error([TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER]))
 
     def params(self):
@@ -1444,9 +1445,13 @@ class Parser:
             if res.error:
                 return res
 
+            self.force_newline = True
+
             statements = res.register(self.statements(level + 1))
             if res.error:
                 return res
+
+            self.force_newline = False
 
             res.register(self._req_tab(level))
             if res.error:
@@ -1467,10 +1472,10 @@ class Parser:
 
         return res.failure(self.throw_expected_error([TT_GO]))
 
-    def _req_newline(self, force=False):
+    def _req_newline(self):
         res = ParseResult()
 
-        if force or not self.expect({TT_EOF}, False):
+        if self.force_newline or not self.expect({TT_EOF}, False):
             if not self.expect({TT_NEWLINE}):
                 return res.failure(self.throw_expected_error([TT_NEWLINE]))
 
@@ -1488,6 +1493,7 @@ class Parser:
             tab_count += 1
 
         if tab_count != level:
+            self.reset(pos)
             return res.failure(self.throw_indentation_error(pos, tab_count, level))
 
         return res
