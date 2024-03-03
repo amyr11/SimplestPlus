@@ -1,4 +1,23 @@
 home():
-    Student student = new Student()
-    x.y.z = 2
-    myfunc.z()
+	every num x in range(10):
+		out(x)
+
+
+		every num x in range(10):
+			out(x)
+
+
+			every num x in range(10):
+				out(x)
+
+				
+				every num x in range(10):
+					out(x)
+					every num x in range(10):
+						out(x)
+						every num x in range(10):
+							out(x)
+							every num x in range(10):
+								out(x)
+								every num x in range(10):
+									out(x)
