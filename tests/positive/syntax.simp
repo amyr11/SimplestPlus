@@ -1,23 +1,5 @@
 home():
-	every num x in range(10):
+	during self.expect([TT_NUM]):
 		out(x)
-
-
-		every num x in range(10):
-			out(x)
-
-
-			every num x in range(10):
-				out(x)
-
-				
-				every num x in range(10):
-					out(x)
-					every num x in range(10):
-						out(x)
-						every num x in range(10):
-							out(x)
-							every num x in range(10):
-								out(x)
-								every num x in range(10):
-									out(x)
+		every num x, num y in mywiki:
+			out(format("{} {}", x, y))

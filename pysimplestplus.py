@@ -1813,7 +1813,7 @@ class Parser:
                     if res.error:
                         return res
 
-                    if not self.expect({TT_NEWLINE}):
+                    if not self.expect({TT_COMMA}):
                         break
 
                 if not self.expect({TT_CPAR}):
