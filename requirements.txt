@@ -3,3 +3,4 @@ packaging==23.2
 prettytable==3.9.0
 tk==0.1.0
 wcwidth==0.2.9
+Flask==3.0.2
