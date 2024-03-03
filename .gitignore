@@ -11,5 +11,13 @@ __pycache__/
 .DS_Store
 */.DS_Store
 
+.venv/
+
 dump/
 samples/
+
+# Yarn files
+.yarn/install-state.gz
+.yarn/build-state.yml
+
+node_modules/
