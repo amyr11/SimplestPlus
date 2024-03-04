@@ -1333,7 +1333,37 @@ class Parser:
         pass
 
     def incase_stmt(self, level):
-        pass
+        """
+        First set: {INCASE}
+        """
+        res = ParseResult()
+        conditions = []
+        instead_stmt = None
+
+        # -> INCASE expr COLON NEWLINE+ statements unless* instead?
+        if self.expect({TT_INCASE}):
+            condition = res.register(self.expr())
+            if res.error:
+                return res
+
+            if not self.expect({TT_COLON}):
+                res.failure(self.throw_expected_error([TT_COLON]))
+
+            self.force_newline = True
+            res.register(self._req_newline())
+            if res.error:
+                return res
+            self.force_newline = False
+
+            statements = res.register(self.statements(level+1))
+            if res.error:
+                return res
+
+            conditions.append((condition, statements))
+
+            # TODO
+
+        return res.failure(self.throw_expected_error([TT_INCASE]))
 
     def unless(self):
         pass
@@ -1378,36 +1408,38 @@ class Parser:
         First set: {TAB}
         """
         res = ParseResult()
-        pos = self.mark()
         event_nodes = []
         default_stmt = None
 
+        pos = self.mark()
         res.register(self._req_tab(level))
         if res.error:
             return res
 
         # -> event+ (default event*)?
         if self.expect({TT_EVENT}, False):
-            events = res.register(self._multiple_event(pos, level, True))
+            self.reset(pos)
+            events = res.register(self._multiple_event(level, True))
             if res.error:
                 return res
             if events:
                 event_nodes.extend(events)
 
-            # _default_and_opt_event = res.register(self._default_and_opt_event(pos, level, False))
-            # if res.error:
-            #         return res
+            _default_and_opt_event = res.register(self._default_and_opt_event(level, False))
+            if res.error:
+                return res
 
-            # if _default_and_opt_event.node:
-            #     default, opt_events = _default_and_opt_event.node
-            #     default_stmt = default
-            #     event_nodes.extend(opt_events)
+            if _default_and_opt_event:
+                default, opt_events = _default_and_opt_event
+                default_stmt = default
+                event_nodes.extend(opt_events)
 
             return res.success((event_nodes, default_stmt))
 
         # -> default event*
         elif self.expect({TT_DEFAULT}, False):
-            _default_and_opt_event = res.register(self._default_and_opt_event(pos, level, True))
+            self.reset(pos)
+            _default_and_opt_event = res.register(self._default_and_opt_event(level, True))
             if res.error:
                 return res
 
@@ -1420,14 +1452,23 @@ class Parser:
 
         return res.failure(self.throw_expected_error([TT_EVENT, TT_DEFAULT]))
 
-    def _multiple_event(self, from_pos, level, required):
+    def _multiple_event(self, level, required):
         res = ParseResult()
+        event_nodes = []
 
-        if not required and not self.expect({TT_EVENT}, False):
+        # Lookahead for event
+        pos = self.mark()
+        res.register(self._req_tab(level, lookahead=True))
+        if res.error:
+            return res
+
+        if not self.expect({TT_EVENT}, False):
+            self.reset(pos)
+            if required:
+                return res.failure(self.throw_expected_error([TT_EVENT]))
             return res.success(None)
 
-        event_nodes = []
-        self.reset(from_pos)
+        self.reset(pos)
 
         while True:
             event = res.register(self.event(level))
@@ -1436,12 +1477,12 @@ class Parser:
             event_nodes.append(event)
             # Lookahead for next event
             pos = self.mark()
-            tab_count = res.register(self._req_tab(level))
+            tab_count = res.register(self._req_tab(level, lookahead=True))
             if res.error:
-                res.error = None
-                if tab_count < level and event_nodes:
-                    break
                 return res
+            if tab_count < level and event_nodes:
+                self.reset(pos)
+                break
             if not self.expect({TT_EVENT}, False):
                 self.reset(pos)
                 break
@@ -1449,20 +1490,28 @@ class Parser:
 
         return res.success(event_nodes)
 
-    def _default_and_opt_event(self, from_pos, level, required):
+    def _default_and_opt_event(self, level, required):
         res = ParseResult()
 
-        if not required and not self.expect({TT_DEFAULT}, False):
+        # Lookahead for default
+        pos = self.mark()
+        res.register(self._req_tab(level, lookahead=True))
+        if res.error:
+            return res
+
+        if not self.expect({TT_DEFAULT}, False):
+            self.reset(pos)
+            if required:
+                return res.failure(self.throw_expected_error([TT_DEFAULT]))
             return res.success(None)
 
-        self.reset(from_pos)
+        self.reset(pos)
 
         default_stmt = res.register(self.default(level))
         if res.error:
             return res
 
-        pos = self.mark()
-        opt_events = res.register(self._multiple_event(pos, level, False))
+        opt_events = res.register(self._multiple_event(level, False))
         if res.error:
             return res
 
@@ -1685,18 +1734,19 @@ class Parser:
 
         return res
 
-    def _req_tab(self, level):
+    def _req_tab(self, level, lookahead=False):
         pos = self.mark()
         res = ParseResult()
 
         if self.expect({TT_EOF}, False):
+            res.node = 0
             return res
 
         tab_count = 0
         while self.expect({TT_TAB}):
             tab_count += 1
 
-        if tab_count != level:
+        if tab_count != level and not lookahead:
             self.reset(pos)
             res.node = tab_count
             return res.failure(self.throw_indentation_error(pos, tab_count, level))

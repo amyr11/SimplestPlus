@@ -38,8 +38,6 @@ def analyze_syntax():
             print_to_console(error.as_string(), message_type="error")
             print_to_console(" ")
     elif ast:
-        print_to_console(f"AST: {ast}")
-        print_to_console(" ")
         print_to_console("Syntax analysis completed successfully")
 
 
