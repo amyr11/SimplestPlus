@@ -1364,7 +1364,6 @@ class Parser:
 
             conditions.append((condition, statements))
 
-            # TODO
             # Lookahead for unless/instead
             pos = self.mark()
             tab_count = res.register(self._req_tab(level))

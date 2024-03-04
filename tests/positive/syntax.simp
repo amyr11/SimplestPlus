@@ -32,7 +32,7 @@ home():
 		unless y:
 			out()
 		instead:
-			back y
+			back n
 		back x
 	unless d:
 		out()
