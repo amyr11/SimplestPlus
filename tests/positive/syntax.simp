@@ -18,6 +18,11 @@ home():
 					out()
 		default:
 			out()
+
+	incase 1 < 2:
+		out("hey")
+	instead:
+		out()
 	
 	incase x:
 		out()

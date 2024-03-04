@@ -55,8 +55,8 @@ def run_syntax(file_path, code):
         for error in errors:
             print(error.as_string())
     else:
-        print("AST:", ast)
-        print()
+        # print("AST:", ast)
+        # print()
         print(f"{file_path} compiled successfully.")
 
 
