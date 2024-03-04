@@ -168,32 +168,25 @@
         </div>
 
         <script>
-            const editor = document.getElementById("editor");
-            const lineNumbers = document.getElementById("line-numbers");
-
-            editor.addEventListener("keyup", (event) => {
+            $("#editor").on("keyup", (event) => {
                 const numberOfLines = event.target.value.split("\n").length;
 
-                lineNumbers.innerHTML = Array(numberOfLines)
-                    .fill("<span></span>")
-                    .join("");
+                $("#line-numbers").html(
+                    Array(numberOfLines).fill("<span></span>").join(""),
+                );
             });
 
-            const textarea = document.getElementById("editor-area");
-            // Handle tab key presses
-            textarea.addEventListener("keydown", function (e) {
-                if (e.key === "Tab") {
+            $("#editor-area").on("keydown", function (e) {
+                if (e.keyCode === 9) {
                     e.preventDefault();
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const value = $(this).val();
 
-                    // Insert a tab character at the current cursor position
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const textBefore = textarea.value.substring(0, start);
-                    const textAfter = textarea.value.substring(end);
-                    textarea.value = textBefore + "\t" + textAfter;
-
-                    // Move the cursor to the position after the inserted tab
-                    textarea.selectionStart = textarea.selectionEnd = start + 1;
+                    $(this).val(
+                        value.substring(0, start) + "\t" + value.substring(end),
+                    );
+                    this.selectionStart = this.selectionEnd = start + 1;
                 }
             });
 
