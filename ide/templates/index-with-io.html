@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link
+            href="{{url_for('static',filename='css/output.css')}}"
+            rel="stylesheet" />
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <title>Simplest+ IDE</title>
+        <style>
+            .line-numbers span {
+                counter-increment: linenumber;
+            }
+
+            .line-numbers span::before {
+                content: counter(linenumber);
+                display: block;
+                color: #508882;
+            }
+
+            p {
+                margin: 0px;
+            }
+
+            ::-webkit-scrollbar {
+                width: 4px;
+                padding-right: 10px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: none;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #4a5568;
+                border-radius: 4px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #2d3748;
+            }
+        </style>
+    </head>
+    <body class="bg-slate-800">
+        <div class="px-5 pt-2">
+            <div class="flex justify-center items-center">
+                <!-- Title -->
+                <h1 class="text-2xl font-bold text-gray-300">
+                    Simplest+<span class="text-gray-400 font-normal italic">
+                        • <span id="title-filename">Untitled</span></span
+                    >
+                </h1>
+            </div>
+            <form method="post" onsubmit="analyze(); return false">
+                <div class="grid grid-cols-3 gap-2 pb-2">
+                    <!-- Top Buttons -->
+                    <div class="col-span-2 flex justify-between">
+                        <div>
+                            <button
+                                class="border-2 p-2 mr-2 rounded-md text-gray-300 hover:bg-green-900 hover:bg-opacity-50 bg-green-800 bg-opacity-50 border-green-800 focus:bg-green-600"
+                                type="button"
+                                onclick="analyze('lexical')">
+                                Lexical Analyzer
+                            </button>
+                            <button
+                                class="border-2 p-2 mr-2 rounded-md text-gray-300 hover:bg-green-900 hover:bg-opacity-50 bg-green-800 bg-opacity-50 border-green-800 focus:bg-green-600"
+                                type="button"
+                                onclick="analyze('syntax')">
+                                Syntax Analyzer
+                            </button>
+                            <button
+                                class="border-2 p-2 mr-2 rounded-md text-gray-300 hover:bg-green-900 hover:bg-opacity-50 bg-green-800 bg-opacity-50 border-green-800 focus:bg-green-600"
+                                type="button">
+                                Semantic Analyzer
+                            </button>
+                        </div>
+
+                        <div>
+                            <button
+                                class="bg-red-600 bg-opacity-50 border-2 border-red-700 p-2 rounded-md hover:bg-red-800 hover:bg-opacity-50"
+                                type="button"
+                                onclick="clearConsoleAndTable()">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    fill="white"
+                                    class="bi bi-trash3"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+                                </svg>
+                            </button>
+                            <button
+                                class="bg-green-600 bg-opacity-50 border-2 border-green-700 p-2 rounded-md hover:bg-green-800 hover:bg-opacity-50"
+                                type="button">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    fill="white"
+                                    class="bi bi-play"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M10.804 8 5 4.633v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Save/Open Files -->
+                    <div class="hidden justify-end">
+                        <button
+                            class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
+                            type="button">
+                            New File
+                        </button>
+                        <button
+                            class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
+                            type="button"
+                            onclick="promptOpenFile()">
+                            Open File
+                        </button>
+                        <button
+                            class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
+                            type="button">
+                            Save File
+                        </button>
+                        <button
+                            class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
+                            type="button"
+                            onclick='$("#open-file-modal").toggleClass("hidden flex")'>
+                            test button
+                        </button>
+                    </div>
+                </div>
+
+                <section class="grid grid-cols-3 gap-2">
+                    <!-- Text Area -->
+                    <div
+                        class="col-span-2 flex leading-[21px] bg-slate-900 rounded-md relative h-[30rem] overflow-y-auto"
+                        id="editor">
+                        <div
+                            class="line-numbers text-right px-4 py-4"
+                            id="line-numbers">
+                            <span></span>
+                        </div>
+                        <textarea
+                            class="leading-[21px] w-full h-[9999px] py-4 font-mono overflow-y-hidden text-nowrap overflow-x-scroll resize-none rounded-md bg-slate-900 text-gray-100 focus:outline-none"
+                            id="editor-area"
+                            name="textarea-content"></textarea>
+                    </div>
+
+                    <!-- Lexeme -->
+                    <div
+                        class="row-span-2 w-full h-[650px] bg-slate-900 rounded-md overflow-y-auto relative">
+                        <table
+                            class="table-fixed text-gray-300 w-full border-separate border-spacing-1">
+                            <thead class="sticky top-0 z-10 bg-slate-900">
+                                <tr>
+                                    <th>Lexeme</th>
+                                    <th>Token</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lexeme-table"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Console -->
+                    <div class="col-span-2">
+                        <p
+                            class="w-full h-40 bg-slate-900 text-gray-300 rounded-md p-2 font-mono whitespace-pre overflow-auto"
+                            id="editor-console"></p>
+                    </div>
+                </section>
+            </form>
+        </div>
+
+        <div
+            class="fixed hidden top-0 left-0 w-full h-full items-center justify-center"
+            id="open-file-modal">
+            <div
+                class="bg-slate-600 text-gray-400 max-w-80 text-center p-4 rounded-md item-center justify-center">
+                Your current file is not yet saved, do you want to save it first
+                before proceeding?
+                <div class="pt-4">
+                    <button
+                        class="bg-green-600 px-4 py-1 text-gray-300 border border-green-800 rounded-md">
+                        Yes
+                    </button>
+                    <button
+                        class="bg-red-600 px-4 py-1 text-gray-300 border border-red-800 rounded-md">
+                        No
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let isModified = false,
+                isSavedAsFile = false;
+            $("#editor").on("keyup", function (event) {
+                if (!isModified) {
+                    isModified = true;
+                    $("#title-filename").text(
+                        `${$("#title-filename").text()}*`,
+                    );
+                }
+                const numberOfLines = event.target.value.split("\n").length;
+
+                $("#line-numbers").html(
+                    Array(numberOfLines).fill("<span></span>").join(""),
+                );
+            });
+
+            $("#editor-area").on("keydown", function (event) {
+                if (event.keyCode === 9) {
+                    event.preventDefault();
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const value = $(this).val();
+
+                    $(this).val(
+                        value.substring(0, start) + "\t" + value.substring(end),
+                    );
+                    this.selectionStart = this.selectionEnd = start + 1;
+                }
+            });
+
+            /**
+             * Convert the string to title case
+             * @param {string} str
+             * @returns {string}
+             */
+            function toTitleCase(string) {
+                if (!string.length) return "";
+                return string
+                    .split(" ")
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(" ");
+            }
+
+            /**
+             * Clear the console and the lexeme table
+             */
+            function clearConsoleAndTable() {
+                $("#editor-console").text("");
+                $("#lexeme-table").html("");
+            }
+
+            /**
+             * Reset the whole IDE
+             */
+            function resetAll() {
+                clearConsoleAndTable();
+                $("#editor-area").val("");
+            }
+
+            /**
+             * Analyze the code using the specified analyzer
+             */
+            function analyze(analyzer) {
+                clearConsoleAndTable();
+                $.ajax({
+                    type: "POST",
+                    url: "/analyze",
+                    data: {
+                        editorContent: $("#editor-area").val(),
+                        analyzer,
+                    },
+                    success: (res) => {
+                        console.log(res);
+                        const rows = res.tokens
+                            .map(
+                                ([lexeme, token]) =>
+                                    `<tr><td>${lexeme}</td><td>${token}</td></tr>`,
+                            )
+                            .join();
+                        $("#lexeme-table").html(rows);
+                        if (res.errors.length) {
+                            $("#editor-console")
+                                .addClass("text-red-500")
+                                .text(res.errors.join("\n"));
+                        } else {
+                            $("#editor-console")
+                                .removeClass("text-red-500")
+                                .text(
+                                    `${toTitleCase(
+                                        analyzer,
+                                    )} analysis completed successfully.`,
+                                );
+                        }
+                    },
+                    error: (err) => {
+                        $("#editor-console").text(
+                            "An error occurred while analyzing the code. Please check the console for more details.",
+                        );
+                        console.log(err);
+                    },
+                });
+            }
+
+            function promptSaveFile() {}
+
+            function newFile() {}
+
+            function promptOpenFile() {
+                if ($("#editor-area").val().length) {
+                    $("#open-file-modal").toggleClass("hidden flex");
+                } else {
+                    const fileDialog = $('<input type="file" accept=".simp">');
+                    fileDialog.click();
+                    fileDialog.on("change", function () {
+                        const [file] = this.files;
+                        console.log(file);
+                        $("#title-filename").text(file.name);
+                        const reader = new FileReader();
+                        reader.readAsText(file);
+                        reader.onload = (event) =>
+                            $("#editor-area").text(event.target.result);
+                        reader.onerror = () => alert("Error reading file.");
+                        isSavedAsFile = true;
+                    });
+                }
+                return false;
+            }
+        </script>
+    </body>
+</html>
