@@ -152,8 +152,7 @@
                                     <th>Token</th>
                                 </tr>
                             </thead>
-                            <tbody
-                                id="lexeme-table"></tbody>
+                            <tbody id="lexeme-table"></tbody>
                         </table>
                     </div>
 
@@ -239,7 +238,9 @@
                             $("#editor-console")
                                 .removeClass("text-red-500")
                                 .text(
-                                    `${toTitleCase(analyzer)} analysis completed successfully.`,
+                                    `${toTitleCase(
+                                        analyzer,
+                                    )} analysis completed successfully.`,
                                 );
                         }
                     },
