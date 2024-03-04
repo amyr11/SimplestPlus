@@ -106,7 +106,7 @@
                     </div>
 
                     <!-- Save/Open Files -->
-                    <div class="flex justify-end">
+                    <div class="hidden justify-end">
                         <button
                             class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
                             type="button">
@@ -114,13 +114,20 @@
                         </button>
                         <button
                             class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
-                            type="button">
+                            type="button"
+                            onclick="promptOpenFile()">
                             Open File
                         </button>
                         <button
                             class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
                             type="button">
                             Save File
+                        </button>
+                        <button
+                            class="border-2 px-2 py-2 ml-2 rounded-md text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 bg-gray-500 bg-opacity-50 border-gray-500"
+                            type="button"
+                            onclick='$("#open-file-modal").toggleClass("hidden flex")'>
+                            test button
                         </button>
                     </div>
                 </div>
