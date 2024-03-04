@@ -1007,11 +1007,9 @@ class ParseResult:
         self.node = None
 
     def register(self, res):
-        if isinstance(res, ParseResult):
-            if res.error:
-                self.error = res.error
-            return res.node
-        return res
+        if res.error:
+            self.error = res.error
+        return res.node
 
     def success(self, node):
         self.node = node
@@ -1369,14 +1367,30 @@ class Parser:
             # TODO
             # Lookahead for unless/instead
             pos = self.mark()
-            res.register(self._req_tab(level, lookahead=True))
+            tab_count = res.register(self._req_tab(level))
             if res.error:
+                if tab_count < level:
+                    res.error = None
+                    self.reset(pos)
+                    return res.success(IncaseNode(conditions, instead_stmt))
                 return res
 
             if self.expect({TT_UNLESS}, False):
                 self.reset(pos)
-                # while True:
-                #     res.register(conditions.append())
+                while True:
+                    res.register(conditions.append(self.unless()))
+                    if res.error:
+                        return res
+
+                    # Lookahead for unless/instead
+                    pos = self.mark()
+                    res.register(self._req_tab(level))
+                    if res.error:
+                        if tab_count < level:
+                            res.error = None
+                            self.reset(pos)
+                            return res.success(IncaseNode(conditions, instead_stmt))
+                        return res
             elif self.expect({TT_INSTEAD}, False):
                 self.reset(pos)
 
@@ -1449,12 +1463,16 @@ class Parser:
 
                 # Lookahead for next event
                 pos = self.mark()
-                tab_count = res.register(self._req_tab(level, lookahead=True))
+                tab_count = res.register(self._req_tab(level))
                 if res.error:
+                    if tab_count < level:
+                        res.error = None
+                        self.reset(pos)
+                        return res.success((event_nodes, default_stmt))
                     return res
 
                 # Possible "default" block
-                if not (self.expect({TT_EVENT}, False) and tab_count == level):
+                if not self.expect({TT_EVENT}, False):
                     break
 
             # (default event*)?
@@ -1466,14 +1484,18 @@ class Parser:
 
                 # Lookahead for next event
                 pos = self.mark()
-                tab_count = res.register(self._req_tab(level, lookahead=True))
+                tab_count = res.register(self._req_tab(level))
                 if res.error:
+                    if tab_count < level:
+                        res.error = None
+                        self.reset(pos)
+                        return res.success((event_nodes, default_stmt))
                     return res
 
-                if self.expect({TT_DEFAULT}, False) and tab_count == level:
+                if self.expect({TT_DEFAULT}, False):
                     return res.failure(self.throw_error("Only one default block is allowed in given statement"))
 
-                if self.expect({TT_EVENT}, False) and tab_count == level:
+                if self.expect({TT_EVENT}, False):
                     while True:
                         self.reset(pos)
                         event_nodes.append(res.register(self.event(level)))
@@ -1482,17 +1504,19 @@ class Parser:
 
                         # Lookahead for next event
                         pos = self.mark()
-                        tab_count = res.register(self._req_tab(level, lookahead=True))
+                        tab_count = res.register(self._req_tab(level))
                         if res.error:
+                            if tab_count < level:
+                                res.error = None
+                                break
                             return res
 
                         # End of given statement
-                        if not (self.expect({TT_EVENT}, False) and tab_count == level):
+                        if not self.expect({TT_EVENT}, False):
                             break
 
             self.reset(pos)
             return res.success((event_nodes, default_stmt))
-
         # -> default event*
         elif self.expect({TT_DEFAULT}, False):
             self.reset(pos)
@@ -1502,18 +1526,24 @@ class Parser:
 
             # Lookahead for next event
             pos = self.mark()
-            tab_count = res.register(self._req_tab(level, lookahead=True))
+            tab_count = res.register(self._req_tab(level))
             if res.error:
+                if tab_count < level:
+                    res.error = None
+                    self.reset(pos)
+                    return res.success((event_nodes, default_stmt))
                 return res
 
-            if self.expect({TT_DEFAULT}, False) and tab_count == level:
+            print("mcl")
+
+            if self.expect({TT_DEFAULT}, False):
                 return res.failure(
                     self.throw_error(
                         "Only one default block is allowed in given statement"
                     )
                 )
 
-            if self.expect({TT_EVENT}, False) and tab_count == level:
+            if self.expect({TT_EVENT}, False):
                 while True:
                     self.reset(pos)
                     event = res.register(self.event(level))
@@ -1523,12 +1553,15 @@ class Parser:
 
                     # Lookahead for next event
                     pos = self.mark()
-                    tab_count = res.register(self._req_tab(level, lookahead=True))
+                    tab_count = res.register(self._req_tab(level))
                     if res.error:
+                        if tab_count < level:
+                            res.error = None
+                            break
                         return res
 
                     # End of given statement
-                    if (tab_count < level and event_nodes) or (not self.expect({TT_EVENT}, False)):
+                    if not self.expect({TT_EVENT}, False):
                         break
 
             self.reset(pos)
@@ -1562,6 +1595,8 @@ class Parser:
         self.force_newline = False
 
         default_statements = res.register(self.statements(level+1))
+        if default_statements.items[0].node_to_call.var_name_tok.value == "how":
+            print("aaaa")
         if res.error:
             return res
 
@@ -1753,7 +1788,7 @@ class Parser:
 
         return res
 
-    def _req_tab(self, level, lookahead=False):
+    def _req_tab(self, level):
         pos = self.mark()
         res = ParseResult()
 
@@ -1765,7 +1800,8 @@ class Parser:
         while self.expect({TT_TAB}):
             tab_count += 1
 
-        if tab_count != level and not lookahead:
+        if tab_count != level:
+            res.node = tab_count
             return res.failure(self.throw_indentation_error(pos, tab_count, level))
 
         return res.success(tab_count)

@@ -8,9 +8,11 @@ home():
 					out()
 				default:
 					inp()
-					given xaa:
-						event 1:
+					given y:
+						event 3:
 							out()
+				event 4:
+					out()
 			given xb:
 				default:
 					out()
