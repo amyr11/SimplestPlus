@@ -1,6 +1,7 @@
 {
   "packageManager": "yarn@4.1.0",
   "dependencies": {
+    "jquery": "^3.7.1",
     "tailwindcss": "^3.4.1"
   }
 }
