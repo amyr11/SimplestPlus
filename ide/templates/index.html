@@ -176,6 +176,16 @@
                 }
             });
 
+            function clearConsoleAndTable() {
+                $("#editor-console").text("");
+                $("#lexeme-table").html("");
+            }
+
+            function resetAll() {
+                clearConsoleAndTable();
+                $("#editor-area").val("");
+            }
+
             function analyze(analyzer) {
                 clearConsoleAndTable();
                 $.ajax({
