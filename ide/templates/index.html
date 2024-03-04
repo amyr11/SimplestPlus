@@ -288,6 +288,31 @@
                     },
                 });
             }
+
+            function promptSaveFile() {}
+
+            function newFile() {}
+
+            function promptOpenFile() {
+                if ($("#editor-area").val().length) {
+                    $("#open-file-modal").toggleClass("hidden flex");
+                } else {
+                    const fileDialog = $('<input type="file" accept=".simp">');
+                    fileDialog.click();
+                    fileDialog.on("change", function () {
+                        const [file] = this.files;
+                        console.log(file);
+                        $("#title-filename").text(file.name);
+                        const reader = new FileReader();
+                        reader.readAsText(file);
+                        reader.onload = (event) =>
+                            $("#editor-area").text(event.target.result);
+                        reader.onerror = () => alert("Error reading file.");
+                        isSavedAsFile = true;
+                    });
+                }
+                return false;
+            }
         </script>
     </body>
 </html>
