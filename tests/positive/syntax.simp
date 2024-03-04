@@ -21,6 +21,37 @@ home():
 	
 	incase x:
 		out()
+
+		incase y:
+			out()
+		unless y:
+			out()
+		instead:
+			back y
+		back x
+	unless d:
+		out()
+
+		every num x in [1, 2, 3]:
+			out()
+
+			go:
+				during x:
+					out()
+					skip
+				stop
+				incase x:
+					out()
+				
+				incase y:
+					out()
+				instead:
+					back y
+			during y
+	unless d:
+		out()
+	unless d:
+		out()
 	
 	out()
 	out()

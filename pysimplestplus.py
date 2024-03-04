@@ -1171,7 +1171,7 @@ class Parser:
         if self.expect({TT_COLLECTION, TT_WIKI}, False):
             return res.register(self.data_struct())
 
-        return res.register(self.data_type())
+        return res.success(self.data_type())
 
     def data_struct(self):
         """
@@ -1376,24 +1376,31 @@ class Parser:
                 return res
 
             if self.expect({TT_UNLESS}, False):
-                self.reset(pos)
                 while True:
-                    res.register(conditions.append(self.unless()))
+                    self.reset(pos)
+                    conditions.append(res.register(self.unless(level)))
                     if res.error:
                         return res
 
+                    
                     # Lookahead for unless/instead
                     pos = self.mark()
-                    res.register(self._req_tab(level))
+                    tab_count = res.register(self._req_tab(level))
                     if res.error:
                         if tab_count < level:
                             res.error = None
                             self.reset(pos)
                             return res.success(IncaseNode(conditions, instead_stmt))
                         return res
-            elif self.expect({TT_INSTEAD}, False):
-                self.reset(pos)
 
+                    if not self.expect({TT_UNLESS}, False):
+                        break
+
+            if self.expect({TT_INSTEAD}, False):
+                self.reset(pos)
+                instead_stmt = res.register(self.instead(level))
+                if res.error:
+                    return res
             else:
                 self.reset(pos)
 
@@ -1401,11 +1408,65 @@ class Parser:
 
         return res.failure(self.throw_expected_error([TT_INCASE]))
 
-    def unless(self):
-        pass
+    def unless(self, level):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
 
-    def instead(self):
-        pass
+        res.register(self._req_tab(level))
+        if res.error:
+            return res
+
+        if not self.expect({TT_UNLESS}):
+            return res.failure(self.throw_expected_error([TT_UNLESS]))
+
+        condition = res.register(self.expr())
+        if res.error:
+            return res
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_COLON]))
+
+        self.force_newline = True
+        res.register(self._req_newline())
+        if res.error:
+            return res
+        self.force_newline = False
+
+        statements = res.register(self.statements(level+1))
+        if res.error:
+            return res
+
+        return res.success((condition, statements))
+
+    def instead(self, level):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+
+        res.register(self._req_tab(level))
+        if res.error:
+            return res
+
+        if not self.expect({TT_INSTEAD}):
+            return res.failure(self.throw_expected_error([TT_INSTEAD]))
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_COLON]))
+
+        self.force_newline = True
+        res.register(self._req_newline())
+        if res.error:
+            return res
+        self.force_newline = False
+
+        statements = res.register(self.statements(level+1))
+        if res.error:
+            return res
+
+        return res.success((statements))
 
     def given_stmt(self, level):
         """
