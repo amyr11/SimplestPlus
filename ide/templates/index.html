@@ -202,16 +202,25 @@
                     .join(" ");
             }
 
+            /**
+             * Clear the console and the lexeme table
+             */
             function clearConsoleAndTable() {
                 $("#editor-console").text("");
                 $("#lexeme-table").html("");
             }
 
+            /**
+             * Reset the whole IDE
+             */
             function resetAll() {
                 clearConsoleAndTable();
                 $("#editor-area").val("");
             }
 
+            /**
+             * Analyze the code using the specified analyzer
+             */
             function analyze(analyzer) {
                 clearConsoleAndTable();
                 $.ajax({
