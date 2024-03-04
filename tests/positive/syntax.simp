@@ -1,15 +1,20 @@
 home():
 	given x:
 		event 1:
-			out()
-		event 2:
-			out()
-		default:
-			inp()
-			given y:
-				event 3:
+			given xa:
+				event 1:
 					out()
-		event 4:
+				event 2:
+					out()
+				default:
+					inp()
+					given xaa:
+						event 1:
+							out()
+			given xb:
+				default:
+					out()
+		default:
 			out()
 	
 	incase x:

@@ -1374,9 +1374,12 @@ class Parser:
                 return res
 
             if self.expect({TT_UNLESS}, False):
-                pass
+                self.reset(pos)
+                # while True:
+                #     res.register(conditions.append())
             elif self.expect({TT_INSTEAD}, False):
-                pass
+                self.reset(pos)
+
             else:
                 self.reset(pos)
 
@@ -1440,11 +1443,9 @@ class Parser:
             # event+
             while True:
                 self.reset(pos)
-                event = res.register(self.event(level))
+                event_nodes.append(res.register(self.event(level)))
                 if res.error:
                     return res
-
-                event_nodes.append(event)
 
                 # Lookahead for next event
                 pos = self.mark()
@@ -1469,17 +1470,15 @@ class Parser:
                 if res.error:
                     return res
 
-                if self.expect({TT_DEFAULT}, False):
+                if self.expect({TT_DEFAULT}, False) and tab_count == level:
                     return res.failure(self.throw_error("Only one default block is allowed in given statement"))
 
-                if self.expect({TT_EVENT}, False):
+                if self.expect({TT_EVENT}, False) and tab_count == level:
                     while True:
                         self.reset(pos)
-                        event = res.register(self.event(level))
+                        event_nodes.append(res.register(self.event(level)))
                         if res.error:
                             return res
-
-                        event_nodes.append(event)
 
                         # Lookahead for next event
                         pos = self.mark()
@@ -1507,7 +1506,14 @@ class Parser:
             if res.error:
                 return res
 
-            if self.expect({TT_EVENT}, False):
+            if self.expect({TT_DEFAULT}, False) and tab_count == level:
+                return res.failure(
+                    self.throw_error(
+                        "Only one default block is allowed in given statement"
+                    )
+                )
+
+            if self.expect({TT_EVENT}, False) and tab_count == level:
                 while True:
                     self.reset(pos)
                     event = res.register(self.event(level))
@@ -1524,9 +1530,6 @@ class Parser:
                     # End of given statement
                     if (tab_count < level and event_nodes) or (not self.expect({TT_EVENT}, False)):
                         break
-
-            if self.expect({TT_DEFAULT}, False):
-                return res.failure(self.throw_error("Only one default block is allowed in given statement"))
 
             self.reset(pos)
             return res.success((event_nodes, default_stmt))
