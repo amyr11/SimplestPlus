@@ -167,7 +167,7 @@
         </div>
 
         <script>
-            $("#editor").on("keyup", (event) => {
+            $("#editor").on("keyup", function (event) {
                 const numberOfLines = event.target.value.split("\n").length;
 
                 $("#line-numbers").html(
@@ -175,9 +175,9 @@
                 );
             });
 
-            $("#editor-area").on("keydown", function (e) {
-                if (e.keyCode === 9) {
-                    e.preventDefault();
+            $("#editor-area").on("keydown", function (event) {
+                if (event.keyCode === 9) {
+                    event.preventDefault();
                     const start = this.selectionStart;
                     const end = this.selectionEnd;
                     const value = $(this).val();
