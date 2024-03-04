@@ -1314,7 +1314,7 @@ class Parser:
                     return res
                 return res.success(dec_stmt)
             # assign_stmt
-            elif self.expect({TT_PERIOD, TT_ASSIGN, TT_PLUS_ASSIGN, TT_MINUS_ASSIGN, TT_MULTIPLY_ASSIGN, TT_DIVIDE_ASSIGN, TT_FLOOR_ASSIGN, TT_MODULO_ASSIGN, TT_POWER_ASSIGN}):
+            elif self.expect({TT_PERIOD, TT_OBRACK, TT_ASSIGN, TT_PLUS_ASSIGN, TT_MINUS_ASSIGN, TT_MULTIPLY_ASSIGN, TT_DIVIDE_ASSIGN, TT_FLOOR_ASSIGN, TT_MODULO_ASSIGN, TT_POWER_ASSIGN}):
                 self.reset(pos)
                 assign_stmt = res.register(self.assign_stmt())
                 if res.error:
@@ -1420,7 +1420,7 @@ class Parser:
         if id := self.expect({TT_IDENTIFIER}):
             var_node = VarAccessNode(id)
             
-            while self.expect({TT_PERIOD, TT_OBRACK}):
+            while self.expect({TT_PERIOD, TT_OBRACK}, False):
                 var_node = res.register(self.dot_slice(var_node))
                 if res.error:
                     return res
@@ -1693,8 +1693,6 @@ class Parser:
                     self.reset(pos)
                     return res.success((event_nodes, default_stmt))
                 return res
-
-            print("mcl")
 
             if self.expect({TT_DEFAULT}, False):
                 return res.failure(
