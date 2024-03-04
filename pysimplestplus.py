@@ -8,6 +8,7 @@ S_COMMENT_LIMIT = 79
 ID_LIMIT = 20
 NUM_LIMIT = 999999999
 DECI_LIMIT = 999999999.999999
+DECI_PRECISION_LIMIT = 6
 WORD_ESCAPE_CHARS = {
             'n': '\n',
             't': '\t',
@@ -155,7 +156,7 @@ DEFINITIONS["delim_obrack"] = [
     '"',
     "'",
 ]
-DEFINITIONS["delim_cbrack"] = [" ", "\n", ",", "[", "]", ")", "}", ".", "(", "+"]
+DEFINITIONS["delim_cbrack"] = [" ", "\n", ",", "[", "]", ")", "}", ".", "(", "+", ":"]
 DEFINITIONS["delim_comma"] = [
     *DEFINITIONS["alpha_num"],
     " ",
@@ -220,6 +221,8 @@ DEFINITIONS["delim_space"] = [
     *DEFINITIONS["arith_op"],
     *DEFINITIONS["rel_op"],
     *DEFINITIONS["special_char_wo_t"],
+    " ",
+    "\n",
 ]
 
 
@@ -736,7 +739,7 @@ class Lexer:
             token, error = self.make_num_deci(neg=True)
             if error:
                 return None, error
-            
+
             if token and token.value == 0:
                 return None, LexicalError(pos_start, self.pos.copy(), "Negative zero is not allowed")
 
@@ -988,6 +991,8 @@ class Lexer:
             deci_val = float(num_str) * negative_val
             if deci_val > DECI_LIMIT:
                 return None, LexicalError(pos_start, self.pos.copy(), f"Deci value cannot be greater than {DECI_LIMIT}")
+            if len(num_str.split('.')[1]) > DECI_PRECISION_LIMIT:
+                return None, LexicalError(pos_start, self.pos.copy(), f"Deci value cannot have more than {DECI_PRECISION_LIMIT} decimal places")
             return Token(TT_DECI_LITERAL, deci_val, pos_start, self.pos), None
 
 
@@ -1418,104 +1423,111 @@ class Parser:
 
         # -> event+ (default event*)?
         if self.expect({TT_EVENT}, False):
+            # event+
+            while True:
+                self.reset(pos)
+                event = res.register(self.event(level))
+                if res.error:
+                    return res
+
+                event_nodes.append(event)
+
+                # Lookahead for next event
+                pos = self.mark()
+                tab_count = res.register(self._req_tab(level, lookahead=True))
+                if res.error:
+                    return res
+
+                # Return only if there are events
+                if tab_count < level and event_nodes:
+                    self.reset(pos)
+                    return res.success((event_nodes, default_stmt))
+
+                # Possible "default" block
+                if not self.expect({TT_EVENT}, False):
+                    break
+
+            # (default event*)?
+            if self.expect({TT_DEFAULT}, False):
+                self.reset(pos)
+                default_stmt = res.register(self.default(level))
+                if res.error:
+                    return res
+
+                # Lookahead for next event
+                pos = self.mark()
+                tab_count = res.register(self._req_tab(level, lookahead=True))
+                if res.error:
+                    return res
+
+                if self.expect({TT_DEFAULT}, False):
+                    return res.failure(self.throw_error("Only one default block is allowed in given statement"))
+
+                if self.expect({TT_EVENT}, False):
+                    while True:
+                        self.reset(pos)
+                        event = res.register(self.event(level))
+                        if res.error:
+                            return res
+
+                        event_nodes.append(event)
+
+                        # Lookahead for next event
+                        pos = self.mark()
+                        tab_count = res.register(self._req_tab(level, lookahead=True))
+                        if res.error:
+                            return res
+
+                        # End of given statement
+                        if (tab_count < level and event_nodes) or (not self.expect({TT_EVENT}, False)):
+                            break
+
             self.reset(pos)
-            events = res.register(self._multiple_event(level, True))
-            if res.error:
-                return res
-            if events:
-                event_nodes.extend(events)
-
-            _default_and_opt_event = res.register(self._default_and_opt_event(level, False))
-            if res.error:
-                return res
-
-            if _default_and_opt_event:
-                default, opt_events = _default_and_opt_event
-                default_stmt = default
-                event_nodes.extend(opt_events)
-
             return res.success((event_nodes, default_stmt))
 
         # -> default event*
         elif self.expect({TT_DEFAULT}, False):
             self.reset(pos)
-            _default_and_opt_event = res.register(self._default_and_opt_event(level, True))
+            default_stmt = res.register(self.default(level))
             if res.error:
                 return res
 
-            if _default_and_opt_event:
-                default, opt_events = _default_and_opt_event
-                default_stmt = default
-                event_nodes.extend(opt_events)
-
-            return res.success((event_nodes, default_stmt))
-
-        return res.failure(self.throw_expected_error([TT_EVENT, TT_DEFAULT]))
-
-    def _multiple_event(self, level, required):
-        res = ParseResult()
-        event_nodes = []
-
-        # Lookahead for event
-        pos = self.mark()
-        res.register(self._req_tab(level, lookahead=True))
-        if res.error:
-            return res
-
-        if not self.expect({TT_EVENT}, False):
-            self.reset(pos)
-            if required:
-                return res.failure(self.throw_expected_error([TT_EVENT]))
-            return res.success(None)
-
-        self.reset(pos)
-
-        while True:
-            event = res.register(self.event(level))
-            if res.error:
-                return res
-            event_nodes.append(event)
             # Lookahead for next event
             pos = self.mark()
             tab_count = res.register(self._req_tab(level, lookahead=True))
             if res.error:
                 return res
-            if tab_count < level and event_nodes:
+
+            # Return only if there is a default statement
+            if tab_count < level and default_stmt:
                 self.reset(pos)
-                break
-            if not self.expect({TT_EVENT}, False):
-                self.reset(pos)
-                break
+                return res.success((event_nodes, default_stmt))
+
+            if self.expect({TT_EVENT}, False):
+                while True:
+                    self.reset(pos)
+                    event = res.register(self.event(level))
+                    if res.error:
+                        return res
+                    event_nodes.append(event)
+
+                    # Lookahead for next event
+                    pos = self.mark()
+                    tab_count = res.register(self._req_tab(level, lookahead=True))
+                    if res.error:
+                        return res
+
+                    # End of given statement
+                    if (tab_count < level and event_nodes) or (not self.expect({TT_EVENT}, False)):
+                        break
+
+            if self.expect({TT_DEFAULT}, False):
+                return res.failure(self.throw_error("Only one default block is allowed in given statement"))
+
             self.reset(pos)
+            return res.success((event_nodes, default_stmt))
 
-        return res.success(event_nodes)
-
-    def _default_and_opt_event(self, level, required):
-        res = ParseResult()
-
-        # Lookahead for default
-        pos = self.mark()
-        res.register(self._req_tab(level, lookahead=True))
-        if res.error:
-            return res
-
-        if not self.expect({TT_DEFAULT}, False):
-            self.reset(pos)
-            if required:
-                return res.failure(self.throw_expected_error([TT_DEFAULT]))
-            return res.success(None)
-
-        self.reset(pos)
-
-        default_stmt = res.register(self.default(level))
-        if res.error:
-            return res
-
-        opt_events = res.register(self._multiple_event(level, False))
-        if res.error:
-            return res
-
-        return res.success((default_stmt, opt_events if opt_events else []))
+        return res.failure(self.throw_expected_error([TT_EVENT, TT_DEFAULT]))
 
     def default(self, level):
         """
@@ -1747,8 +1759,6 @@ class Parser:
             tab_count += 1
 
         if tab_count != level and not lookahead:
-            self.reset(pos)
-            res.node = tab_count
             return res.failure(self.throw_indentation_error(pos, tab_count, level))
 
         return res.success(tab_count)
@@ -1791,7 +1801,7 @@ class Parser:
         elif blank := self.expect({TT_BLANK}):
             return res.success(BlankNode(blank))
         # -> arith-expr ((EE|LT|GT|LTE|GTE) arith-expr)*
-        return self._binary_op(self.arith_expr, (TT_EQUAL_TO, TT_LESS_THAN, TT_GREATER_THAN, TT_LESS_THAN_EQUAL, TT_GREATER_THAN_EQUAL))
+        return self._binary_op(self.arith_expr, (TT_EQUAL_TO, TT_NOT_EQUAL, TT_LESS_THAN, TT_GREATER_THAN, TT_LESS_THAN_EQUAL, TT_GREATER_THAN_EQUAL))
 
     def arith_expr(self):
         """

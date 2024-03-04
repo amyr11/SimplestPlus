@@ -1,6 +1,15 @@
 home():
 	given x:
 		event 1:
-			out(1)
+			out()
 		event 2:
-			out(1)
+			out()
+		default:
+			inp()
+			given y:
+				default:
+					out()
+				event 5:
+					out()
+		event 4:
+			out()
