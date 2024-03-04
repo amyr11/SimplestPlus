@@ -50,9 +50,19 @@ CFG = {
         [
             sp.TT_GROUP,
             sp.TT_IDENTIFIER,
+            "<inherits>",
             sp.TT_COLON,
             "<newline>",
             "<group-body>",
+        ],
+    ],
+    "<inherits>": [
+        [
+            sp.TT_INHERITS,
+            sp.TT_IDENTIFIER,
+        ],
+        [
+            None,
         ],
     ],
     "<group-body>": [
@@ -99,8 +109,10 @@ CFG = {
     "<dec-func-def>": [
         [
             "<dec-stmt>",
+        ],
+        [
             "<func-def>",
-        ]
+        ],
     ],
     "<access-spec>": [
         [
@@ -334,7 +346,7 @@ CFG = {
             "<newline>",
         ],
     ],
-    "<dot_slice_tail>":[
+    "<dot_slice_tail>": [
         [
             "<dot_slice>",
             "<dot_slice_tail>",
@@ -428,7 +440,7 @@ CFG = {
         [
             "<default>",
             "<event-opt>",
-        ],   
+        ],
     ],
     "<event-req>": [
         [
@@ -437,10 +449,7 @@ CFG = {
         ],
     ],
     "<event-opt>": [
-        [
-            "<event>",
-            "<event-opt>"
-        ],
+        ["<event>", "<event-opt>"],
         [
             None,
         ],
@@ -561,7 +570,7 @@ CFG = {
             None,
         ],
     ],
-    "<and-expr>":[  
+    "<and-expr>": [
         [
             "<comp-expr>",
             "<and-comp-expr-tail>",
@@ -587,7 +596,7 @@ CFG = {
             "<rel-tail>",
         ],
         [
-            sp.TT_BLANK,             
+            sp.TT_BLANK,
         ],
     ],
     "<rel-tail>": [
@@ -620,7 +629,7 @@ CFG = {
             sp.TT_GREATER_THAN_EQUAL,
         ],
     ],
-    "<arith-expr>":  [
+    "<arith-expr>": [
         [
             "<term>",
             "<term-tail>",
@@ -629,7 +638,8 @@ CFG = {
     "<term-tail>": [
         [
             "<term-optr>",
-            "<term>"
+            "<term>",
+            "<term-tail>",
         ],
         [
             None,
@@ -641,9 +651,9 @@ CFG = {
         ],
         [
             sp.TT_MINUS,
-        ]
+        ],
     ],
-    "<term>":  [
+    "<term>": [
         [
             "<factor>",
             "<factor-tail>",
@@ -653,6 +663,7 @@ CFG = {
         [
             "<factor-optr>",
             "<factor>",
+            "<factor-tail>",
         ],
         [
             None,
@@ -678,7 +689,7 @@ CFG = {
             "<factor>",
         ],
         [
-            "<power>",  
+            "<power>",
         ],
     ],
     "<power>": [
@@ -694,7 +705,7 @@ CFG = {
             "<power-tail>",
         ],
         [
-            None,  
+            None,
         ],
     ],
     "<atom>": [
@@ -747,7 +758,6 @@ CFG = {
             "<args>",
         ],
     ],
-
     "<dot_slice_arg_tail>": [
         [
             "<dot_slice_arg>",
@@ -755,13 +765,13 @@ CFG = {
         ],
         [
             None,
-        ]
+        ],
     ],
     "<args_opt>": [
         [
             "<dot_slice>",
             "<args_tail>",
-            "<args_opt>",	
+            "<args_opt>",
         ],
         [
             None,
@@ -774,13 +784,13 @@ CFG = {
         ],
         [
             None,
-        ]
+        ],
     ],
     "<slice_arg_opt>": [
         [
             "<dot>",
             "<slice_arg_tail>",
-            "<slice_arg_opt>",	
+            "<slice_arg_opt>",
         ],
         [
             None,
@@ -793,7 +803,7 @@ CFG = {
         ],
         [
             None,
-        ]
+        ],
     ],
     "<dot_slice>": [
         [
@@ -850,7 +860,7 @@ CFG = {
             None,
         ],
     ],
-    "<comma-expr-tail>":[
+    "<comma-expr-tail>": [
         [
             sp.TT_COMMA,
             "<expr>",
@@ -858,7 +868,7 @@ CFG = {
         ],
         [
             None,
-        ]
+        ],
     ],
     "<collection-expr>": [
         [
@@ -871,30 +881,50 @@ CFG = {
         [
             sp.TT_OBRACE,
             "<key-value-opt>",
-            sp.TT_CBRACE, 
+            sp.TT_CBRACE,
         ],
     ],
     "<key-value-opt>": [
         [
-            "<expr>",
+            "<keys>",
             sp.TT_COLON,
             "<expr>",
             "<key-value-tail>",
         ],
         [
-            None,  
+            None,
         ],
     ],
     "<key-value-tail>": [
         [
             sp.TT_COMMA,
-            "<expr>",
+            "<keys>",
             sp.TT_COLON,
             "<expr>",
             "<key-value-tail>",
         ],
         [
-            None,  
+            None,
+        ],
+    ],
+    "<keys>": [
+        [
+            sp.TT_NUM_LITERAL,
+        ],
+        [
+            sp.TT_DECI_LITERAL,
+        ],
+        [
+            sp.TT_WORD_LITERAL,
+        ],
+        [
+            sp.TT_LETTER_LITERAL,
+        ],
+        [
+            sp.TT_YES,
+        ],
+        [
+            sp.TT_NO,
         ],
     ],
     "<tab>": [
@@ -924,4 +954,5 @@ CFG = {
         [
             None,
         ],
-    ],}
+    ],
+}

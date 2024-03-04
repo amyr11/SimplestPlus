@@ -1,5 +1,15 @@
 home():
-	during self.expect([TT_NUM]):
-		out(x)
-		every num x, num y in mywiki:
-			out(format("{} {}", x, y))
+'''
+adskf
+'''
+	go: # asdf
+		during self.expect([TT_NUM]):
+			out(x) # adf
+			'''
+			adskf
+			'''
+			every num x, num y in mywiki:
+				out(format("{} {}", x, y))
+			not x
+			not x
+	during x
