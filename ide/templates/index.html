@@ -176,10 +176,47 @@
                 }
             });
 
-            const clearButton = document.getElementById("button-clear");
-            clearButton.addEventListener("click", function () {
-                textarea.value = "";
-            });
+            function analyze(analyzer) {
+                clearConsoleAndTable();
+                $.ajax({
+                    type: "POST",
+                    url: "/analyze",
+                    data: {
+                        editorContent: $("#editor-area").val(),
+                        analyzer,
+                    },
+                    success: (res) => {
+                        console.log(res);
+                        if (res.errors.length) {
+                            document
+                                .getElementById("editor-console")
+                                .classList.add("text-red-500");
+                            $("#editor-console").text(res.errors.join("\n"));
+                        }
+                        const rows = res.tokens
+                            .map(
+                                ([a, b]) =>
+                                    `<tr><td>${a}</td><td>${b}</td></tr>`,
+                            )
+                            .join();
+                        $("#lexeme-table").html(rows);
+                        $("#editor-console").text(
+                            "Lexical analysis completed successfully.",
+                        );
+
+                        $("#editor-console").text(
+                            res.errors.length
+                                ? res.errors.join("\n")
+                                : "Lexical analysis completed successfully",
+                        );
+                    },
+                    error: (err) => {
+                        $("#editor-console").text(
+                            "An error occurred while analyzing the code. Please check the console for more details.",
+                        );
+                    },
+                });
+            }
         </script>
     </body>
 </html>
