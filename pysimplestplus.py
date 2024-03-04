@@ -1367,6 +1367,20 @@ class Parser:
             conditions.append((condition, statements))
 
             # TODO
+            # Lookahead for unless/instead
+            pos = self.mark()
+            res.register(self._req_tab(level, lookahead=True))
+            if res.error:
+                return res
+
+            if self.expect({TT_UNLESS}, False):
+                pass
+            elif self.expect({TT_INSTEAD}, False):
+                pass
+            else:
+                self.reset(pos)
+
+            return res.success(IncaseNode(conditions, instead_stmt))
 
         return res.failure(self.throw_expected_error([TT_INCASE]))
 
@@ -1438,13 +1452,8 @@ class Parser:
                 if res.error:
                     return res
 
-                # Return only if there are events
-                if tab_count < level and event_nodes:
-                    self.reset(pos)
-                    return res.success((event_nodes, default_stmt))
-
                 # Possible "default" block
-                if not self.expect({TT_EVENT}, False):
+                if not (self.expect({TT_EVENT}, False) and tab_count == level):
                     break
 
             # (default event*)?
@@ -1479,7 +1488,7 @@ class Parser:
                             return res
 
                         # End of given statement
-                        if (tab_count < level and event_nodes) or (not self.expect({TT_EVENT}, False)):
+                        if not (self.expect({TT_EVENT}, False) and tab_count == level):
                             break
 
             self.reset(pos)
@@ -1497,11 +1506,6 @@ class Parser:
             tab_count = res.register(self._req_tab(level, lookahead=True))
             if res.error:
                 return res
-
-            # Return only if there is a default statement
-            if tab_count < level and default_stmt:
-                self.reset(pos)
-                return res.success((event_nodes, default_stmt))
 
             if self.expect({TT_EVENT}, False):
                 while True:
@@ -2259,7 +2263,7 @@ class BodyNode:
         self.items = items or []
 
     def __repr__(self):
-        return f"body({self.items})"
+        return f"{self.items}"
 
 class ProgramNode:
     def __init__(self, global_nodes, home_node):
@@ -2396,6 +2400,14 @@ class GivenNode:
     
     def __repr__(self):
         return f"given({self.given_expr}, {self.event_nodes}, {self.default_stmt})"
+
+class IncaseNode:
+    def __init__(self, conditions, instead_stmt):
+        self.conditions = conditions
+        self.instead_stmt = instead_stmt
+    
+    def __repr__(self):
+        return f"incase({self.conditions}, {self.instead_stmt})"
 
 
 #######################################

@@ -7,9 +7,15 @@ home():
 		default:
 			inp()
 			given y:
-				default:
-					out()
-				event 5:
+				event 3:
 					out()
 		event 4:
 			out()
+	
+	incase x:
+		out()
+	
+	out()
+	out()
+	out()
+	inp()
