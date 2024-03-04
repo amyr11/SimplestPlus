@@ -1,4 +1,14 @@
 home():
+
+	frozen myobj x = 1, y = 2, z = 2
+	x + 2
+	x = 2
+	myobj x = blank
+	collection[word] x, y, z
+	collection[word] x = []
+	out()
+	# Student = new Student()
+	wiki[word, collection[wiki[word, num]]] x = {}
 	given x:
 		event 1:
 			given xa:

@@ -1169,7 +1169,7 @@ class Parser:
 
         # -> data-struct|data-type
         if self.expect({TT_COLLECTION, TT_WIKI}, False):
-            return res.register(self.data_struct())
+            return self.data_struct()
 
         return res.success(self.data_type())
 
@@ -1300,10 +1300,27 @@ class Parser:
                 return res
             return res.success(DelNode(id))
         # -> dec-stmt
+        if self.expect({TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE}, False):
+            return self.dec_stmt()
+        # -> dec-stmt
         # -> assign-stmt
-        # if self.expect({TT_IDENTIFIER}, False):
-        #     # TODO
-        #     return self.assign_stmt()
+        pos = self.mark()
+        if self.expect({TT_IDENTIFIER}):
+            # dec_stmt
+            if self.expect({TT_IDENTIFIER}):
+                self.reset(pos)
+                dec_stmt = res.register(self.dec_stmt())
+                if res.error:
+                    return res
+                return res.success(dec_stmt)
+            # assign_stmt
+            elif self.expect({TT_PERIOD, TT_ASSIGN, TT_PLUS_ASSIGN, TT_MINUS_ASSIGN, TT_MULTIPLY_ASSIGN, TT_DIVIDE_ASSIGN, TT_FLOOR_ASSIGN, TT_MODULO_ASSIGN, TT_POWER_ASSIGN}):
+                self.reset(pos)
+                assign_stmt = res.register(self.assign_stmt())
+                if res.error:
+                    return res
+                return res.success(assign_stmt)
+            self.reset(pos)
         # -> incase-stmt
         if self.expect({TT_INCASE}, False):
             return self.incase_stmt(level)
@@ -1330,10 +1347,94 @@ class Parser:
         return res.success(expr)
 
     def dec_stmt(self):
-        pass
+        """
+        First set: {FROZEN, COLLECTION, WIKI, NUM, DECI, WORD, LETTER, CHOICE, ID}
+        """
+        res = ParseResult()
+        declaration_nodes = []
+
+        # -> FROZEN type ID ASSIGN expr (COMMA ID ASSIGN expr)* NEWLINE+
+        if self.expect({TT_FROZEN}):
+            type = res.register(self.type())
+            if res.error:
+                return res
+
+            while True:
+                if not (id := self.expect({TT_IDENTIFIER})):
+                    return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+                if not self.expect({TT_ASSIGN}):
+                    return res.failure(self.throw_expected_error([TT_ASSIGN]))
+                
+                val = res.register(self.expr())
+                if res.error:
+                    return res
+
+                declaration_nodes.append(VarDecNode(True, type, id, val))
+
+                if not self.expect({TT_COMMA}):
+                    break
+            
+            res.register(self._req_newline())
+            if res.error:
+                return res
+            
+            return res.success(DeclarationsNode(declaration_nodes))
+        # -> type ID (ASSIGN expr)? (COMMA ID (ASSIGN expr)?)* NEWLINE+
+        elif self.expect({TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
+            type = res.register(self.type())
+            if res.error:
+                return res
+
+            while True:
+                if not (id := self.expect({TT_IDENTIFIER})):
+                    return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+                val = None
+
+                if self.expect({TT_ASSIGN}):
+                    val = res.register(self.expr())
+                    if res.error:
+                        return res
+
+                declaration_nodes.append(VarDecNode(False, type, id, val))
+
+                if not self.expect({TT_COMMA}):
+                    break
+            
+            res.register(self._req_newline())
+            if res.error:
+                return res
+            
+            return res.success(DeclarationsNode(declaration_nodes))
+
+        return res.failure(self.throw_expected_error([TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER]))
 
     def assign_stmt(self):
-        pass
+        """
+        First set: {ID}
+        """
+        res = ParseResult()
+
+        # -> ID dot_slice* (ASSIGN|PLUS_ASSIGN|MINUS_ASSIGN|MUL_ASSIGN|DIV_ASSIGN|FLOOR_ASSIGN|MOD_ASSIGN|POWER_ASSIGN) expr NEWLINE+
+        if id := self.expect({TT_IDENTIFIER}):
+            var_node = VarAccessNode(id)
+            
+            while self.expect({TT_PERIOD, TT_OBRACK}):
+                var_node = res.register(self.dot_slice(var_node))
+                if res.error:
+                    return res
+            
+            if not (assign_op := self.expect({TT_PERIOD, TT_ASSIGN, TT_PLUS_ASSIGN, TT_MINUS_ASSIGN, TT_MULTIPLY_ASSIGN, TT_DIVIDE_ASSIGN, TT_FLOOR_ASSIGN, TT_MODULO_ASSIGN, TT_POWER_ASSIGN})):
+                return res.failure(self.throw_expected_error([TT_PERIOD, TT_ASSIGN, TT_PLUS_ASSIGN, TT_MINUS_ASSIGN, TT_MULTIPLY_ASSIGN, TT_DIVIDE_ASSIGN, TT_FLOOR_ASSIGN, TT_MODULO_ASSIGN, TT_POWER_ASSIGN]))
+            
+            val = res.register(self.expr())
+            if res.error:
+                return res
+            
+            return res.success(VarAssignNode(var_node, assign_op, val))
+
+        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
 
     def incase_stmt(self, level):
         """
@@ -1381,7 +1482,6 @@ class Parser:
                     if res.error:
                         return res
 
-                    
                     # Lookahead for unless/instead
                     pos = self.mark()
                     tab_count = res.register(self._req_tab(level))
@@ -1655,8 +1755,6 @@ class Parser:
         self.force_newline = False
 
         default_statements = res.register(self.statements(level+1))
-        if default_statements.items[0].node_to_call.var_name_tok.value == "how":
-            print("aaaa")
         if res.error:
             return res
 
@@ -2355,7 +2453,23 @@ class VarDecNode:
         self.value_node = value_node
 
     def __repr__(self):
-        return f"var_init({self.var_name_tok}, frozen:{self.is_frozen}, type:{self.data_type_node}, val:{self.value_node})"
+        return f"var_dec({self.var_name_tok}, frozen:{self.is_frozen}, type:{self.data_type_node}, val:{self.value_node})"
+
+class VarAssignNode:
+    def __init__(self, var_node, op_tok, value_node):
+        self.var_node = var_node
+        self.op_tok = op_tok
+        self.value_node = value_node
+    
+    def __repr__(self):
+        return f"var_assign({self.var_node}, {self.op_tok}, {self.value_node})"
+
+class DeclarationsNode:
+    def __init__(self, declaration_nodes):
+        self.declaration_nodes = declaration_nodes
+
+    def __repr__(self):
+        return f"multi_dec({self.declaration_nodes})"
 
 class BodyNode:
     def __init__(self, items):
