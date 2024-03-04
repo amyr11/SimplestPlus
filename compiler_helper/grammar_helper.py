@@ -368,7 +368,7 @@ class GrammarHelper:
                 out += "{"
                 for i, right_prod_item in enumerate(right_prod):
                     if i > 0:
-                        out += " "
+                        out += ", "
                     if is_terminal(right_prod_item):
                         if right_prod_item in ["\\n", "\\t"]:
                             out += f"\{right_prod_item}"
