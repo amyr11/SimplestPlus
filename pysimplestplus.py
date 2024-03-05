@@ -1099,6 +1099,11 @@ class Parser:
         home_node = None
         global_nodes = []
 
+        while self.expect({TT_TAB, TT_NEWLINE}, False):
+            res.register(self.extras())
+            if res.error:
+                return res
+
         while self.expect({TT_EMPTY, TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
             global_nodes.append(res.register(self.global_(force_newline=True)))
             if res.error:
@@ -1146,11 +1151,28 @@ class Parser:
             global_nodes.append(res.register(self.global_(force_newline=False)))
             if res.error:
                 return res
+        
+        while self.expect({TT_TAB, TT_NEWLINE}, False):
+            res.register(self.extras())
+            if res.error:
+                return res
 
         return res.success(ProgramNode(global_nodes, home_node))
 
     def extras(self):
-        pass
+        """
+        First set: {TAB, NEWLINE}
+        """
+        res = ParseResult()
+
+        # -> TAB* NEWLINE
+        while self.expect({TT_TAB}):
+            pass
+        
+        if not self.expect({TT_NEWLINE}):
+            return res.failure(self.throw_expected_error([TT_NEWLINE]))
+        
+        return res.success(None)
 
     def global_(self, force_newline):
         """
