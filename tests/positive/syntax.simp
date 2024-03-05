@@ -1,13 +1,28 @@
+num x = 1
+
+num get_num():
+	out()
+
 home():
+	incase x:
+		out()
+		incase x:
+			out()
+		unless (x):
+			out()
+	unless x:
+		out()
+
+
 	frozen myobj x = 1, y = 2, z = 2
 	x + 2
-	x = 2
+	x += 2
 	myobj x = blank
 	x.name = "shantidope"
 	collection[word] x, y, z
 	collection[word] x = []
 	out()
-	# Student = new Student()
+	Student = new Student()
 	wiki[word, collection[wiki[word, num]]] x = {}
 	given x:
 		event 1:
@@ -72,3 +87,8 @@ home():
 	out()
 	out()
 	inp()
+
+num x = 1
+
+num get_num():
+	out()
