@@ -1,3 +1,12 @@
+group Person:
+	visible word name = "gelo"
+	visible word x, y, u
+	visible frozen word x = 2, y=1, z =2
+	visible word name = "a"
+	init():
+		out()
+	visible word x
+	visible word name = "a"
 
 
 
@@ -101,3 +110,11 @@ num get_num():
 
 
 
+group Student inherits Person:
+	visible word name = "gelo"
+	visible word x, y, u
+	visible frozen word x = 2, y=1, z =2
+	visible word name = "a"
+	init():
+		out()
+	visible word x

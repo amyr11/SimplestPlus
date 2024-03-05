@@ -1104,7 +1104,7 @@ class Parser:
             if res.error:
                 return res
 
-        while self.expect({TT_EMPTY, TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
+        while self.expect({TT_GROUP, TT_EMPTY, TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
             global_nodes.append(res.register(self.global_(force_newline=True)))
             if res.error:
                 return res
@@ -1147,11 +1147,11 @@ class Parser:
 
         home_node = FuncDefNode(DataTypeNode(TT_EMPTY), TT_HOME, [], home_body)
 
-        while self.expect({TT_EMPTY, TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
+        while self.expect({TT_GROUP, TT_EMPTY, TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
             global_nodes.append(res.register(self.global_(force_newline=False)))
             if res.error:
                 return res
-        
+
         while self.expect({TT_TAB, TT_NEWLINE}, False):
             res.register(self.extras())
             if res.error:
@@ -1168,10 +1168,10 @@ class Parser:
         # -> TAB* NEWLINE
         while self.expect({TT_TAB}):
             pass
-        
+
         if not self.expect({TT_NEWLINE}):
             return res.failure(self.throw_expected_error([TT_NEWLINE]))
-        
+
         return res.success(None)
 
     def global_(self, force_newline):
@@ -1181,12 +1181,14 @@ class Parser:
         res = ParseResult()
 
         # -> dec-stmt
-        if self.expect({TT_FROZEN}):
+        if self.expect({TT_FROZEN}, False):
             return self.dec_stmt(force_newline)
         # -> func-def
-        if self.expect({TT_EMPTY}):
-            return self.func_def(force_newline)
+        if self.expect({TT_EMPTY}, False):
+            return self.func_def(level=1, force_newline=force_newline)
         # -> group-def
+        if self.expect({TT_GROUP}, False):
+            return self.group_def(force_newline=force_newline)
 
         # Lookahead for dec-stmt or func-def
         pos = self.mark()
@@ -1205,7 +1207,7 @@ class Parser:
             # -> func-def
             if self.expect({TT_OPAR}):
                 self.reset(pos)
-                return self.func_def(force_newline=force_newline)
+                return self.func_def(level=1, force_newline=force_newline)
 
         return res.failure(
             self.throw_expected_error(
@@ -1224,22 +1226,271 @@ class Parser:
             )
         )
 
-    def group_def(self):
-        pass
+    def group_def(self, force_newline):
+        """
+        First set: {GROUP}
+        """
+        res = ParseResult()
+        parent_id = None
 
-    def group_body(self):
-        pass
+        # -> GROUP ID (INHERITS ID)? COLON NEWLINE+ group-body
+        if not self.expect({TT_GROUP}):
+            return res.failure(self.throw_expected_error([TT_GROUP]))
 
-    def group_global(self):
-        pass
+        if not (id := self.expect({TT_IDENTIFIER})):
+            return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+        if self.expect({TT_INHERITS}):
+            if not (parent_id := self.expect({TT_IDENTIFIER})):
+                return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_GROUP]))
+
+        res.register(self._req_newline(True))
+        if res.error:
+            return res
+
+        group_body = res.register(self.group_body(force_newline))
+        if res.error:
+            return res
+
+        return res.success(GroupNode(id, parent_id, group_body))
+
+    def group_body(self, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+        group_constr = None
+        group_globals = []
+
+        # Lookahead for group-constr and group-global
+        pos = self.mark()
+        if not self.expect({TT_TAB}):
+            return res.failure(self.throw_expected_error([TT_TAB]))
+
+        # -> group-constr group-global*
+        if self.expect({TT_IDENTIFIER}):
+            self.reset(pos)
+            group_constr = res.register(self.group_constr(force_newline=force_newline))
+            if res.error:
+                return res
+            # Lookahead for possible group-global
+            while True:
+                pos = self.mark()
+                tab_count = res.register(self._req_tab(level=1))
+                if res.error:
+                    if tab_count < 1:
+                        res.error = None
+                        break
+                    return res
+                if not self.expect({TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED}):
+                    break
+                self.reset(pos)
+                group_globals.append(
+                    res.register(self.group_global(force_newline=force_newline))
+                )
+                if res.error:
+                    return res
+            self.reset(pos)
+            return res.success((group_constr, group_globals))
+        # -> group-global+ (group-constr group-global*)?
+        if self.expect({TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED}):
+            self.reset(pos)
+            group_globals.append(
+                res.register(self.group_global(force_newline=force_newline))
+            )
+            if res.error:
+                return res
+
+            # Lookahead for possible group-global
+            while True:
+                pos = self.mark()
+                tab_count = res.register(self._req_tab(level=1))
+                if res.error:
+                    if tab_count < 1:
+                        res.error = None
+                        break
+                    return res
+                if not self.expect({TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED}):
+                    break
+                self.reset(pos)
+                group_globals.append(
+                    res.register(self.group_global(force_newline=force_newline))
+                )
+                if res.error:
+                    return res
+
+            self.reset(pos)
+
+            # Lookahead for possible group-constr
+            pos = self.mark()
+            if self.expect({TT_TAB}):
+                if self.expect({TT_IDENTIFIER}):
+                    self.reset(pos)
+                    group_constr = res.register(self.group_constr(force_newline=force_newline))
+                    if res.error:
+                        return res
+                    # Lookahead for possible group-global
+                    while True:
+                        pos = self.mark()
+                        tab_count = res.register(self._req_tab(level=1))
+                        if res.error:
+                            if tab_count < 1:
+                                res.error = None
+                                break
+                            return res
+                        if not self.expect({TT_IDENTIFIER}):
+                            break
+                        self.reset(pos)
+                        group_globals.append(
+                            res.register(self.group_global(force_newline=force_newline))
+                        )
+                        if res.error:
+                            return res
+                self.reset(pos)
+
+                # Lookahead for possible group-global
+                while True:
+                    pos = self.mark()
+                    tab_count = res.register(self._req_tab(level=1))
+                    if res.error:
+                        if tab_count < 1:
+                            res.error = None
+                            break
+                        return res
+                    if not self.expect({TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED}):
+                        break
+                    self.reset(pos)
+                    group_globals.append(
+                        res.register(self.group_global(force_newline=force_newline))
+                    )
+                    if res.error:
+                        return res
+
+            self.reset(pos)
+            return res.success((group_constr, group_globals))
+
+        return res.failure(
+            self.throw_expected_error(
+                [
+                    TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED,
+                    TT_IDENTIFIER,
+                ]
+            )
+        )
+
+    def group_global(self, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+
+        # -> TAB access-spec dec-stmt|func-def
+        # if not self.expect({TT_TAB}):
+        #     return res.failure(self.throw_expected_error([TT_TAB]))
+        res.register(self._req_tab(level=1))
+        if res.error:
+            return res
+
+        access_spec_tok = res.register(self.access_spec())
+        if res.error:
+            return res
+
+        # -> dec-stmt
+        if self.expect({TT_FROZEN}, False):
+            node = res.register(self.dec_stmt(force_newline=force_newline))
+            if res.error:
+                return res
+            return res.success(GroupMemberNode(access_spec_tok, node))
+        # -> func-def
+        if self.expect({TT_EMPTY}, False):
+            node = res.register(self.func_def(level=2, force_newline=force_newline))
+            if res.error:
+                return res
+            return res.success(GroupMemberNode(access_spec_tok, node))
+
+        # Lookahead for dec-stmt or func-def
+        pos = self.mark()
+        if self.expect({TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
+            res.register(self.type())
+            if res.error:
+                return res
+
+            if not self.expect({TT_IDENTIFIER}):
+                return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+            # -> dec-stmt
+            if self.expect({TT_ASSIGN}):
+                self.reset(pos)
+                node = res.register(self.dec_stmt(force_newline=force_newline))
+                if res.error:
+                    return res
+                return res.success(GroupMemberNode(access_spec_tok, node))
+            # -> func-def
+            if self.expect({TT_OPAR}):
+                self.reset(pos)
+                node = res.register(self.func_def(level=2, force_newline=force_newline))
+                if res.error:
+                    return res
+                return res.success(GroupMemberNode(access_spec_tok, node))
+
+            self.reset(pos)
+            node = res.register(self.dec_stmt(force_newline=force_newline))
+            if res.error:
+                return res
+            return res.success(GroupMemberNode(access_spec_tok, node))
+
+        return res.failure(self.throw_expected_error([TT_FROZEN, TT_EMPTY, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER]))
 
     def access_spec(self):
-        pass
+        """
+        First set: {VISIBLE, HIDDEN, RESTRICTED}
+        """
+        res = ParseResult()
 
-    def group_constr(self):
-        pass
+        if not (access_spec_tok := self.expect({TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED})):
+            return res.failure(self.throw_expected_error([TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED]))
 
-    def func_def(self, force_newline):
+        return res.success(access_spec_tok)
+
+    def group_constr(self, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+
+        # -> TAB ID params COLON NEWLINE+ statements
+        # if not self.expect({TT_TAB}):
+        #     return res.failure(self.throw_expected_error([TT_TAB]))
+
+        res.register(self._req_tab(level=1))
+        if res.error:
+            return res
+
+        if not (id := self.expect({TT_IDENTIFIER})):
+            if id and id.value != "init":
+                return res.failure(self.throw_error("Group constructor must be named 'init'"))
+
+        params = res.register(self.params())
+        if res.error:
+            return res
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_COLON]))
+
+        res.register(self._req_newline(True))
+        if res.error:
+            return res
+
+        statements = res.register(self.statements(level=2, force_newline=force_newline))
+        if res.error:
+            return res
+
+        return res.success(FuncDefNode(DataTypeNode(TT_EMPTY), id, params, statements))
+
+    def func_def(self, level, force_newline):
         """
         First set: {EMPTY, COLLECTION, WIKI, NUM, DECI, WORD, LETTER, CHOICE, ID}
         """
@@ -1264,7 +1515,7 @@ class Parser:
         if res.error:
             return res
 
-        statements = res.register(self.statements(level=1, force_newline=force_newline))
+        statements = res.register(self.statements(level=level, force_newline=force_newline))
         if res.error:
             return res
 
@@ -1550,7 +1801,7 @@ class Parser:
                 if not self.expect({TT_COMMA}):
                     break
 
-            res.register(self._req_newline(True))
+            res.register(self._req_newline(force_newline))
             if res.error:
                 return res
 
@@ -2576,6 +2827,23 @@ class VarDecNode:
 
     def __repr__(self):
         return f"var_dec({self.var_name_tok}, frozen:{self.is_frozen}, type:{self.data_type_node}, val:{self.value_node})"
+
+class GroupNode:
+    def __init__(self, id, parent_id, group_body):
+        self.id = id
+        self.parent_id = parent_id
+        self.group_body = group_body
+    
+    def __repr__(self):
+        return f"group({self.id}, parent:{self.parent_id}, body:{self.group_body})"
+
+class GroupMemberNode:
+    def __init__(self, access_spec, node):
+        self.access_spec = access_spec
+        self.node = node
+
+    def __repr__(self):
+        return f"group_member(access_spec:{self.access_spec}, node:{self.node})"
 
 class VarAssignNode:
     def __init__(self, var_node, op_tok, value_node):
