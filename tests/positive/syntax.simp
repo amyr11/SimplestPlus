@@ -1,15 +1,120 @@
+group Person:
+	visible word name = "gelo"
+	visible word x, y, u
+	visible frozen word x = 2, y=1, z =2
+	visible word name = "a"
+	init():
+		out()
+	visible word x
+	visible word name = "a"
+
+
+
+
+num x = 1
+
+num get_num():
+	out()
+
 home():
-'''
-adskf
-'''
-	go: # asdf
-		during self.expect([TT_NUM]):
-			out(x) # adf
-			'''
-			adskf
-			'''
-			every num x, num y in mywiki:
-				out(format("{} {}", x, y))
-			not x
-			not x
-	during x
+	incase x:
+		out()
+		incase x:
+			out()
+		unless (x):
+			out()
+	unless x:
+		out()
+
+
+	frozen myobj x = 1, y = 2, z = 2
+	x + 2
+	x += 2
+	myobj x = blank
+	x.name = "shantidope"
+	collection[word] x, y, z
+	collection[word] x = []
+	out()
+	Student = new Student()
+	wiki[word, collection[wiki[word, num]]] x = {}
+	given x:
+		event 1:
+			given xa:
+				event 1:
+					out()
+				event 2:
+					out()
+				default:
+					inp()
+					given y:
+						event 3:
+							out()
+				event 4:
+					out()
+			given xb:
+				default:
+					out()
+		default:
+			out()
+
+	incase 1 < 2:
+		out("hey")
+	instead:
+		out()
+	
+	incase x:
+		out()
+
+		incase y:
+			out()
+		unless y:
+			out()
+		instead:
+			back n
+		back x
+	unless d:
+		out()
+
+		every num x in [1, 2, 3]:
+			out()
+
+			go:
+				during x:
+					out()
+					skip
+				stop
+				incase x:
+					out()
+				
+				incase y:
+					out()
+				instead:
+					back y
+			during y
+	unless d:
+		out()
+	unless d:
+		out()
+	
+	out()
+	out()
+	out()
+	inp()
+
+num x = 1
+
+num get_num():
+	out()
+
+
+
+
+
+group Student inherits Person:
+	visible word name = "gelo"
+	visible word x, y, u
+	visible frozen word x = 2, y=1, z =2
+	visible word name = "a"
+	init():
+		out()
+	visible word x

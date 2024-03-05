@@ -617,6 +617,9 @@ CFG = {
             sp.TT_NOT_EQUAL,
         ],
         [
+            sp.TT_NOT_EQUAL,
+        ],
+        [
             sp.TT_LESS_THAN,
         ],
         [

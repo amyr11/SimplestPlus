@@ -8,6 +8,7 @@ S_COMMENT_LIMIT = 79
 ID_LIMIT = 20
 NUM_LIMIT = 999999999
 DECI_LIMIT = 999999999.999999
+DECI_PRECISION_LIMIT = 6
 WORD_ESCAPE_CHARS = {
             'n': '\n',
             't': '\t',
@@ -155,7 +156,7 @@ DEFINITIONS["delim_obrack"] = [
     '"',
     "'",
 ]
-DEFINITIONS["delim_cbrack"] = [" ", "\n", ",", "[", "]", ")", "}", ".", "(", "+"]
+DEFINITIONS["delim_cbrack"] = [" ", "\n", ",", "[", "]", ")", "}", ".", "(", "+", ":"]
 DEFINITIONS["delim_comma"] = [
     *DEFINITIONS["alpha_num"],
     " ",
@@ -220,6 +221,8 @@ DEFINITIONS["delim_space"] = [
     *DEFINITIONS["arith_op"],
     *DEFINITIONS["rel_op"],
     *DEFINITIONS["special_char_wo_t"],
+    " ",
+    "\n",
 ]
 
 
@@ -736,7 +739,7 @@ class Lexer:
             token, error = self.make_num_deci(neg=True)
             if error:
                 return None, error
-            
+
             if token and token.value == 0:
                 return None, LexicalError(pos_start, self.pos.copy(), "Negative zero is not allowed")
 
@@ -988,6 +991,8 @@ class Lexer:
             deci_val = float(num_str) * negative_val
             if deci_val > DECI_LIMIT:
                 return None, LexicalError(pos_start, self.pos.copy(), f"Deci value cannot be greater than {DECI_LIMIT}")
+            if len(num_str.split('.')[1]) > DECI_PRECISION_LIMIT:
+                return None, LexicalError(pos_start, self.pos.copy(), f"Deci value cannot have more than {DECI_PRECISION_LIMIT} decimal places")
             return Token(TT_DECI_LITERAL, deci_val, pos_start, self.pos), None
 
 
@@ -1002,12 +1007,9 @@ class ParseResult:
         self.node = None
 
     def register(self, res):
-        if isinstance(res, ParseResult):
-            if res.error:
-                self.error = res.error
-            return res.node
-        
-        return res
+        if res.error:
+            self.error = res.error
+        return res.node
 
     def success(self, node):
         self.node = node
@@ -1027,7 +1029,6 @@ class Parser:
     def __init__(self, tokens):
         self.tokens = [token for token in tokens if token.type not in (TT_SPACE, TT_S_COMMENT, TT_M_COMMENT)]
         self.tok_idx = -1
-        self.force_newline = False
         self.advance()
 
     def advance(self):
@@ -1095,57 +1096,430 @@ class Parser:
 
     def program(self):
         res = ParseResult()
+        home_node = None
         global_nodes = []
 
-        if self.expect({TT_HOME}):
-            if not self.expect({TT_OPAR}):
-                return res.failure(self.throw_expected_error([TT_OPAR]))
-
-            if not self.expect({TT_CPAR}):
-                return res.failure(self.throw_expected_error([TT_CPAR]))
-
-            if not self.expect({TT_COLON}):
-                return res.failure(self.throw_expected_error([TT_COLON]))
-
-            res.register(self._req_newline())
+        while self.expect({TT_TAB, TT_NEWLINE}, False):
+            res.register(self.extras())
             if res.error:
                 return res
 
-            self.force_newline = False
-
-            home_body = res.register(self.statements(level=1))
+        while self.expect({TT_GROUP, TT_EMPTY, TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
+            global_nodes.append(res.register(self.global_(force_newline=True)))
             if res.error:
                 return res
 
-            home_node = FuncDefNode(DataTypeNode(TT_EMPTY), TT_HOME, [], home_body)
+        if not self.expect({TT_HOME}):
+            return res.failure(
+                self.throw_expected_error(
+                    [
+                        TT_HOME,
+                        TT_EMPTY,
+                        TT_FROZEN,
+                        TT_COLLECTION,
+                        TT_WIKI,
+                        TT_NUM,
+                        TT_DECI,
+                        TT_WORD,
+                        TT_LETTER,
+                        TT_CHOICE,
+                        TT_IDENTIFIER,
+                    ]
+                )
+            )
 
-            return res.success(ProgramNode(global_nodes, home_node))
+        if not self.expect({TT_OPAR}):
+            return res.failure(self.throw_expected_error([TT_OPAR]))
 
-        return res.failure(self.throw_expected_error([TT_HOME, TT_FROZEN, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_WIKI, TT_IDENTIFIER]))
+        if not self.expect({TT_CPAR}):
+            return res.failure(self.throw_expected_error([TT_CPAR]))
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_COLON]))
+
+        res.register(self._req_newline(True))
+        if res.error:
+            return res
+
+        home_body = res.register(self.statements(level=1, force_newline=False))
+        if res.error:
+            return res
+
+        home_node = FuncDefNode(DataTypeNode(TT_EMPTY), TT_HOME, [], home_body)
+
+        while self.expect({TT_GROUP, TT_EMPTY, TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
+            global_nodes.append(res.register(self.global_(force_newline=False)))
+            if res.error:
+                return res
+
+        while self.expect({TT_TAB, TT_NEWLINE}, False):
+            res.register(self.extras())
+            if res.error:
+                return res
+
+        return res.success(ProgramNode(global_nodes, home_node))
 
     def extras(self):
-        pass
+        """
+        First set: {TAB, NEWLINE}
+        """
+        res = ParseResult()
 
-    def global_(self):
-        pass
+        # -> TAB* NEWLINE
+        while self.expect({TT_TAB}):
+            pass
 
-    def group_def(self):
-        pass
+        if not self.expect({TT_NEWLINE}):
+            return res.failure(self.throw_expected_error([TT_NEWLINE]))
 
-    def group_body(self):
-        pass
+        return res.success(None)
 
-    def group_global(self):
-        pass
+    def global_(self, force_newline):
+        """
+        First set: {EMPTY, FROZEN, COLLECTION, WIKI, NUM, DECI, WORD, LETTER, CHOICE, ID}
+        """
+        res = ParseResult()
+
+        # -> dec-stmt
+        if self.expect({TT_FROZEN}, False):
+            return self.dec_stmt(force_newline)
+        # -> func-def
+        if self.expect({TT_EMPTY}, False):
+            return self.func_def(level=1, force_newline=force_newline)
+        # -> group-def
+        if self.expect({TT_GROUP}, False):
+            return self.group_def(force_newline=force_newline)
+
+        # Lookahead for dec-stmt or func-def
+        pos = self.mark()
+        if self.expect({TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
+            res.register(self.type())
+            if res.error:
+                return res
+
+            if not self.expect({TT_IDENTIFIER}):
+                return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+            # -> dec-stmt
+            if self.expect({TT_ASSIGN}):
+                self.reset(pos)
+                return self.dec_stmt(force_newline)
+            # -> func-def
+            if self.expect({TT_OPAR}):
+                self.reset(pos)
+                return self.func_def(level=1, force_newline=force_newline)
+
+        return res.failure(
+            self.throw_expected_error(
+                [
+                    TT_EMPTY,
+                    TT_FROZEN,
+                    TT_COLLECTION,
+                    TT_WIKI,
+                    TT_NUM,
+                    TT_DECI,
+                    TT_WORD,
+                    TT_LETTER,
+                    TT_CHOICE,
+                    TT_IDENTIFIER,
+                ]
+            )
+        )
+
+    def group_def(self, force_newline):
+        """
+        First set: {GROUP}
+        """
+        res = ParseResult()
+        parent_id = None
+
+        # -> GROUP ID (INHERITS ID)? COLON NEWLINE+ group-body
+        if not self.expect({TT_GROUP}):
+            return res.failure(self.throw_expected_error([TT_GROUP]))
+
+        if not (id := self.expect({TT_IDENTIFIER})):
+            return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+        if self.expect({TT_INHERITS}):
+            if not (parent_id := self.expect({TT_IDENTIFIER})):
+                return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_GROUP]))
+
+        res.register(self._req_newline(True))
+        if res.error:
+            return res
+
+        group_body = res.register(self.group_body(force_newline))
+        if res.error:
+            return res
+
+        return res.success(GroupNode(id, parent_id, group_body))
+
+    def group_body(self, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+        group_constr = None
+        group_globals = []
+
+        # Lookahead for group-constr and group-global
+        pos = self.mark()
+        if not self.expect({TT_TAB}):
+            return res.failure(self.throw_expected_error([TT_TAB]))
+
+        # -> group-constr group-global*
+        if self.expect({TT_IDENTIFIER}):
+            self.reset(pos)
+            group_constr = res.register(self.group_constr(force_newline=force_newline))
+            if res.error:
+                return res
+            # Lookahead for possible group-global
+            while True:
+                pos = self.mark()
+                tab_count = res.register(self._req_tab(level=1))
+                if res.error:
+                    if tab_count < 1:
+                        res.error = None
+                        break
+                    return res
+                if not self.expect({TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED}):
+                    break
+                self.reset(pos)
+                group_globals.append(
+                    res.register(self.group_global(force_newline=force_newline))
+                )
+                if res.error:
+                    return res
+            self.reset(pos)
+            return res.success((group_constr, group_globals))
+        # -> group-global+ (group-constr group-global*)?
+        if self.expect({TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED}):
+            self.reset(pos)
+            group_globals.append(
+                res.register(self.group_global(force_newline=force_newline))
+            )
+            if res.error:
+                return res
+
+            # Lookahead for possible group-global
+            while True:
+                pos = self.mark()
+                tab_count = res.register(self._req_tab(level=1))
+                if res.error:
+                    if tab_count < 1:
+                        res.error = None
+                        break
+                    return res
+                if not self.expect({TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED}):
+                    break
+                self.reset(pos)
+                group_globals.append(
+                    res.register(self.group_global(force_newline=force_newline))
+                )
+                if res.error:
+                    return res
+
+            self.reset(pos)
+
+            # Lookahead for possible group-constr
+            pos = self.mark()
+            if self.expect({TT_TAB}):
+                if self.expect({TT_IDENTIFIER}):
+                    self.reset(pos)
+                    group_constr = res.register(self.group_constr(force_newline=force_newline))
+                    if res.error:
+                        return res
+                    # Lookahead for possible group-global
+                    while True:
+                        pos = self.mark()
+                        tab_count = res.register(self._req_tab(level=1))
+                        if res.error:
+                            if tab_count < 1:
+                                res.error = None
+                                break
+                            return res
+                        if not self.expect({TT_IDENTIFIER}):
+                            break
+                        self.reset(pos)
+                        group_globals.append(
+                            res.register(self.group_global(force_newline=force_newline))
+                        )
+                        if res.error:
+                            return res
+                self.reset(pos)
+
+                # Lookahead for possible group-global
+                while True:
+                    pos = self.mark()
+                    tab_count = res.register(self._req_tab(level=1))
+                    if res.error:
+                        if tab_count < 1:
+                            res.error = None
+                            break
+                        return res
+                    if not self.expect({TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED}):
+                        break
+                    self.reset(pos)
+                    group_globals.append(
+                        res.register(self.group_global(force_newline=force_newline))
+                    )
+                    if res.error:
+                        return res
+
+            self.reset(pos)
+            return res.success((group_constr, group_globals))
+
+        return res.failure(
+            self.throw_expected_error(
+                [
+                    TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED,
+                    TT_IDENTIFIER,
+                ]
+            )
+        )
+
+    def group_global(self, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+
+        # -> TAB access-spec dec-stmt|func-def
+        # if not self.expect({TT_TAB}):
+        #     return res.failure(self.throw_expected_error([TT_TAB]))
+        res.register(self._req_tab(level=1))
+        if res.error:
+            return res
+
+        access_spec_tok = res.register(self.access_spec())
+        if res.error:
+            return res
+
+        # -> dec-stmt
+        if self.expect({TT_FROZEN}, False):
+            node = res.register(self.dec_stmt(force_newline=force_newline))
+            if res.error:
+                return res
+            return res.success(GroupMemberNode(access_spec_tok, node))
+        # -> func-def
+        if self.expect({TT_EMPTY}, False):
+            node = res.register(self.func_def(level=2, force_newline=force_newline))
+            if res.error:
+                return res
+            return res.success(GroupMemberNode(access_spec_tok, node))
+
+        # Lookahead for dec-stmt or func-def
+        pos = self.mark()
+        if self.expect({TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
+            res.register(self.type())
+            if res.error:
+                return res
+
+            if not self.expect({TT_IDENTIFIER}):
+                return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+            # -> dec-stmt
+            if self.expect({TT_ASSIGN}):
+                self.reset(pos)
+                node = res.register(self.dec_stmt(force_newline=force_newline))
+                if res.error:
+                    return res
+                return res.success(GroupMemberNode(access_spec_tok, node))
+            # -> func-def
+            if self.expect({TT_OPAR}):
+                self.reset(pos)
+                node = res.register(self.func_def(level=2, force_newline=force_newline))
+                if res.error:
+                    return res
+                return res.success(GroupMemberNode(access_spec_tok, node))
+
+            self.reset(pos)
+            node = res.register(self.dec_stmt(force_newline=force_newline))
+            if res.error:
+                return res
+            return res.success(GroupMemberNode(access_spec_tok, node))
+
+        return res.failure(self.throw_expected_error([TT_FROZEN, TT_EMPTY, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER]))
 
     def access_spec(self):
-        pass
+        """
+        First set: {VISIBLE, HIDDEN, RESTRICTED}
+        """
+        res = ParseResult()
 
-    def group_constr(self):
-        pass
+        if not (access_spec_tok := self.expect({TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED})):
+            return res.failure(self.throw_expected_error([TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED]))
 
-    def func_def(self):
-        pass
+        return res.success(access_spec_tok)
+
+    def group_constr(self, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+
+        # -> TAB ID params COLON NEWLINE+ statements
+        # if not self.expect({TT_TAB}):
+        #     return res.failure(self.throw_expected_error([TT_TAB]))
+
+        res.register(self._req_tab(level=1))
+        if res.error:
+            return res
+
+        if not (id := self.expect({TT_IDENTIFIER})):
+            if id and id.value != "init":
+                return res.failure(self.throw_error("Group constructor must be named 'init'"))
+
+        params = res.register(self.params())
+        if res.error:
+            return res
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_COLON]))
+
+        res.register(self._req_newline(True))
+        if res.error:
+            return res
+
+        statements = res.register(self.statements(level=2, force_newline=force_newline))
+        if res.error:
+            return res
+
+        return res.success(FuncDefNode(DataTypeNode(TT_EMPTY), id, params, statements))
+
+    def func_def(self, level, force_newline):
+        """
+        First set: {EMPTY, COLLECTION, WIKI, NUM, DECI, WORD, LETTER, CHOICE, ID}
+        """
+        res = ParseResult()
+
+        # -> ret-type ID params COLON NEWLINE+ statements
+        ret_type = res.register(self.ret_type())
+        if res.error:
+            return res
+
+        if not (id := self.expect({TT_IDENTIFIER})):
+            return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+        params = res.register(self.params())
+        if res.error:
+            return res
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_COLON]))
+
+        res.register(self._req_newline(True))
+        if res.error:
+            return res
+
+        statements = res.register(self.statements(level=level, force_newline=force_newline))
+        if res.error:
+            return res
+
+        return res.success(FuncDefNode(ret_type, id, params, statements))
 
     def ret_type(self):
         """
@@ -1167,9 +1541,9 @@ class Parser:
 
         # -> data-struct|data-type
         if self.expect({TT_COLLECTION, TT_WIKI}, False):
-            return res.register(self.data_struct())
+            return self.data_struct()
 
-        return res.register(self.data_type())
+        return res.success(self.data_type())
 
     def data_struct(self):
         """
@@ -1226,9 +1600,36 @@ class Parser:
         return res.failure(self.throw_expected_error([TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER]))
 
     def params(self):
-        pass
+        """
+        First set: {OPAR}
+        """
+        res = ParseResult()
+        params = []
 
-    def statements(self, level):
+        # -> OPAR (type ID (COMMA type ID)*)? CPAR
+        if self.expect({TT_OPAR}):
+            if not self.expect({TT_CPAR}):
+                while True:
+                    type = res.register(self.type())
+                    if res.error:
+                        return res
+
+                    if not (id := self.expect({TT_IDENTIFIER})):
+                        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+                    params.append((type, id))
+
+                    if not self.expect({TT_COMMA}):
+                        break
+
+                if not self.expect({TT_CPAR}):
+                    return res.failure(self.throw_expected_error([TT_CPAR]))
+
+            return res.success(params)
+
+        return res.failure(self.throw_expected_error([TT_OPAR]))
+
+    def statements(self, level, force_newline):
         """
         First set: {TAB}
         """
@@ -1252,13 +1653,13 @@ class Parser:
                 self.reset(pos)
                 break
 
-            nodes.append(res.register(self.statement(level)))
+            nodes.append(res.register(self.statement(level, force_newline)))
             if res.error:
                 return res
 
         return res.success(BodyNode(nodes))
 
-    def statement(self, level):
+    def statement(self, level, force_newline):
         """
         First set: {BACK, SKIP, STOP, GLOBAL, DEL, ID, INCASE, GIVEN, EVERY, DURING, GO, NEW, NOT, MINUS, WORD_LIT, OBRACK, OBRACE, OPAR, YES, NO, LETTER_LIT, NUM_LIT, DECI_LIT, BLANK}
         """
@@ -1269,23 +1670,23 @@ class Parser:
             expr = res.register(self.expr())
             if res.error:
                 return res
-            res.register(self._req_newline())
+            res.register(self._req_newline(force_newline))
             if res.error:
                 return res
             return res.success(BackNode(expr))
         # -> SKIP NEWLINE+
         if self.expect({TT_SKIP}):
-            res.register(self._req_newline())
+            res.register(self._req_newline(force_newline))
             return res.success(SkipNode())
         # -> STOP NEWLINE+
         if self.expect({TT_STOP}):
-            res.register(self._req_newline())
+            res.register(self._req_newline(force_newline))
             return res.success(StopNode())
         # -> GLOBAL ID NEWLINE+
         if self.expect({TT_GLOBAL}):
             if not (id := self.expect({TT_IDENTIFIER})):
                 return res.failure(self.throw_error([TT_IDENTIFIER]))
-            res.register(self._req_newline())
+            res.register(self._req_newline(force_newline))
             if res.error:
                 return res
             return res.success(GlobalAccessNode(id))
@@ -1293,71 +1694,509 @@ class Parser:
         if self.expect({TT_DEL}):
             if not (id := self.expect({TT_IDENTIFIER})):
                 return res.failure(self.throw_error([TT_IDENTIFIER]))
-            res.register(self._req_newline())
+            res.register(self._req_newline(force_newline))
             if res.error:
                 return res
             return res.success(DelNode(id))
         # -> dec-stmt
+        if self.expect({TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE}, False):
+            return self.dec_stmt(force_newline)
+        # -> dec-stmt
         # -> assign-stmt
-        # if self.expect({TT_IDENTIFIER}, False):
-        #     # TODO
-        #     return self.assign_stmt()
+        pos = self.mark()
+        if self.expect({TT_IDENTIFIER}):
+            # dec_stmt
+            if self.expect({TT_IDENTIFIER}):
+                self.reset(pos)
+                dec_stmt = res.register(self.dec_stmt(force_newline))
+                if res.error:
+                    return res
+                return res.success(dec_stmt)
+            # assign_stmt
+            elif self.expect({TT_PERIOD, TT_OBRACK, TT_ASSIGN, TT_PLUS_ASSIGN, TT_MINUS_ASSIGN, TT_MULTIPLY_ASSIGN, TT_DIVIDE_ASSIGN, TT_FLOOR_ASSIGN, TT_MODULO_ASSIGN, TT_POWER_ASSIGN}):
+                self.reset(pos)
+                assign_stmt = res.register(self.assign_stmt())
+                if res.error:
+                    return res
+                return res.success(assign_stmt)
+            self.reset(pos)
         # -> incase-stmt
         if self.expect({TT_INCASE}, False):
-            return self.incase_stmt(level)
+            return self.incase_stmt(level, force_newline)
         # -> given-stmt
         if self.expect({TT_GIVEN}, False):
-            return self.given_stmt(level)
+            return self.given_stmt(level, force_newline)
         # -> every-stmt
         if self.expect({TT_EVERY}, False):
-            return self.every_stmt(level)
+            return self.every_stmt(level, force_newline)
         # -> during-stmt
         if self.expect({TT_DURING}, False):
-            return self.during_stmt(level)
+            return self.during_stmt(level, force_newline)
         # -> go-during-stmt
         if self.expect({TT_GO}, False):
-            return self.go_during_stmt(level)
+            return self.go_during_stmt(level, force_newline)
 
         # -> expr NEWLINE+
         expr = res.register(self.expr())
         if res.error:
             return res
-        res.register(self._req_newline())
+        res.register(self._req_newline(force_newline))
         if res.error:
             return res
         return res.success(expr)
 
-    def dec_stmt(self):
-        pass
+    def dec_stmt(self, force_newline):
+        """
+        First set: {FROZEN, COLLECTION, WIKI, NUM, DECI, WORD, LETTER, CHOICE, ID}
+        """
+        res = ParseResult()
+        declaration_nodes = []
+
+        # -> FROZEN type ID ASSIGN expr (COMMA ID ASSIGN expr)* NEWLINE+
+        if self.expect({TT_FROZEN}):
+            type = res.register(self.type())
+            if res.error:
+                return res
+
+            while True:
+                if not (id := self.expect({TT_IDENTIFIER})):
+                    return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+                if not self.expect({TT_ASSIGN}):
+                    return res.failure(self.throw_expected_error([TT_ASSIGN]))
+
+                val = res.register(self.expr())
+                if res.error:
+                    return res
+
+                declaration_nodes.append(VarDecNode(True, type, id, val))
+
+                if not self.expect({TT_COMMA}):
+                    break
+
+            res.register(self._req_newline(force_newline))
+            if res.error:
+                return res
+
+            return res.success(DeclarationsNode(declaration_nodes))
+        # -> type ID (ASSIGN expr)? (COMMA ID (ASSIGN expr)?)* NEWLINE+
+        elif self.expect({TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER}, False):
+            type = res.register(self.type())
+            if res.error:
+                return res
+
+            while True:
+                if not (id := self.expect({TT_IDENTIFIER})):
+                    return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
+
+                val = None
+
+                if self.expect({TT_ASSIGN}):
+                    val = res.register(self.expr())
+                    if res.error:
+                        return res
+
+                declaration_nodes.append(VarDecNode(False, type, id, val))
+
+                if not self.expect({TT_COMMA}):
+                    break
+
+            res.register(self._req_newline(force_newline))
+            if res.error:
+                return res
+
+            return res.success(DeclarationsNode(declaration_nodes))
+
+        return res.failure(self.throw_expected_error([TT_FROZEN, TT_COLLECTION, TT_WIKI, TT_NUM, TT_DECI, TT_WORD, TT_LETTER, TT_CHOICE, TT_IDENTIFIER]))
 
     def assign_stmt(self):
-        pass
+        """
+        First set: {ID}
+        """
+        res = ParseResult()
 
-    def incase_stmt(self, level):
-        pass
+        # -> ID dot_slice* (ASSIGN|PLUS_ASSIGN|MINUS_ASSIGN|MUL_ASSIGN|DIV_ASSIGN|FLOOR_ASSIGN|MOD_ASSIGN|POWER_ASSIGN) expr NEWLINE+
+        if id := self.expect({TT_IDENTIFIER}):
+            var_node = VarAccessNode(id)
 
-    def unless(self):
-        pass
+            while self.expect({TT_PERIOD, TT_OBRACK}, False):
+                var_node = res.register(self.dot_slice(var_node))
+                if res.error:
+                    return res
 
-    def insted(self):
-        pass
+            if not (assign_op := self.expect({TT_PERIOD, TT_ASSIGN, TT_PLUS_ASSIGN, TT_MINUS_ASSIGN, TT_MULTIPLY_ASSIGN, TT_DIVIDE_ASSIGN, TT_FLOOR_ASSIGN, TT_MODULO_ASSIGN, TT_POWER_ASSIGN})):
+                return res.failure(self.throw_expected_error([TT_PERIOD, TT_ASSIGN, TT_PLUS_ASSIGN, TT_MINUS_ASSIGN, TT_MULTIPLY_ASSIGN, TT_DIVIDE_ASSIGN, TT_FLOOR_ASSIGN, TT_MODULO_ASSIGN, TT_POWER_ASSIGN]))
 
-    def given_stmt(self, level):
-        pass
+            val = res.register(self.expr())
+            if res.error:
+                return res
 
-    def event_default(self):
-        pass
+            return res.success(VarAssignNode(var_node, assign_op, val))
 
-    def default(self):
-        pass
+        return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
 
-    def event(self):
-        pass
+    def incase_stmt(self, level, force_newline):
+        """
+        First set: {INCASE}
+        """
+        res = ParseResult()
+        conditions = []
+        instead_stmt = None
+
+        # -> INCASE expr COLON NEWLINE+ statements unless* instead?
+        if self.expect({TT_INCASE}):
+            condition = res.register(self.expr())
+            if res.error:
+                return res
+
+            if not self.expect({TT_COLON}):
+                res.failure(self.throw_expected_error([TT_COLON]))
+
+            res.register(self._req_newline(True))
+            if res.error:
+                return res
+
+            statements = res.register(self.statements(level+1, force_newline))
+            if res.error:
+                return res
+
+            conditions.append((condition, statements))
+
+            # Lookahead for unless/instead
+            pos = self.mark()
+            tab_count = res.register(self._req_tab(level))
+            if res.error:
+                if tab_count < level:
+                    res.error = None
+                    self.reset(pos)
+                    return res.success(IncaseNode(conditions, instead_stmt))
+                return res
+
+            if self.expect({TT_UNLESS}, False):
+                while True:
+                    self.reset(pos)
+                    conditions.append(res.register(self.unless(level, force_newline)))
+                    if res.error:
+                        return res
+
+                    # Lookahead for unless/instead
+                    pos = self.mark()
+                    tab_count = res.register(self._req_tab(level))
+                    if res.error:
+                        if tab_count < level:
+                            res.error = None
+                            self.reset(pos)
+                            return res.success(IncaseNode(conditions, instead_stmt))
+                        return res
+
+                    if not self.expect({TT_UNLESS}, False):
+                        break
+
+            if self.expect({TT_INSTEAD}, False):
+                self.reset(pos)
+                instead_stmt = res.register(self.instead(level, force_newline))
+                if res.error:
+                    return res
+            else:
+                self.reset(pos)
+
+            return res.success(IncaseNode(conditions, instead_stmt))
+
+        return res.failure(self.throw_expected_error([TT_INCASE]))
+
+    def unless(self, level, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+
+        res.register(self._req_tab(level))
+        if res.error:
+            return res
+
+        if not self.expect({TT_UNLESS}):
+            return res.failure(self.throw_expected_error([TT_UNLESS]))
+
+        condition = res.register(self.expr())
+        if res.error:
+            return res
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_COLON]))
+
+        res.register(self._req_newline(True))
+        if res.error:
+            return res
+
+        statements = res.register(self.statements(level+1, force_newline))
+        if res.error:
+            return res
+
+        return res.success((condition, statements))
+
+    def instead(self, level, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+
+        res.register(self._req_tab(level))
+        if res.error:
+            return res
+
+        if not self.expect({TT_INSTEAD}):
+            return res.failure(self.throw_expected_error([TT_INSTEAD]))
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_COLON]))
+
+        res.register(self._req_newline(True))
+        if res.error:
+            return res
+
+        statements = res.register(self.statements(level+1, force_newline))
+        if res.error:
+            return res
+
+        return res.success((statements))
+
+    def given_stmt(self, level, force_newline):
+        """
+        First set: {GIVEN}
+        """
+        res = ParseResult()
+
+        # -> GIVEN expr COLON NEWLINE+ event-default
+        if self.expect({TT_GIVEN}):
+            expr = res.register(self.expr())
+            if res.error:
+                return res
+
+            if not self.expect({TT_COLON}):
+                return res.failure(self.throw_expected_error([TT_COLON]))
+
+            res.register(self._req_newline(True))
+            if res.error:
+                return res
+
+            event_default = res.register(self.event_default(level+1, force_newline))
+            if res.error:
+                return res
+
+            if event_default:
+                event_nodes, default_stmt = event_default
+
+            return res.success(GivenNode(expr, event_nodes, default_stmt))
+
+        return res.failure(self.throw_expected_error([TT_GIVEN]))
+
+    def event_default(self, level, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+        event_nodes = []
+        default_stmt = None
+
+        pos = self.mark()
+        res.register(self._req_tab(level))
+        if res.error:
+            return res
+
+        # -> event+ (default event*)?
+        if self.expect({TT_EVENT}, False):
+            # event+
+            while True:
+                self.reset(pos)
+                event_nodes.append(res.register(self.event(level, force_newline)))
+                if res.error:
+                    return res
+
+                # Lookahead for next event
+                pos = self.mark()
+                tab_count = res.register(self._req_tab(level))
+                if res.error:
+                    if tab_count < level:
+                        res.error = None
+                        self.reset(pos)
+                        return res.success((event_nodes, default_stmt))
+                    return res
+
+                # Possible "default" block
+                if not self.expect({TT_EVENT}, False):
+                    break
+
+            # (default event*)?
+            if self.expect({TT_DEFAULT}, False):
+                self.reset(pos)
+                default_stmt = res.register(self.default(level, force_newline))
+                if res.error:
+                    return res
+
+                # Lookahead for next event
+                pos = self.mark()
+                tab_count = res.register(self._req_tab(level))
+                if res.error:
+                    if tab_count < level:
+                        res.error = None
+                        self.reset(pos)
+                        return res.success((event_nodes, default_stmt))
+                    return res
+
+                if self.expect({TT_DEFAULT}, False):
+                    return res.failure(self.throw_error("Only one default block is allowed in given statement"))
+
+                if self.expect({TT_EVENT}, False):
+                    while True:
+                        self.reset(pos)
+                        event_nodes.append(res.register(self.event(level, force_newline)))
+                        if res.error:
+                            return res
+
+                        # Lookahead for next event
+                        pos = self.mark()
+                        tab_count = res.register(self._req_tab(level))
+                        if res.error:
+                            if tab_count < level:
+                                res.error = None
+                                break
+                            return res
+
+                        # End of given statement
+                        if not self.expect({TT_EVENT}, False):
+                            break
+
+            self.reset(pos)
+            return res.success((event_nodes, default_stmt))
+        # -> default event*
+        elif self.expect({TT_DEFAULT}, False):
+            self.reset(pos)
+            default_stmt = res.register(self.default(level, force_newline))
+            if res.error:
+                return res
+
+            # Lookahead for next event
+            pos = self.mark()
+            tab_count = res.register(self._req_tab(level))
+            if res.error:
+                if tab_count < level:
+                    res.error = None
+                    self.reset(pos)
+                    return res.success((event_nodes, default_stmt))
+                return res
+
+            if self.expect({TT_DEFAULT}, False):
+                return res.failure(
+                    self.throw_error(
+                        "Only one default block is allowed in given statement"
+                    )
+                )
+
+            if self.expect({TT_EVENT}, False):
+                while True:
+                    self.reset(pos)
+                    event = res.register(self.event(level, force_newline))
+                    if res.error:
+                        return res
+                    event_nodes.append(event)
+
+                    # Lookahead for next event
+                    pos = self.mark()
+                    tab_count = res.register(self._req_tab(level))
+                    if res.error:
+                        if tab_count < level:
+                            res.error = None
+                            break
+                        return res
+
+                    # End of given statement
+                    if not self.expect({TT_EVENT}, False):
+                        break
+
+            self.reset(pos)
+            return res.success((event_nodes, default_stmt))
+
+        return res.failure(self.throw_expected_error([TT_EVENT, TT_DEFAULT]))
+
+    def default(self, level, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+
+        # -> TAB+ DEFAULT COLON NEWLINE+ statements
+        res.register(self._req_tab(level))
+        if res.error:
+            return res
+
+        if not self.expect({TT_DEFAULT}):
+            return res.failure(self.throw_expected_error([TT_DEFAULT]))
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_COLON]))
+
+        res.register(self._req_newline(True))
+        if res.error:
+            return res
+
+        default_statements = res.register(self.statements(level+1, force_newline))
+        if res.error:
+            return res
+
+        return res.success(default_statements)
+
+    def event(self, level, force_newline):
+        """
+        First set: {TAB}
+        """
+        res = ParseResult()
+
+        # -> TAB+ EVENT literals COLON NEWLINE+ statements
+        res.register(self._req_tab(level))
+        if res.error:
+            return res
+
+        if not self.expect({TT_EVENT}):
+            return res.failure(self.throw_expected_error([TT_EVENT]))
+
+        event = res.register(self.literals())
+        if res.error:
+            return res
+
+        if not self.expect({TT_COLON}):
+            return res.failure(self.throw_expected_error([TT_COLON]))
+
+        res.register(self._req_newline(True))
+        if res.error:
+            return res
+
+        statements = res.register(self.statements(level+1, force_newline))
+        if res.error:
+            return res
+
+        return res.success((event, statements))
 
     def literals(self):
-        pass
+        """
+        First set: {NUM_LIT, DECI_LIT, WORD_LIT, LETTER_LIT, YES, NO, BLANK}
+        """
+        res = ParseResult()
 
-    def every_stmt(self, level):
+        # -> NUM_LIT|DECI_LIT|WORD_LIT|LETTER_LIT|YES|NO|BLANK
+        if number := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
+            return res.success(NumberNode(number))
+        elif word := self.expect({TT_WORD_LITERAL}):
+            return res.success(WordNode(word))
+        elif letter := self.expect({TT_LETTER_LITERAL}):
+            return res.success(LetterNode(letter))
+        elif choice := self.expect({TT_YES, TT_NO}):
+            return res.success(ChoiceNode(choice))
+        elif blank := self.expect({TT_BLANK}):
+            return res.success(BlankNode(blank))
+
+        return res.failure(self.throw_expected_error([TT_NUM_LITERAL, TT_DECI_LITERAL, TT_WORD_LITERAL, TT_LETTER_LITERAL,TT_YES, TT_NO, TT_BLANK]))
+
+    def every_stmt(self, level, force_newline):
         """
         First set: {EVERY}
         """
@@ -1393,17 +2232,17 @@ class Parser:
             if not self.expect({TT_COLON}):
                 return res.failure(self.throw_expected_error([TT_COLON]))
 
-            res.register(self._req_newline())
+            res.register(self._req_newline(True))
             if res.error:
                 return res
 
-            statements = res.register(self.statements(level + 1))
+            statements = res.register(self.statements(level + 1, force_newline))
             if res.error:
                 return res
 
             return res.success(EveryNode((type_, id), (type2, id2), iterable, statements))
 
-    def during_stmt(self, level):
+    def during_stmt(self, level, force_newline):
         """
         First set: {DURING}
         """
@@ -1418,11 +2257,11 @@ class Parser:
             if not self.expect({TT_COLON}):
                 return res.failure(self.throw_expected_error([TT_COLON]))
 
-            res.register(self._req_newline())
+            res.register(self._req_newline(True))
             if res.error:
                 return res
 
-            statements = res.register(self.statements(level + 1))
+            statements = res.register(self.statements(level + 1, force_newline))
             if res.error:
                 return res
 
@@ -1430,7 +2269,7 @@ class Parser:
 
         return res.failure(self.throw_expected_error([TT_DURING]))
 
-    def go_during_stmt(self, level):
+    def go_during_stmt(self, level, force_newline):
         """
         First set: {GO}
         """
@@ -1441,17 +2280,13 @@ class Parser:
             if not self.expect({TT_COLON}):
                 return res.failure(self.throw_expected_error([TT_COLON]))
 
-            res.register(self._req_newline())
+            res.register(self._req_newline(True))
             if res.error:
                 return res
 
-            self.force_newline = True
-
-            statements = res.register(self.statements(level + 1))
+            statements = res.register(self.statements(level + 1, force_newline))
             if res.error:
                 return res
-
-            self.force_newline = False
 
             res.register(self._req_tab(level))
             if res.error:
@@ -1464,7 +2299,7 @@ class Parser:
             if res.error:
                 return res
 
-            res.register(self._req_newline())
+            res.register(self._req_newline(False))
             if res.error:
                 return res
 
@@ -1472,10 +2307,10 @@ class Parser:
 
         return res.failure(self.throw_expected_error([TT_GO]))
 
-    def _req_newline(self):
+    def _req_newline(self, force):
         res = ParseResult()
 
-        if self.force_newline or not self.expect({TT_EOF}, False):
+        if force or not self.expect({TT_EOF}, False):
             if not self.expect({TT_NEWLINE}):
                 return res.failure(self.throw_expected_error([TT_NEWLINE]))
 
@@ -1488,15 +2323,19 @@ class Parser:
         pos = self.mark()
         res = ParseResult()
 
+        if self.expect({TT_EOF}, False):
+            res.node = 0
+            return res
+
         tab_count = 0
         while self.expect({TT_TAB}):
             tab_count += 1
 
         if tab_count != level:
-            self.reset(pos)
+            res.node = tab_count
             return res.failure(self.throw_indentation_error(pos, tab_count, level))
 
-        return res
+        return res.success(tab_count)
 
     def expr(self):
         """
@@ -1536,7 +2375,7 @@ class Parser:
         elif blank := self.expect({TT_BLANK}):
             return res.success(BlankNode(blank))
         # -> arith-expr ((EE|LT|GT|LTE|GTE) arith-expr)*
-        return self._binary_op(self.arith_expr, (TT_EQUAL_TO, TT_LESS_THAN, TT_GREATER_THAN, TT_LESS_THAN_EQUAL, TT_GREATER_THAN_EQUAL))
+        return self._binary_op(self.arith_expr, (TT_EQUAL_TO, TT_NOT_EQUAL, TT_LESS_THAN, TT_GREATER_THAN, TT_LESS_THAN_EQUAL, TT_GREATER_THAN_EQUAL))
 
     def arith_expr(self):
         """
@@ -1858,11 +2697,11 @@ class Parser:
         res = ParseResult()
         key_value_pairs = []
 
-        # -> OBRACE (expr COLON expr (COMMA expr COLON expr)*)? CBRACE
+        # -> OBRACE (keys COLON expr (COMMA keys COLON expr)*)? CBRACE
         if self.expect({TT_OBRACE}):
             if not self.expect({TT_CBRACE}):
                 while True:
-                    key = res.register(self.expr())
+                    key = res.register(self.keys())
                     if res.error:
                         return res
                     if not self.expect({TT_COLON}):
@@ -1878,6 +2717,24 @@ class Parser:
             return res.success(WikiNode(key_value_pairs))
 
         return res.failure(self.throw_expected_error([TT_OBRACE]))
+
+    def keys(self):
+        """
+        First set: {NUM_LIT, DECI_LIT, WORD_LIT, LETTER_LIT, YES, NO}
+        """
+        res = ParseResult()
+
+        # -> NUM_LIT|DECI_LIT|WORD_LIT|LETTER_LIT|YES|NO|BLANK
+        if number := self.expect({TT_NUM_LITERAL, TT_DECI_LITERAL}):
+            return res.success(NumberNode(number))
+        elif word := self.expect({TT_WORD_LITERAL}):
+            return res.success(WordNode(word))
+        elif letter := self.expect({TT_LETTER_LITERAL}):
+            return res.success(LetterNode(letter))
+        elif choice := self.expect({TT_YES, TT_NO}):
+            return res.success(ChoiceNode(choice))
+
+        return res.failure(self.throw_expected_error([TT_NUM_LITERAL, TT_DECI_LITERAL, TT_WORD_LITERAL, TT_LETTER_LITERAL,TT_YES, TT_NO]))
 
 
 #######################################
@@ -1969,14 +2826,47 @@ class VarDecNode:
         self.value_node = value_node
 
     def __repr__(self):
-        return f"var_init({self.var_name_tok}, frozen:{self.is_frozen}, type:{self.data_type_node}, val:{self.value_node})"
+        return f"var_dec({self.var_name_tok}, frozen:{self.is_frozen}, type:{self.data_type_node}, val:{self.value_node})"
+
+class GroupNode:
+    def __init__(self, id, parent_id, group_body):
+        self.id = id
+        self.parent_id = parent_id
+        self.group_body = group_body
+    
+    def __repr__(self):
+        return f"group({self.id}, parent:{self.parent_id}, body:{self.group_body})"
+
+class GroupMemberNode:
+    def __init__(self, access_spec, node):
+        self.access_spec = access_spec
+        self.node = node
+
+    def __repr__(self):
+        return f"group_member(access_spec:{self.access_spec}, node:{self.node})"
+
+class VarAssignNode:
+    def __init__(self, var_node, op_tok, value_node):
+        self.var_node = var_node
+        self.op_tok = op_tok
+        self.value_node = value_node
+    
+    def __repr__(self):
+        return f"var_assign({self.var_node}, {self.op_tok}, {self.value_node})"
+
+class DeclarationsNode:
+    def __init__(self, declaration_nodes):
+        self.declaration_nodes = declaration_nodes
+
+    def __repr__(self):
+        return f"multi_dec({self.declaration_nodes})"
 
 class BodyNode:
     def __init__(self, items):
         self.items = items or []
 
     def __repr__(self):
-        return f"body({self.items})"
+        return f"{self.items}"
 
 class ProgramNode:
     def __init__(self, global_nodes, home_node):
@@ -2104,6 +2994,25 @@ class EveryNode:
     def __repr__(self):
         return f"every({self.var1}, {self.var2}, {self.iterable}, {self.statements})"
 
+
+class GivenNode:
+    def __init__(self, given_expr, event_nodes, default_stmt):
+        self.given_expr = given_expr
+        self.event_nodes = event_nodes
+        self.default_stmt = default_stmt
+    
+    def __repr__(self):
+        return f"given({self.given_expr}, {self.event_nodes}, {self.default_stmt})"
+
+class IncaseNode:
+    def __init__(self, conditions, instead_stmt):
+        self.conditions = conditions
+        self.instead_stmt = instead_stmt
+    
+    def __repr__(self):
+        return f"incase({self.conditions}, {self.instead_stmt})"
+
+
 #######################################
 # RUN
 #######################################
@@ -2119,8 +3028,6 @@ def run_syntax(fn, text):
     # Generate Abstract Syntax Tree
     parser = Parser(tokens)
     res = parser.parse()
-    
-    # tokens.pop()
 
     return tokens[:-1], res.node, [res.error] if res.error else None
 
