@@ -26,8 +26,7 @@ def analyze():
             tokens, nodes, errors = run_syntax('', code)
             data = {
                 'tokens': [[token.lexeme_str(), token.token_type_str()] for token in tokens],
-                'nodes': nodes,
-                'errors': [error.as_string() for error in errors]
+                'errors': [error.as_string() for error in errors] if errors else []
             }
             print(data)
             return jsonify(data)
