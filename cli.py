@@ -67,19 +67,17 @@ def run_syntax():
 def get_input():
     text = ""
     tmp_text = ""
+    prompt = ">>> "
     while True:
         try:
-            prompt = ">>> " if not text or text[-2] != ":" else "... "
             tmp_text = input(prompt)
-            if tmp_text.strip() in ["", "\n"]:
-                break
             text += tmp_text + "\n"
-            if tmp_text.strip() in ["exit"]:
+            if tmp_text == "":
+                break
+            elif tmp_text == "exit":
                 exit()
-            if tmp_text.strip()[0] == "\t":
-                continue
+            prompt = "... "
         except KeyboardInterrupt:
-            # clear the ^C character
             print()
             print("Type 'exit' or ctrl + D to exit")
             text = ""
