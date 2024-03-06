@@ -1532,19 +1532,18 @@ class Parser:
         if self.expect({TT_EMPTY}):
             return res.success(DataTypeNode(TT_EMPTY))
 
-        return res.register(self.type())
+        return self.type()
 
     def type(self):
         """
         First set: {COLLECTION, WIKI, NUM, DECI, WORD, LETTER, CHOICE, ID}
         """
-        res = ParseResult()
 
         # -> data-struct|data-type
         if self.expect({TT_COLLECTION, TT_WIKI}, False):
             return self.data_struct()
 
-        return res.success(self.data_type())
+        return self.data_type()
 
     def data_struct(self):
         """
@@ -1723,8 +1722,8 @@ class Parser:
             # assign_stmt or function call
             elif self.expect({TT_PERIOD}, False):
                 tmp_var_node = VarAccessNode(id)
-                while self.expect({TT_PERIOD}, False):
-                    tmp_var_node = res.register(self.dot(tmp_var_node))
+                while self.expect({TT_PERIOD, TT_OBRACK, TT_OPAR}, False):
+                    tmp_var_node = res.register(self.dot_slice_arg(tmp_var_node))
                     if res.error:
                         return res
                 # assign_stmt
