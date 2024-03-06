@@ -1,12 +1,12 @@
 import sys
 
 sys.path.append("./")
-import pysimplestplus
+import pysimplestplus.compiler as sp
 from grammar import CFG
 
 
 def is_terminal(item):
-    return item in pysimplestplus.DELIM_MAP.keys()
+    return item in sp.DELIM_MAP.keys()
 
 
 class GrammarHelper:

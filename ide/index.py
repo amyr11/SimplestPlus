@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify
-from pysimplestplus import run_lexical, run_syntax
+import sys
+sys.path.append("./")
+from pysimplestplus.compiler import run_lexical, run_syntax
 
 app = Flask(__name__)
 

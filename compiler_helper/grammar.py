@@ -1,4 +1,4 @@
-import pysimplestplus as sp
+import pysimplestplus.compiler as sp
 
 CFG = {
     "<program>": [

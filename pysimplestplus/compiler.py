@@ -1245,7 +1245,7 @@ class Parser:
                 return res.failure(self.throw_expected_error([TT_IDENTIFIER]))
 
         if not self.expect({TT_COLON}):
-            return res.failure(self.throw_expected_error([TT_GROUP]))
+            return res.failure(self.throw_expected_error([TT_COLON]))
 
         res.register(self._req_newline(True))
         if res.error:

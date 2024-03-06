@@ -1,4 +1,4 @@
-import pysimplestplus
+import pysimplestplus.compiler as sp
 import os
 import sys
 
@@ -35,7 +35,7 @@ def test_compile():
         pass
 
 def run_lexical(file_path, code):
-    tokens, errors = pysimplestplus.run_lexical(file_path, code)
+    tokens, errors = sp.run_lexical(file_path, code)
 
     if errors:
         print("Tokens:", tokens)
@@ -49,7 +49,7 @@ def run_lexical(file_path, code):
 
 
 def run_syntax(file_path, code):
-    tokens, ast, errors = pysimplestplus.run_syntax(file_path, code)
+    tokens, ast, errors = sp.run_syntax(file_path, code)
 
     if errors:
         for error in errors:

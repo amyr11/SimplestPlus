@@ -2,7 +2,7 @@ import tkinter.font as tkfont
 import customtkinter as ctk
 from tkinter import ttk, filedialog, messagebox
 
-import pysimplestplus
+import pysimplestplus.compiler as sp
 
 file_is_modified = False
 saved_as_file = False
@@ -12,7 +12,7 @@ def analyze_lexical():
     code = text_editor.get("1.0", "end-1c")
 
     global current_file_name
-    tokens, errors = pysimplestplus.run_lexical(current_file_name, code)
+    tokens, errors = sp.run_lexical(current_file_name, code)
     clear()
     for token in tokens:
         token_table.insert("", "end", values=(token.lexeme_str(), token.token_type_str()))
@@ -27,7 +27,7 @@ def analyze_syntax():
     code = text_editor.get("1.0", "end-1c")
 
     global current_file_name
-    tokens, ast, errors = pysimplestplus.run_syntax(current_file_name, code)
+    tokens, ast, errors = sp.run_syntax(current_file_name, code)
     clear()
     for token in tokens:
         token_table.insert(
