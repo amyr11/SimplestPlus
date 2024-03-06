@@ -1376,7 +1376,7 @@ class Parser:
             self.throw_expected_error(
                 [
                     TT_VISIBLE, TT_HIDDEN, TT_RESTRICTED,
-                    TT_IDENTIFIER,
+                    "init",
                 ]
             )
         )
