@@ -1114,6 +1114,7 @@ class Parser:
                 self.throw_expected_error(
                     [
                         TT_HOME,
+                        TT_GROUP,
                         TT_EMPTY,
                         TT_FROZEN,
                         TT_COLLECTION,

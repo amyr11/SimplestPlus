@@ -1,0 +1,6 @@
+$
+home():
+    out()
+$
+home():
+    num x = 1
