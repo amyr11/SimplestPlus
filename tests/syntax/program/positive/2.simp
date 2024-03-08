@@ -1,0 +1,3 @@
+home():
+	num x = 1
+	out(x)

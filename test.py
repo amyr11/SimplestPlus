@@ -40,8 +40,9 @@ def run_lexical(file_path, code):
     if errors:
         print("Tokens:", tokens)
         print()
-        for error in errors:
-            print(error.as_string())
+        if errors:
+            for error in errors:
+                print(error.as_string())
     else:
         print("Tokens:", tokens)
         print()

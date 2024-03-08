@@ -700,7 +700,7 @@ class Lexer:
                     self.tokens.append(token)
 
         self.tokens.append(Token(TT_EOF, pos_start=self.pos))
-        return self.tokens, self.errors
+        return self.tokens, self.errors if self.errors else None
 
     def make_asterisk(self):
         tok_type = TT_MULTIPLY
@@ -1084,8 +1084,9 @@ class Parser:
     def throw_indentation_error(self, pos, tab_count, level):
         return self.throw_error(f"Required indent is {level}, got {tab_count}", error_type=IndentationError, pos_start=self.get_tok_at(pos).pos_start, pos_end=self.get_tok_at(self.tok_idx).pos_start)
 
-    def parse(self):
-        res = self.program()
+    def parse(self, func=None):
+        func = self.__getattribute__(func) if func else self.program
+        res = func()
 
         if not res.error and self.current_tok.type != TT_EOF:
             return res.failure(self.throw_error("Unexpected token"))
@@ -1175,7 +1176,7 @@ class Parser:
 
         return res.success(None)
 
-    def global_(self, force_newline):
+    def global_(self, force_newline=False):
         """
         First set: {EMPTY, FROZEN, COLLECTION, WIKI, NUM, DECI, WORD, LETTER, CHOICE, ID}
         """
@@ -3051,6 +3052,5 @@ def run_lexical(fn, text):
     # Generate tokens
     lexer = Lexer(fn, text)
     tokens, errors = lexer.make_tokens()
-    # tokens.pop()
 
-    return tokens[:-1], errors
+    return tokens[:-1], errors if errors else None
